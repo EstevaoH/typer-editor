@@ -37,5 +37,5 @@ export function AlertMessage({ success, message }: AlertMessageProps) {
         );
     }
 
-    return null; // Retorna null se não houver mensagem para exibir
+    return null;
 }

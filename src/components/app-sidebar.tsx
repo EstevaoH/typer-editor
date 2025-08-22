@@ -115,7 +115,6 @@ export function AppSidebar({
         <NavDocuments searchQuery={searchQuery} />
         <NavActions />
         <Separator orientation="horizontal" className="bg-zinc-700" />
-        {/* <NavUser name="Usuario" email="test@gmail.com" image="" /> */}
       </SidebarContent>
     </Sidebar>
   )

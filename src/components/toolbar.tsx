@@ -14,37 +14,6 @@ import { BoldIcon, Code2Icon, ItalicIcon, QuoteIcon, Redo2, StrikethroughIcon, U
 
 export function ToolBar({ editor }: { editor: any }) {
     if (!editor) return null;
-    const setLink = useCallback(() => {
-        const previousUrl = editor.getAttributes('link').href;
-        const url = window.prompt('URL', previousUrl);
-
-        if (url === null) return;
-
-        if (url === '') {
-            editor.chain().focus().extendMarkRange('link').unsetLink().run();
-            return;
-        }
-        try {
-            new URL(url);
-            editor
-                .chain()
-                .focus()
-                .extendMarkRange('link')
-                .setLink({ href: url })
-                .run();
-        } catch {
-            alert('Por favor, insira uma URL válida (ex: https://exemplo.com)');
-        }
-    }, [editor]);
-    const addImage = useCallback(() => {
-        const url = window.prompt('URL')
-
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run()
-        }
-    }, [editor])
-
-
     return (
         <div className="flex flex-wrap h-12 items-center justify-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700 sticky top-0 z-50">
             <button
@@ -102,7 +71,7 @@ export function ToolBar({ editor }: { editor: any }) {
             <HeadingSelector editor={editor} />
             <AlignmentSelector editor={editor} />
             <ListSelector editor={editor} />
-            <LanguageSelector editor={editor} />
+            {/* <LanguageSelector editor={editor} /> */}
 
             <div className="control-group">
                 <div className="button-group flex items-center gap-1">

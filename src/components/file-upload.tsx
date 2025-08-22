@@ -100,8 +100,7 @@ export function FileUploader({
       setUploading(true)
       setProgress(0)
       setError(null)
-
-      // Simulate progress updates
+      
       const progressInterval = setInterval(() => {
         setProgress((prev) => {
           const newProgress = prev + 10
@@ -109,7 +108,6 @@ export function FileUploader({
         })
       }, 300)
 
-      // Upload the file using the server action
       const result = await uploadFile(file)
 
       clearInterval(progressInterval)
