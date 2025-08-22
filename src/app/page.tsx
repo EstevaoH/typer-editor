@@ -1,4 +1,4 @@
-import { Download, Edit, FileText, Share } from "lucide-react";
+import { Download, Edit, Share } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 

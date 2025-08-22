@@ -2,7 +2,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react'
 import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { v4 as uuidv4 } from 'uuid';
-import { htmlToFormattedText, htmlToPlainText, parseHtmlStyles } from '@/utils/htmlToPlainText';
+import { htmlToFormattedText, parseHtmlStyles } from '@/utils/htmlToPlainText';
 interface Document {
   id: string
   title: string

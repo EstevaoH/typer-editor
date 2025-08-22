@@ -1,7 +1,8 @@
+//@typescript-eslint/no-explicit-any
 export function Footerbar({ editor, characterLimit }: { editor: any, characterLimit: number }) {
     if (!editor) return null;
 
-    const percentage = Math.round((100 / characterLimit) * editor.storage.characterCount.characters());
+    // const percentage = Math.round((100 / characterLimit) * editor.storage.characterCount.characters());
 
     return (
         <>

@@ -65,6 +65,7 @@ export const htmlToMarkdown = (html: string): string => {
   // Listas ordenadas
   md = md.replace(/<ol[^>]*>(.*?)<\/ol>/gi, (match, p1) => {
     let counter = 1;
+    //@typescript-eslint/no-unused-vars
     return p1.replace(/<li[^>]*>(.*?)<\/li>/gi, (liMatch:any, liContent:any) => {
       return `${counter++}. ${liContent}\n`;
     }) + '\n';
@@ -117,7 +118,7 @@ export const parseHtmlStyles = (html: string): { text: string, bold?: boolean, i
       const element = node as HTMLElement;
       const children = Array.from(node.childNodes);
       
-      let styles: { bold?: boolean, italics?: boolean } = {};
+      const styles: { bold?: boolean, italics?: boolean } = {};
       
       // Verificar estilos
       if (element.tagName === 'STRONG' || element.tagName === 'B') {

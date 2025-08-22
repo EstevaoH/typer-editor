@@ -1,7 +1,7 @@
 import { FloatingMenu } from '@tiptap/react';
 import { Heading1, Heading2, ImageIcon, TypeIcon, YoutubeIcon } from 'lucide-react';
-import React, { useCallback } from 'react';
-
+import React from 'react';
+//@typescript-eslint/no-explicit-any
 export function MenuFloating({ editor }: { editor: any }){
     return (
         <FloatingMenu

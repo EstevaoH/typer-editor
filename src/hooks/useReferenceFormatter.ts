@@ -20,6 +20,7 @@ export const referenceSchema = z.object({
 export type ReferenceData = z.infer<typeof referenceSchema>
 
 export function useReferenceFormatter() {
+    //@typescript-eslint/no-unused-vars
     const formatABNTReference = (data: ReferenceData, index?: number) => {
         const authorName = `${data.lastName.toUpperCase()}, ${data.firstName}`
         const publicationMonth = format(data.publicationDate, 'MMM', { locale: ptBR }).toLowerCase()
@@ -49,6 +50,7 @@ export function useReferenceFormatter() {
         }
 
         // Junta todas as partes e remove espaços extras
+        //@typescript-eslint/no-unused-vars
         let reference = referenceParts.join(' ')
             .replace(/\s+/g, ' ') // Remove múltiplos espaços
             .replace(/, ,/g, ',') // Remove vírgulas com espaços extras

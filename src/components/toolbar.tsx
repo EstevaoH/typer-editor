@@ -1,7 +1,7 @@
 "use client"
-import React, { useCallback } from 'react';
+import React from 'react';
 import { ReferenceDialog } from './reference-dialog';
-import { LanguageSelector } from './language-selector';
+
 import { ListSelector } from './list-selector';
 import { AlignmentSelector } from './alignment-selector';
 import { HeadingSelector } from './heading-selector';
@@ -11,7 +11,7 @@ import { VideoSelector } from './video-selector';
 import { ImageSelector } from './image-selector';
 import { LinkSelector } from './link-selector';
 import { BoldIcon, Code2Icon, ItalicIcon, QuoteIcon, Redo2, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
-
+//@typescript-eslint/no-explicit-any
 export function ToolBar({ editor }: { editor: any }) {
     if (!editor) return null;
     return (

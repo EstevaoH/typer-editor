@@ -13,6 +13,7 @@ import { uploadFile } from "@/actions/upload-actions"
 interface FileUploaderProps {
   maxSizeMB?: number
   allowedTypes?: string[]
+  //@typescript-eslint/no-explicit-any
   onUploadComplete?: (url: any) => void
 }
 

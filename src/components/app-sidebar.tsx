@@ -13,11 +13,10 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { useDocuments } from '@/context/documents-context'
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Input } from "./ui/input"
 import { NavDocuments } from "./nav-documents"
 import { NavActions } from "./nav-actions"
-import { NavUser } from "./nav-user"
 import { Separator } from "./ui/separator"
 import Link from "next/link"
 
@@ -36,15 +35,15 @@ export function AppSidebar({
   ...props
 }: AppSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const { documents } = useDocuments()
+  // const { documents } = useDocuments()
   const { state, toggleSidebar } = useSidebar()
 
-  const filteredDocuments = useMemo(() => {
-    if (!searchQuery.trim()) return documents
-    return documents.filter(doc =>
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [documents, searchQuery])
+  // const filteredDocuments = useMemo(() => {
+  //   if (!searchQuery.trim()) return documents
+  //   return documents.filter(doc =>
+  //     doc.title.toLowerCase().includes(searchQuery.toLowerCase())
+  //   )
+  // }, [documents, searchQuery])
 
   return (
     <Sidebar

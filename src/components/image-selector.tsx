@@ -40,7 +40,7 @@ export function ImageSelector({ editor }: { editor: Editor | null }) {
                                 try {
                                     new URL(url);
                                     editor.chain().focus().setImage({ src: url }).run();
-                                } catch (e) {
+                                } catch {
                                     alert('Por favor, insira uma URL válida (ex: https://exemplo.com/imagem.jpg)');
                                 }
                             }}
