@@ -218,7 +218,7 @@ export function Editor() {
         <>
             <ToolBar editor={editor} />
             <div className="flex h-[calc(100vh-4rem)]">
-                <div className="flex-1 overflow-auto p-4">
+                <div className="flex-1 overflow-auto pt-4 pr-4">
                     <div className="max-w-screen prose prose-violet tiptap">
                         <div className="mb-4">
                             <textarea
