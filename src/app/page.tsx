@@ -1,8 +1,13 @@
+'use client'
+
+import { ContactModal } from "@/components/contact-modal";
 import { Download, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-black text-white">
       <header className="container mx-auto px-4 py-6">
@@ -260,13 +265,23 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
               <a href="#features" className="text-zinc-400 hover:text-white transition-colors">Recursos</a>
               <a href="#how-it-works" className="text-zinc-400 hover:text-white transition-colors">Como Funciona</a>
-              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Contato</a>
+              <a onClick={(e) => {
+                e.preventDefault();
+                setIsContactModalOpen(true);
+              }}
+                className="text-zinc-400 hover:text-white transition-colors">Contato</a>
+              {/* Modal de contato */}
+              <ContactModal
+                isOpen={isContactModalOpen}
+                onClose={() => setIsContactModalOpen(false)}
+              />
               <a href="#" className="text-zinc-400 hover:text-white transition-colors">Privacidade</a>
             </div>
 
             <div className="flex space-x-4">
               <span className="text-zinc-500">© 2024 TyperEditor. Todos os direitos reservados.</span>
             </div>
+
           </div>
         </div>
       </footer>

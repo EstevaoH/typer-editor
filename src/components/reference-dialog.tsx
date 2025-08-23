@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button"
 import { useReferenceFormatter } from "@/hooks/useReferenceFormatter"
 import { useState } from "react"
 import { DatePicker } from "./date-picker"
-//@typescript-eslint/no-explicit-any
+
 export function ReferenceDialog({ editor }: { editor: any }) {
     const [isOpenDialog, setIsOpenDialog] = useState(false)
     const { formatABNTReference, referenceSchema } = useReferenceFormatter()
