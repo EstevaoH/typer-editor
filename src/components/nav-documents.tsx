@@ -46,11 +46,11 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
             <SidebarGroupContent className="overflow-y-auto">
                 <SidebarMenu>
                     {filteredDocuments.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-zinc-400">
+                        <SidebarGroupLabel className="px-3 py-2 text-sm text-zinc-400">
                             {searchQuery.trim() ?
                                 "Nenhum documento encontrado" :
                                 "Nenhum documento criado"}
-                        </div>
+                        </SidebarGroupLabel>
                     )}
                     {filteredDocuments.map((doc) => (
                         <SidebarMenuItem key={doc.id}>

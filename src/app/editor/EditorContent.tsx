@@ -219,11 +219,16 @@ export function Editor() {
             <ToolBar editor={editor} />
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
-                    <div className="max-w-screen prose prose-violet tiptap">
-                        <div className="mb-4">
+                    <div className="max-w-screen mx-auto prose prose-violet tiptap">
+                        <div className="mb-6 relative group">
                             <textarea
                                 value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                onChange={(e) => {
+                                    setTitle(e.target.value);
+                                    const target = e.target;
+                                    target.style.height = 'auto';
+                                    target.style.height = `${target.scrollHeight}px`;
+                                }}
                                 onBlur={() => {
                                     if (title.trim() && !currentDocument) {
                                         saveDocument(title);
@@ -231,28 +236,67 @@ export function Editor() {
                                         updateDocument({ title });
                                     }
                                 }}
-                                placeholder="Digite o título aqui"
-                                className="w-full bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground text-foreground resize-none overflow-hidden border-b pb-2 focus:border-primary transition-colors"
-                                style={{ minHeight: '60px', height: 'auto' }}
-                                onInput={(e) => {
-                                    const target = e.target as HTMLTextAreaElement;
-                                    target.style.height = 'auto';
-                                    target.style.height = `${target.scrollHeight}px`;
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        e.currentTarget.blur();
+                                    }
+                                    if (e.key === 'Tab' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        editor?.commands.focus();
+                                    }
                                 }}
+                                placeholder="Digite o título aqui..."
+                                className="w-full bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/60 text-foreground resize-none overflow-hidden border-b pb-3 focus:border-primary transition-all duration-200 group-hover:border-border/60"
+                                style={{ minHeight: '60px' }}
                                 rows={1}
+                                maxLength={120}
                             />
+                            <div className="absolute bottom-2 right-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                {title.length}/120
+                            </div>
                         </div>
+
                         <div
                             ref={editorRef}
-                            className={`min-h-[100vh] border rounded-lg p-4 transition-colors ${isEditorFocused
-                                ? 'border-primary ring-primary/20'
-                                : 'border-border hover:border-border/80'
+                            className={`min-h-[calc(100vh-10rem)] border-2 rounded-xl p-6 transition-all duration-300 ${isEditorFocused
+                                    ? 'border-primary/30 bg-background shadow-lg ring-2 ring-primary/10'
+                                    : 'border-border/50 bg-background/50 hover:border-border/70 hover:bg-background/70'
                                 }`}
+                            onClick={() => editor?.commands.focus()}
                         >
                             <EditorContent
                                 editor={editor}
-                                className="outline-none"
+                                className="outline-none min-h-[500px]"
                             />
+                            <div className="mt-4 pt-4 border-t border-border/30 flex items-center justify-between text-xs text-muted-foreground">
+                                <div className="flex items-center gap-4">
+                                    <span className="flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                        </svg>
+                                        {currentDocument?.updatedAt
+                                            ? `Editado ${new Date(currentDocument.updatedAt).toLocaleDateString('pt-BR')}`
+                                            : 'Novo documento'
+                                        }
+                                    </span>
+
+                                    {editor && (
+                                        <span className="flex items-center gap-1">
+                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                                            </svg>
+                                            {editor.storage.characterCount.characters()} caracteres
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${editor?.isFocused ? 'animate-pulse bg-yellow-400' : 'bg-green-400'
+                                        }`} />
+                                    <span>{editor?.isFocused ? 'Editando...' : 'Salvo'}</span>
+                                </div>
+                            </div>
                         </div>
                         {editor && <MenuFloating editor={editor} />}
                         {editor && <MenuBubble editor={editor} />}

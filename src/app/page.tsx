@@ -305,7 +305,9 @@ export default function Home() {
               >
                 Contato
               </button>
-              <a href="#" className="text-zinc-400 hover:text-white transition-colors hover:scale-105">Privacidade</a>
+              <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors">
+                Privacidade
+              </Link>
             </div>
 
             <div className="text-center md:text-right">
