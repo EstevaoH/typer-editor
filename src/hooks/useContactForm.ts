@@ -33,7 +33,7 @@ export function useContactForm() {
             });
 
             const emailPromise = emailjs.send(
-                'service_e3oczeqS',
+                'service_e3oczeq',
                 'template_97bmg7b',
                 {
                     from_name: data.name.trim(),
