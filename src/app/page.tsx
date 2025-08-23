@@ -1,69 +1,85 @@
 'use client'
 
 import { ContactModal } from "@/components/contact-modal";
-import { Download, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages } from "lucide-react";
+import { Toast } from "@/components/toast";
+import { Download, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-black text-white">
-      <header className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-black text-white overflow-x-hidden">
+      <header className="container mx-auto px-4 py-6 animate-fade-in">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Edit className="h-5 w-5 text-white" />
+            </div>
             <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
               TyperEditor
             </span>
           </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="#features" className="text-zinc-300 hover:text-white transition-colors">Recursos</a>
-            <a href="#how-it-works" className="text-zinc-300 hover:text-white transition-colors">Como Funciona</a>
-            <a href="#faq" className="text-zinc-300 hover:text-white transition-colors">FAQ</a>
+          <nav className="hidden md:flex space-x-8">
+            <a href="#features" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">Recursos</a>
+            <a href="#how-it-works" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">Como Funciona</a>
+            <a href="#faq" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">FAQ</a>
           </nav>
           <Link
             href="/editor"
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-medium transition-colors"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-5 py-2.5 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center gap-2 group"
           >
-            Começar Agora
+            <Edit className="h-4 w-4" />
+            <span>Começar Agora</span>
+            <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </header>
-      <main className="container mx-auto px-4 py-16 md:py-16 text-center">
-        <div className="max-w-4xl mx-auto ">
-          <div className="inline-flex items-center bg-blue-500/10 px-4 py-2 rounded-full mb-6">
+
+      <main className="container mx-auto px-4 py-16 md:py-20 text-center">
+        <div className="max-w-5xl mx-auto">
+          <div className="inline-flex items-center bg-blue-500/10 px-4 py-2 rounded-full mb-8 animate-pulse">
             <Zap className="h-4 w-4 text-blue-400 mr-2" />
             <span className="text-blue-400 text-sm">Editor Online Revolucionário</span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight">
-            Escreva, Edite e Compartilhe
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight animate-slide-up">
+            Escreva, Edite e <span className="inline-block transform hover:scale-105 transition-transform">Compartilhe</span>
           </h1>
-          <div className="flex items-center justify-center mb-8">
-            <p className="text-xl  text-zinc-300  max-w-2xl mx-auto  leading-relaxed">
+
+          <div className="flex items-center justify-center mb-10">
+            <p className="text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed animate-fade-in delay-100">
               O editor de texto moderno que funciona diretamente no seu navegador.
               Rápido, seguro e com tudo que você precisa para criar documentos incríveis.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-fade-in delay-200">
             <Link
               href="/editor"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-4 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-3"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-4 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-3 shadow-lg hover:shadow-purple-500/20"
             >
               <Edit className="h-5 w-5" />
               Começar a Editar
+              <Sparkles className="h-4 w-4" />
             </Link>
           </div>
-          <div className="bg-zinc-800/50 rounded-xl p-1 border border-zinc-700/50 backdrop-blur-sm mx-auto max-w-3xl">
-            <div className="bg-zinc-900 rounded-lg p-6 border border-zinc-700 text-left">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+          <div className="bg-zinc-800/50 rounded-2xl p-2 border border-zinc-700/50 backdrop-blur-sm mx-auto max-w-4xl transform hover:scale-[1.02] transition-all duration-300 animate-fade-in delay-300">
+            <div className="bg-zinc-900 rounded-xl p-8 border border-zinc-700 text-left">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-zinc-400 ml-2 text-sm">documento.md</span>
+                <span className="text-zinc-400 ml-3 text-sm font-mono">documento.md</span>
               </div>
-              <pre className="text-zinc-200 font-mono text-sm md:text-base">
+              <pre className="text-zinc-200 font-mono text-sm md:text-base leading-relaxed">
                 {`# Bem-vindo ao TyperEditor ✨
 
 ## 📝 Recursos Principais
@@ -83,10 +99,11 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <section id="features" className="py-10 bg-zinc-900/50">
+
+      <section id="features" className="py-20 bg-zinc-900/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Recursos Poderosos</h2>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Recursos Poderosos</h2>
             <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
               Tudo que você precisa em um editor moderno e intuitivo
             </p>
@@ -124,97 +141,101 @@ export default function Home() {
                 description: "Seus documentos ficam salvos localmente, apenas você tem acesso.",
                 color: "yellow"
               },
-              {
-                icon: <Palette className="h-8 w-8 text-cyan-500" />,
-                title: "Personalização",
-                description: "Temas claros e escuros com interface customizável.",
-                color: "cyan"
-              }
+              // {
+              //   icon: <Palette className="h-8 w-8 text-cyan-500" />,
+              //   title: "Personalização",
+              //   description: "Temas claros e escuros com interface customizável.",
+              //   color: "cyan"
+              // }
             ].map((feature, index) => (
-              <div key={index} className="bg-zinc-800/50 p-6 rounded-xl border border-zinc-700/30 hover:border-zinc-600 transition-all group hover:scale-105">
-                <div className={`bg-${feature.color}-500/10 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+              <div
+                key={index}
+                className="bg-zinc-800/50 p-8 rounded-2xl border border-zinc-700/30 hover:border-zinc-600 transition-all group hover:scale-105 animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className={`bg-${feature.color}-500/10 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-zinc-400">{feature.description}</p>
+                <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
+                <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="how-it-works" className="py-10">
+      <section id="how-it-works" className="py-20 bg-gradient-to-br from-zinc-900 to-black">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Como Funciona</h2>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona</h2>
             <p className="text-xl text-zinc-400">Simples e intuitivo em três passos</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               {
                 step: "01",
                 title: "Crie seu Documento",
                 description: "Acesse o editor e comece a escrever imediatamente.",
-                icon: <Edit className="h-6 w-6" />
+                icon: <Edit className="h-8 w-8" />
               },
               {
                 step: "02",
                 title: "Edite e Formate",
                 description: "Use as ferramentas de formatação para melhorar seu conteúdo.",
-                icon: <Palette className="h-6 w-6" />
+                icon: <Palette className="h-8 w-8" />
               },
               {
                 step: "03",
                 title: "Exporte e Compartilhe",
                 description: "Baixe em múltiplos formatos ou compartilhe diretamente.",
-                icon: <Share className="h-6 w-6" />
+                icon: <Share className="h-8 w-8" />
               }
             ].map((step, index) => (
-              <div key={index} className="text-center p-6 bg-zinc-800/30 rounded-xl border border-zinc-700/20">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-4">
+              <div
+                key={index}
+                className="text-center p-8 bg-zinc-800/30 rounded-2xl border border-zinc-700/20 hover:border-blue-500/30 transition-all transform hover:scale-105 animate-fade-in"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                   {step.step}
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-zinc-400 mb-3">{step.description}</p>
-                {/* <div className="text-blue-400 w-full text-center flex items-center justify-center mt-3">{step.icon}</div> */}
+                <h3 className="text-2xl font-semibold mb-4">{step.title}</h3>
+                <p className="text-zinc-400 mb-6 leading-relaxed">{step.description}</p>
+                <div className="text-blue-400 flex justify-center">{step.icon}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+      <section className="py-20 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">Pronto para Começar?</h2>
-          <div className="flex justify-center my-8">
-            <p className="text-xl text-zinc-300 mb-8 max-w-2xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold mb-8">Pronto para Começar?</h2>
+          <div className="flex justify-center mb-12">
+            <p className="text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed">
               Junte-se a milhares de usuários que já estão criando documentos incríveis com o TyperEditor.
             </p>
-
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link
               href="/editor"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-4 rounded-lg font-medium transition-all transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-10 py-5 rounded-2xl font-medium transition-all transform hover:scale-105 text-lg flex items-center justify-center gap-3 shadow-2xl hover:shadow-purple-500/30"
             >
+              <Edit className="h-6 w-6" />
               Criar Primeiro Documento
             </Link>
-            {/* <button className="border border-zinc-700 hover:border-zinc-500 px-8 py-4 rounded-lg font-medium transition-colors">
-              Ver Demonstração
-            </button> */}
           </div>
         </div>
       </section>
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-zinc-900/30">
+      <section id="faq" className="py-20 bg-zinc-900/50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Perguntas Frequentes</h2>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">Perguntas Frequentes</h2>
             <p className="text-xl text-zinc-400">Tire suas dúvidas sobre o TyperEditor</p>
           </div>
 
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-6">
             {[
               {
                 question: "O que é o TyperEditor?",
@@ -237,54 +258,93 @@ export default function Home() {
                 answer: "Sim! O TyperEditor é totalmente responsivo e funciona em qualquer dispositivo com navegador moderno."
               }
             ].map((faq, index) => (
-              <div key={index} className="bg-zinc-800/50 rounded-lg p-6 border border-zinc-700/30">
-                <h3 className="text-lg font-semibold mb-2 text-blue-400">{faq.question}</h3>
-                <p className="text-zinc-300">{faq.answer}</p>
+              <div
+                key={index}
+                className="bg-zinc-800/50 rounded-xl p-8 border border-zinc-700/30 hover:border-zinc-600 transition-all animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <h3 className="text-xl font-semibold mb-4 text-blue-400 flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5" />
+                  {faq.question}
+                </h3>
+                <p className="text-zinc-300 leading-relaxed">{faq.answer}</p>
               </div>
             ))}
 
-            <div className="text-center mt-8">
-              <p className="text-zinc-400">
-                Não encontrou sua dúvida?{" "}
-                <a href="#" className="text-blue-400 hover:text-blue-300 underline">
-                  Entre em contato conosco
-                </a>
+            <div className="text-center mt-12">
+              <p className="text-zinc-400 text-lg mb-8">
+                Não encontrou sua dúvida?
               </p>
+              <button
+                onClick={() => setIsContactModalOpen(true)}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:to-purple-700 hover:from-blue-600 px-8 py-3 mt-4 rounded-lg font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
+              >
+                <span>Entre em contato conosco</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-zinc-800 py-12">
+      <footer className="border-t border-zinc-800 py-16 bg-zinc-900/50">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-6 md:mb-0">
-              <span className="text-lg font-bold">TyperEditor</span>
+            <div className="flex items-center space-x-4 mb-8 md:mb-0">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Edit className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold">TyperEditor</span>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
-              <a href="#features" className="text-zinc-400 hover:text-white transition-colors">Recursos</a>
-              <a href="#how-it-works" className="text-zinc-400 hover:text-white transition-colors">Como Funciona</a>
-              <a onClick={(e) => {
-                e.preventDefault();
-                setIsContactModalOpen(true);
-              }}
-                className="text-zinc-400 hover:text-white transition-colors">Contato</a>
-              {/* Modal de contato */}
-              <ContactModal
-                isOpen={isContactModalOpen}
-                onClose={() => setIsContactModalOpen(false)}
-              />
-              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Privacidade</a>
+            <div className="flex flex-wrap justify-center gap-8 mb-8 md:mb-0">
+              <a href="#features" className="text-zinc-400 hover:text-white transition-colors hover:scale-105">Recursos</a>
+              <a href="#how-it-works" className="text-zinc-400 hover:text-white transition-colors hover:scale-105">Como Funciona</a>
+              <button
+                onClick={() => setIsContactModalOpen(true)}
+                className="text-zinc-400 hover:text-white transition-colors hover:scale-105"
+              >
+                Contato
+              </button>
+              <a href="#" className="text-zinc-400 hover:text-white transition-colors hover:scale-105">Privacidade</a>
             </div>
 
-            <div className="flex space-x-4">
+            <div className="text-center md:text-right">
               <span className="text-zinc-500">© 2024 TyperEditor. Todos os direitos reservados.</span>
             </div>
-
           </div>
         </div>
       </footer>
+
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(50px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+        .animate-slide-up {
+          animation: slideUp 1s ease-out forwards;
+        }
+        .animate-fade-in.delay-100 {
+          animation-delay: 0.1s;
+        }
+        .animate-fade-in.delay-200 {
+          animation-delay: 0.2s;
+        }
+        .animate-fade-in.delay-300 {
+          animation-delay: 0.3s;
+        }
+      `}</style>
     </div>
   );
 }
