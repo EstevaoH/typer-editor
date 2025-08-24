@@ -1,13 +1,14 @@
-import { Download, FileText, FileType } from "lucide-react";
+import { Download, FileText, FileTextIcon, FileType } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { useDocuments } from "@/context/documents-context";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { ShareButton } from "./share-button";
 
 export function NavActions() {
 
     const { currentDocument, downloadDocument } = useDocuments();
 
-    const handleDownloadCurrent = (format: 'txt' | 'md' | 'docx' = 'txt') => {
+    const handleDownloadCurrent = (format: 'txt' | 'md' | 'docx' | 'pdf' = 'txt') => {
         if (currentDocument) {
             downloadDocument(currentDocument.id, format);
         } else {
@@ -19,6 +20,10 @@ export function NavActions() {
             <SidebarGroupLabel className="text-zinc-400">Ações</SidebarGroupLabel>
             <SidebarGroupContent>
                 <SidebarMenu>
+                    <SidebarMenuItem className="dark">
+                        <ShareButton />
+                        
+                    </SidebarMenuItem>
                     <SidebarMenuItem className="dark">
                         <DropdownMenu  >
                             <DropdownMenuTrigger className="dark" asChild>
@@ -64,6 +69,16 @@ export function NavActions() {
                                     >
                                         <FileType className="w-4 h-4 mr-2" />
                                         Baixar como DOCX
+                                    </button>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <button
+                                        onClick={() => handleDownloadCurrent('pdf')}
+                                        disabled={!currentDocument}
+                                        className="flex items-center w-full py-2 text-sm cursor-pointer"
+                                    >
+                                        <FileTextIcon className="w-4 h-4 mr-2" />
+                                        Baixar como PDF
                                     </button>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

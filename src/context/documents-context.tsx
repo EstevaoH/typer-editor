@@ -2,14 +2,20 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react'
 import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { v4 as uuidv4 } from 'uuid';
-import { htmlToFormattedText, parseHtmlStyles } from '@/utils/htmlToPlainText';
+import { htmlToFormattedText, htmlToPlainText, parseHtmlStyles } from '@/utils/htmlToPlainText';
+import jsPDF from 'jspdf';
+
+
+
 interface Document {
   id: string
   title: string
   content: string
   updatedAt: string
+  shareToken?: string // Token único para compartilhamento
+  isPublic?: boolean // Se o documento é público
 }
-type DownloadFormat = 'txt' | 'md' | 'docx';
+type DownloadFormat = 'txt' | 'md' | 'docx' | 'pdf';
 
 interface DocumentsContextType {
   documents: Document[]
@@ -19,7 +25,10 @@ interface DocumentsContextType {
   deleteDocument: (id: string) => void
   saveDocument: (title: string) => void
   setCurrentDocumentId: (id: string | null) => void
-  downloadDocument: (id: string, format?: 'txt' | 'md' | 'docx') => void
+  downloadDocument: (id: string, format?: DownloadFormat) => void
+  shareDocument: (id: string) => Promise<string | null> // Retorna URL de compartilhamento
+  stopSharing: (id: string) => void
+  getSharedDocument: (token: string) => Document | null
   isLoading: boolean
 }
 
@@ -130,6 +139,72 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
     return await Packer.toBlob(doc);
   };
+  // Função para converter conteúdo em PDF usando jsPDF
+  const convertToPdf = (content: string, title: string): Blob => {
+    const doc = new jsPDF();
+    const plainText = htmlToPlainText(content);
+
+    // Configurar margens
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxWidth = pageWidth - (margin * 2);
+
+    // Adicionar título
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    const titleLines = doc.splitTextToSize(title, maxWidth);
+    let yPosition = margin;
+
+    // Adicionar título e verificar se cabe na página
+    if (yPosition + (titleLines.length * 10) > pageHeight - margin) {
+      doc.addPage();
+      yPosition = margin;
+    }
+
+    doc.text(titleLines, margin, yPosition);
+    yPosition += (titleLines.length * 10) + 10;
+
+    // Adicionar conteúdo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+
+    const contentLines = doc.splitTextToSize(plainText, maxWidth);
+    let currentLine = 0;
+
+    while (currentLine < contentLines.length) {
+      // Verificar se precisa de nova página
+      if (yPosition > pageHeight - margin) {
+        doc.addPage();
+        yPosition = margin;
+      }
+
+      // Adicionar quantas linhas couberem na página atual
+      const linesForThisPage = [];
+      let lineHeight = 7; // Altura aproximada de cada linha
+
+      while (currentLine < contentLines.length &&
+        yPosition + lineHeight <= pageHeight - margin) {
+        linesForThisPage.push(contentLines[currentLine]);
+        yPosition += lineHeight;
+        currentLine++;
+      }
+
+      if (linesForThisPage.length > 0) {
+        doc.text(linesForThisPage, margin, yPosition - (linesForThisPage.length * lineHeight));
+      }
+    }
+
+    // Adicionar número da página
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin - 30, pageHeight - 10);
+    }
+
+    return doc.output('blob');
+  };
 
   const downloadDocument = useCallback(async (id: string, format: DownloadFormat = 'txt') => {
     const document = documents.find(doc => doc.id === id)
@@ -144,6 +219,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         blob = await convertToDocx(document.content, document.title);
         filename = `${document.title}.docx`;
         mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        break;
+
+      case 'pdf':
+        blob = convertToPdf(document.content, document.title);
+        filename = `${document.title}.pdf`;
+        mimeType = 'application/pdf';
         break;
 
       case 'md':
@@ -215,6 +296,79 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         }, 100);
       });
   };
+  const shareDocument = useCallback(async (id: string): Promise<string | null> => {
+    const document = documents.find(doc => doc.id === id);
+    if (!document) return null;
+
+    try {
+      // Gerar token único para compartilhamento
+      const shareToken = uuidv4();
+
+      // Atualizar documento com token de compartilhamento
+      setDocuments(prev =>
+        prev.map(doc =>
+          doc.id === id
+            ? {
+              ...doc,
+              shareToken,
+              isPublic: true,
+              updatedAt: new Date().toISOString()
+            }
+            : doc
+        )
+      );
+
+      // Criar URL de compartilhamento
+      const shareUrl = `${window.location.origin}/shared/${shareToken}`;
+
+      // Verificar se a API de compartilhamento nativa está disponível
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: document.title,
+            text: `Confira este documento: ${document.title}`,
+            url: shareUrl
+          });
+        } catch (shareError) {
+          console.log('Compartilhamento nativo cancelado ou não suportado');
+        }
+      }
+
+      // Copiar para a área de transferência
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        console.log('URL copiada para a área de transferência');
+      } catch (copyError) {
+        console.log('Não foi possível copiar para a área de transferência');
+      }
+
+      return shareUrl;
+    } catch (error) {
+      console.error('Erro ao compartilhar documento:', error);
+      return null;
+    }
+  }, [documents]);
+
+  // Função para parar de compartilhar
+  const stopSharing = useCallback((id: string) => {
+    setDocuments(prev =>
+      prev.map(doc =>
+        doc.id === id
+          ? {
+            ...doc,
+            shareToken: undefined,
+            isPublic: false,
+            updatedAt: new Date().toISOString()
+          }
+          : doc
+      )
+    );
+  }, []);
+
+  // Função para obter documento compartilhado
+  const getSharedDocument = useCallback((token: string): Document | null => {
+    return documents.find(doc => doc.shareToken === token && doc.isPublic) || null;
+  }, [documents]);
 
   const value = {
     documents,
@@ -225,6 +379,9 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     saveDocument,
     setCurrentDocumentId: setCurrentDocId,
     downloadDocument,
+    shareDocument,
+    stopSharing,
+    getSharedDocument,
     isLoading
   }
 
