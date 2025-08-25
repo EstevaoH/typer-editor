@@ -30,6 +30,8 @@ import Document from '@tiptap/extension-document'
 import { MenuFloating } from '@/components/menu-floating';
 import { MenuBubble } from '@/components/menu-bubble';
 import { useDocuments } from '@/context/documents-context';
+import { Placeholder } from '@tiptap/extensions'
+import { editorExtensions } from '@/lib/editor-config';
 
 const limit = 42400
 const lowlight = createLowlight(all)
@@ -46,121 +48,13 @@ export function Editor() {
     const editorRef = useRef<HTMLDivElement>(null)
 
     const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                document: false
-            }),
-            Document,
-            Underline,
-            TextStyle,
-            Blockquote,
-            Color.configure({
-                types: ['textStyle'],
-            }),
-            CharacterCount.configure({
-                limit,
-            }),
-            Link.configure({
-                openOnClick: true,
-                autolink: false,
-                defaultProtocol: 'https',
-                protocols: ['http', 'https'],
-                isAllowedUri: (url, ctx) => {
-                    try {
-                        const parsedUrl = url.includes(':') ? new URL(url) : new URL(`${ctx.defaultProtocol}://${url}`)
-                        console.log(parsedUrl)
-                        if (!ctx.defaultValidate(parsedUrl.href)) {
-                            return false
-                        }
-                        const disallowedProtocols = ['ftp', 'file', 'mailto']
-                        const protocol = parsedUrl.protocol.replace(':', '')
-
-                        if (disallowedProtocols.includes(protocol)) {
-                            return false
-                        }
-                        const allowedProtocols = ctx.protocols.map(p => (typeof p === 'string' ? p : p.scheme))
-
-                        if (!allowedProtocols.includes(protocol)) {
-                            return false
-                        }
-                        const disallowedDomains = ['example-phishing.com', 'malicious-site.net']
-                        const domain = parsedUrl.hostname
-
-                        if (disallowedDomains.includes(domain)) {
-                            return false
-                        }
-                        return true
-                    } catch {
-                        return false
-                    }
-                },
-                shouldAutoLink: url => {
-                    try {
-                        const parsedUrl = url.includes(':') ? new URL(url) : new URL(`https://${url}`)
-                        const disallowedDomains = ['example-no-autolink.com', 'another-no-autolink.com']
-                        const domain = parsedUrl.hostname
-
-                        return !disallowedDomains.includes(domain)
-                    } catch {
-                        return false
-                    }
-                },
-
-            }),
-            Highlight.configure({ multicolor: true }),
-            CodeBlockLowlight.configure({
-                lowlight,
-            }),
-            Image,
-            Youtube.configure({
-                inline: false,
-                width: 640,
-                height: 480,
-                controls: true,
-                nocookie: true,
-                HTMLAttributes: {
-                    class: 'embedded-youtube',
-                },
-            }),
-            TextAlign.configure({
-                types: ['heading', 'paragraph', 'image', 'youtube'],
-                alignments: ['left', 'center', 'right'],
-            }),
-            BulletList.configure({
-                HTMLAttributes: {
-                    class: 'inline-list',
-                },
-                itemTypeName: 'listItem',
-                keepMarks: true,
-            }),
-            OrderedList.configure({
-                HTMLAttributes: {
-                    class: 'inline-list',
-                },
-                keepMarks: true,
-            }),
-            TaskList.configure({
-                HTMLAttributes: {
-                    class: 'inline-task-list',
-                },
-            }),
-            ListItem.configure({
-                HTMLAttributes: {
-                    class: 'inline-item',
-                },
-            }),
-            TaskItem.configure({
-                HTMLAttributes: {
-                    class: 'inline-task-item',
-                },
-                nested: true,
-            }),
-            ListKeymap,
-        ],
+        extensions: editorExtensions,
         content: currentDocument?.content || '',
         onUpdate: ({ editor }) => {
             updateDocument({ content: editor.getHTML() })
+
         },
+
         editorProps: {
             attributes: {
                 class: "outline-none",
@@ -260,14 +154,14 @@ export function Editor() {
                         <div
                             ref={editorRef}
                             className={`min-h-[calc(100vh-10rem)] border-2 rounded-xl p-6 transition-all duration-300 ${isEditorFocused
-                                    ? 'border-primary/30 bg-background shadow-lg ring-2 ring-primary/10'
-                                    : 'border-border/50 bg-background/50 hover:border-border/70 hover:bg-background/70'
+                                ? 'border-primary/30 bg-background  ring-primary/10'
+                                : 'border-border/50 bg-background/50 hover:border-border/70 hover:bg-background/70'
                                 }`}
                             onClick={() => editor?.commands.focus()}
                         >
                             <EditorContent
                                 editor={editor}
-                                className="outline-none min-h-[500px]"
+                                className="outline-none min-h-screen"
                             />
                             <div className="mt-4 pt-4 border-t border-border/30 flex items-center justify-between text-xs text-muted-foreground">
                                 <div className="flex items-center gap-4">

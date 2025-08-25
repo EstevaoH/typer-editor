@@ -115,7 +115,7 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
-body{
+body {
   /* background: url('./assets/noise.svg'); */
   /* background-color: '#000'; */
 }
@@ -188,6 +188,14 @@ p {
   accent-color: #4f46e5;
   margin: 0;
   /* Indigo-600 */
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 /* .tiptap.ProseMirror {

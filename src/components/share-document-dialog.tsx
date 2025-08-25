@@ -122,7 +122,7 @@ export function ShareDocumentDialog({ documentId, open, onOpenChange }: {
                     })}
                     className="flex-1"
                   >
-                    <Share className="h-4 w-4 mr-2" />
+                    <Share className="w-4 h-4 text-zinc-300 mr-2" />
                     Compartilhar
                   </Button>
                 )}

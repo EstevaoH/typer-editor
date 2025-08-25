@@ -26,7 +26,7 @@ interface DocumentsContextType {
   saveDocument: (title: string) => void
   setCurrentDocumentId: (id: string | null) => void
   downloadDocument: (id: string, format?: DownloadFormat) => void
-  shareDocument: (id: string) => Promise<string | null> // Retorna URL de compartilhamento
+  shareDocument: (id: string) => Promise<string | null> 
   stopSharing: (id: string) => void
   getSharedDocument: (token: string) => Document | null
   isLoading: boolean
@@ -72,6 +72,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       id: uuidv4(),
       title,
       content: '',
+      isPublic: false,
+      shareToken: uuidv4(),
       updatedAt: new Date().toISOString()
     }
     setDocuments(prev => [newDoc, ...prev])
@@ -280,7 +282,6 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         tempLink.href = objectUrl;
         tempLink.download = filename;
 
-        // Usar um evento synthetic em vez de adicionar ao DOM
         const clickEvent = new MouseEvent('click', {
           view: window,
           bubbles: true,
@@ -288,8 +289,6 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         });
 
         tempLink.dispatchEvent(clickEvent);
-
-        // Limpar após um delay
         setTimeout(() => {
           URL.revokeObjectURL(objectUrl);
           URL.revokeObjectURL(url);
@@ -301,16 +300,11 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     if (!document) return null;
 
     try {
-      // Gerar token único para compartilhamento
-      const shareToken = uuidv4();
-
-      // Atualizar documento com token de compartilhamento
       setDocuments(prev =>
         prev.map(doc =>
           doc.id === id
             ? {
               ...doc,
-              shareToken,
               isPublic: true,
               updatedAt: new Date().toISOString()
             }
@@ -319,7 +313,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       );
 
       // Criar URL de compartilhamento
-      const shareUrl = `${window.location.origin}/shared/${shareToken}`;
+      const shareUrl = `${window.location.origin}/shared/${document.shareToken}`;
 
       // Verificar se a API de compartilhamento nativa está disponível
       if (navigator.share) {
@@ -367,6 +361,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   // Função para obter documento compartilhado
   const getSharedDocument = useCallback((token: string): Document | null => {
+    console.log(documents)
     return documents.find(doc => doc.shareToken === token && doc.isPublic) || null;
   }, [documents]);
 
