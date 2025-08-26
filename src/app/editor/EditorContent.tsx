@@ -42,7 +42,7 @@ lowlight.register('ts', ts)
 
 
 export function Editor() {
-    const { currentDocument, updateDocument, saveDocument } = useDocuments()
+    const { currentDocument, updateDocument, saveDocument, toggleFavorite } = useDocuments()
     const [title, setTitle] = useState(currentDocument?.title || '')
     const [isEditorFocused, setIsEditorFocused] = useState(false)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -86,6 +86,35 @@ export function Editor() {
         }
     }, [])
 
+    // No seu componente de editor principal
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                // Abrir o popover de busca
+                const searchButton = document.querySelector('[title="Buscar no documento (Ctrl+F)"]') as HTMLButtonElement;
+                if (searchButton) {
+                    searchButton.click();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                if (currentDocument) {
+                    toggleFavorite(currentDocument.id);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentDocument, toggleFavorite]);
 
     useEffect(() => {
         setTitle(currentDocument?.title || '')
@@ -154,7 +183,7 @@ export function Editor() {
                         <div
                             ref={editorRef}
                             className={`min-h-[calc(100vh-10rem)] border-2 rounded-xl p-6 transition-all duration-300 ${isEditorFocused
-                                ? 'border-primary/30 bg-background  ring-primary/10'
+                                ? 'border-primary/30 bg-background '
                                 : 'border-border/50 bg-background/50 hover:border-border/70 hover:bg-background/70'
                                 }`}
                             onClick={() => editor?.commands.focus()}

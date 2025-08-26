@@ -12,8 +12,9 @@ interface Document {
   title: string
   content: string
   updatedAt: string
-  shareToken?: string // Token único para compartilhamento
-  isPublic?: boolean // Se o documento é público
+  shareToken?: string
+  isPublic?: boolean
+  isFavorite: boolean
 }
 type DownloadFormat = 'txt' | 'md' | 'docx' | 'pdf';
 
@@ -26,9 +27,10 @@ interface DocumentsContextType {
   saveDocument: (title: string) => void
   setCurrentDocumentId: (id: string | null) => void
   downloadDocument: (id: string, format?: DownloadFormat) => void
-  shareDocument: (id: string) => Promise<string | null> 
+  shareDocument: (id: string) => Promise<string | null>
   stopSharing: (id: string) => void
   getSharedDocument: (token: string) => Document | null
+  toggleFavorite: (id: string) => void
   isLoading: boolean
 }
 
@@ -73,6 +75,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       title,
       content: '',
       isPublic: false,
+      isFavorite: false,
       shareToken: uuidv4(),
       updatedAt: new Date().toISOString()
     }
@@ -102,6 +105,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       setCurrentDocId(remainingDocs.length > 0 ? remainingDocs[0].id : null)
     }
   }, [currentDocId, documents])
+
+  const toggleFavorite = useCallback((id: string) => {
+    setDocuments(prev => prev.map(doc =>
+      doc.id === id ? { ...doc, isFavorite: !doc.isFavorite } : doc
+    ));
+  }, []);
 
   const saveDocument = useCallback((title: string) => {
     if (!currentDocument) {
@@ -377,7 +386,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     shareDocument,
     stopSharing,
     getSharedDocument,
-    isLoading
+    isLoading,
+    toggleFavorite
   }
 
   return (

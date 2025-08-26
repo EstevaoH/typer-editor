@@ -198,6 +198,19 @@ p {
   pointer-events: none;
 }
 
+.highlight {
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.2rem;
+}
+
+.bg-yellow-400 {
+  background-color: #facc15;
+}
+
+.bg-yellow-200\/30 {
+  background-color: rgba(254, 240, 138, 0.3);
+}
+
 /* .tiptap.ProseMirror {
   --tt-checklist-bg-color: var(--tt-gray-light-a-100);
   --tt-checklist-bg-active-color: var(--tt-gray-light-a-900);

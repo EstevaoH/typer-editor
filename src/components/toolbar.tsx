@@ -11,6 +11,7 @@ import { VideoSelector } from './video-selector';
 import { ImageSelector } from './image-selector';
 import { LinkSelector } from './link-selector';
 import { BoldIcon, Code2Icon, ItalicIcon, QuoteIcon, Redo2, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
+import { SearchSelector } from './search-selector';
 
 export function ToolBar({ editor }: { editor: any }) {
     if (!editor) return null;
@@ -75,6 +76,7 @@ export function ToolBar({ editor }: { editor: any }) {
                 <HeadingSelector editor={editor} />
                 <AlignmentSelector editor={editor} />
                 <ListSelector editor={editor} />
+                <SearchSelector editor={editor} />
                 {/* <LanguageSelector editor={editor} /> */}
 
                 <div className="control-group">

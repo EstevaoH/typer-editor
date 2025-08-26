@@ -3,6 +3,8 @@ import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, Side
 import { useMemo } from "react";
 import { useDocuments } from "@/context/documents-context";
 import { cn } from "@/lib/utils";
+import { DocumentItem } from "./document-item";
+import { Separator } from "./ui/separator";
 
 export function NavDocuments({ searchQuery }: { searchQuery: string }) {
     const {
@@ -10,15 +12,33 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
         currentDocument,
         createDocument,
         deleteDocument,
-        setCurrentDocumentId
+        setCurrentDocumentId,
+        toggleFavorite
     } = useDocuments()
 
     const { state } = useSidebar()
 
     const filteredDocuments = useMemo(() => {
         if (!searchQuery.trim()) return documents
-        return documents.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()) || doc.title.toUpperCase().includes(searchQuery.toUpperCase()))
+        return documents.filter(doc =>
+            doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            doc.title.toUpperCase().includes(searchQuery.toUpperCase())
+        )
     }, [documents, searchQuery])
+
+    const favoriteDocuments = useMemo(() =>
+        filteredDocuments.filter(doc => doc.isFavorite),
+        [filteredDocuments]
+    )
+    const regularDocuments = useMemo(() =>
+        filteredDocuments.filter(doc => !doc.isFavorite),
+        [filteredDocuments]
+    )
+
+    // const filteredDocuments = useMemo(() => {
+    //     if (!searchQuery.trim()) return documents
+    //     return documents.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()) || doc.title.toUpperCase().includes(searchQuery.toUpperCase()))
+    // }, [documents, searchQuery])
     return (
         <SidebarGroup className="flex-1 overflow-hidden">
             {state === "collapsed" && (
@@ -45,6 +65,48 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
 
             <SidebarGroupContent className="overflow-y-auto">
                 <SidebarMenu>
+                    {/* Seção de Favoritos */}
+                    {favoriteDocuments.length > 0 && (
+                        <>
+                            <SidebarGroupLabel className="text-zinc-400 text-xs mt-4">
+                                Favoritos
+                            </SidebarGroupLabel>
+                            {favoriteDocuments.map((doc) => (
+                                <DocumentItem
+                                    key={doc.id}
+                                    doc={doc}
+                                    currentDocument={currentDocument}
+                                    setCurrentDocumentId={setCurrentDocumentId}
+                                    deleteDocument={deleteDocument}
+                                    toggleFavorite={toggleFavorite}
+                                />
+                            ))}
+                        </>
+                    )}
+                    {
+                        favoriteDocuments.length > 0 && (
+                            <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
+                        )
+                    }
+                    {regularDocuments.length > 0 && (
+                        <>
+                            <SidebarGroupLabel className="text-zinc-400 text-xs mb-2">
+                                Todos os Documentos
+                            </SidebarGroupLabel>
+                            {regularDocuments.map((doc) => (
+                                <DocumentItem
+                                    key={doc.id}
+                                    doc={doc}
+                                    currentDocument={currentDocument}
+                                    setCurrentDocumentId={setCurrentDocumentId}
+                                    deleteDocument={deleteDocument}
+                                    toggleFavorite={toggleFavorite}
+                                />
+                            ))}
+                        </>
+                    )}
+
+                    {/* Mensagem quando não há documentos */}
                     {filteredDocuments.length === 0 && (
                         <SidebarGroupLabel className="px-3 py-2 text-sm text-zinc-400">
                             {searchQuery.trim() ?
@@ -52,43 +114,6 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
                                 "Nenhum documento criado"}
                         </SidebarGroupLabel>
                     )}
-                    {filteredDocuments.map((doc) => (
-                        <SidebarMenuItem key={doc.id}>
-                            <SidebarMenuButton
-                                className={cn(
-                                    "group hover:bg-zinc-700 transition-colors duration-200 cursor-pointer",
-                                    currentDocument?.id === doc.id && "bg-zinc-700/80"
-                                )}
-                                onClick={() => setCurrentDocumentId?.(doc.id)}
-                            >
-                                <FileText className={cn(
-                                    "w-4 h-4 flex-shrink-0 text-zinc-300",
-                                    currentDocument?.id === doc.id && "text-blue-400"
-                                )} />
-                                <span className={cn(
-                                    "text-zinc-100 truncate",
-                                    currentDocument?.id === doc.id && "text-blue-400 font-medium"
-                                )}>
-                                    {doc.title || 'Sem título'}
-                                </span>
-                                <div
-                                    role="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation()
-                                        deleteDocument?.(doc.id)
-                                    }}
-                                    className={cn(
-                                        "ml-auto cursor-pointer opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity",
-                                        currentDocument?.id === doc.id && "opacity-100"
-                                    )}
-                                    title="Excluir documento"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </div>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>
