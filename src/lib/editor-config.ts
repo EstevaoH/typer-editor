@@ -98,7 +98,9 @@ export const editorExtensions: any[] = [
       }
     },
   }),
-  Highlight.configure({ multicolor: true }),
+  Highlight.configure({ multicolor: true, HTMLAttributes:{
+    class: 'search-highlight',
+  } },),
   CodeBlockLowlight.configure({
     lowlight,
   }),

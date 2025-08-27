@@ -32,6 +32,7 @@ import { MenuBubble } from '@/components/menu-bubble';
 import { useDocuments } from '@/context/documents-context';
 import { Placeholder } from '@tiptap/extensions'
 import { editorExtensions } from '@/lib/editor-config';
+import { SearchSelector } from '@/components/search-selector';
 
 const limit = 42400
 const lowlight = createLowlight(all)

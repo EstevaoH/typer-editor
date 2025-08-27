@@ -23,27 +23,21 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
     const content = editor.getText();
     const newMatches: Array<{from: number, to: number}> = [];
     
-    // Criar regex para busca
-    let searchRegex;
-    try {
-      searchRegex = new RegExp(
-        caseSensitive ? searchTerm : `(?i)${searchTerm}`,
-        'g'
-      );
-    } catch {
-      searchRegex = new RegExp(
-        searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        caseSensitive ? 'g' : 'gi'
-      );
-    }
+    // Abordagem mais simples sem regex complexo
+    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+    const textToSearch = caseSensitive ? content : content.toLowerCase();
     
-    // Encontrar todas as ocorrências
-    let match;
-    while ((match = searchRegex.exec(content)) !== null) {
+    let position = 0;
+    while (position < textToSearch.length) {
+      const foundIndex = textToSearch.indexOf(searchValue, position);
+      if (foundIndex === -1) break;
+      
       newMatches.push({
-        from: match.index,
-        to: match.index + match[0].length
+        from: foundIndex,
+        to: foundIndex + searchValue.length
       });
+      
+      position = foundIndex + 1;
     }
     
     setMatches(newMatches);
@@ -59,6 +53,11 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
     // Primeiro, remover destaques anteriores
     clearHighlights();
     
+    if (matches.length === 0) return;
+    
+    // Salvar a posição original do cursor
+    const originalPosition = editor.state.selection.anchor;
+    
     // Adicionar novos destaques
     matches.forEach((match, index) => {
       editor.chain().setTextSelection({
@@ -66,46 +65,69 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
         to: match.to,
       }).run();
       
-      // Aplicar marcação (usando uma marcação temporária)
-      editor.chain().focus().setMark('highlight', {
-        class: index === currentMatch - 1 ? 'bg-yellow-400 text-black' : 'bg-yellow-200/30 text-white'
-      }).run();
+      // Aplicar marcação
+      editor.chain().setHighlight({ color: index === 0 ? '#ffd700' : '#fffacd' }).run();
     });
     
-    // Restaurar a posição original do cursor
-    editor.chain().focus().setTextSelection(editor.state.selection.anchor).run();
+    // Mover para o primeiro match
+    if (matches.length > 0) {
+      editor.chain().setTextSelection({
+        from: matches[0].from,
+        to: matches[0].to,
+      }).scrollIntoView().run();
+    }
+    
+    setCurrentMatch(1);
   };
 
   // Função para limpar os destaques
   const clearHighlights = () => {
-    editor.chain().focus().unsetMark('highlight').run();
+    editor.chain().focus().unsetHighlight().run();
     setMatches([]);
     setTotalMatches(0);
     setCurrentMatch(0);
   };
 
-  // Navegar entre os resultados
+  // Navegar entre os resultados - FUNÇÃO CORRIGIDA
   const navigateToMatch = (index: number) => {
-    if (matches.length === 0) return;
+    if (matches.length === 0 || index < 0 || index >= matches.length) return;
     
     const match = matches[index];
+    
+    // Primeiro limpar todos os destaques
+    clearHighlights();
+    
+    // Destacar todos os matches novamente, com o atual em destaque
+    matches.forEach((otherMatch, otherIndex) => {
+      editor.chain().setTextSelection({
+        from: otherMatch.from,
+        to: otherMatch.to,
+      }).run();
+      
+      if (otherIndex === index) {
+        editor.chain().setHighlight({ color: '#ffd700' }).run(); // Amarelo forte para o atual
+      } else {
+        editor.chain().setHighlight({ color: '#fffacd' }).run(); // Amarelo claro para os outros
+      }
+    });
+    
+    // Mover cursor e scroll para o match atual
     editor.chain().focus().setTextSelection({
       from: match.from,
       to: match.to,
     }).scrollIntoView().run();
     
     setCurrentMatch(index + 1);
-    
-    // Atualizar o destaque para mostrar o atual
-    highlightMatches(matches);
   };
 
+  // Ir para o próximo match - FUNÇÃO CORRIGIDA
   const goToNextMatch = () => {
     if (matches.length === 0) return;
-    const nextIndex = (currentMatch) % matches.length;
+    const nextIndex = currentMatch % matches.length;
     navigateToMatch(nextIndex);
   };
 
+  // Ir para o match anterior - FUNÇÃO CORRIGIDA
   const goToPrevMatch = () => {
     if (matches.length === 0) return;
     const prevIndex = (currentMatch - 2 + matches.length) % matches.length;
@@ -120,19 +142,10 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
     const selectedText = editor.state.doc.textBetween(currentSelection.from, currentSelection.to, " ");
     
     // Verificar se a seleção atual corresponde ao termo de busca
-    let searchRegex;
-    try {
-      searchRegex = new RegExp(
-        caseSensitive ? searchTerm : `(?i)${searchTerm}`
-      );
-    } catch {
-      searchRegex = new RegExp(
-        searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        caseSensitive ? '' : 'i'
-      );
-    }
+    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+    const compareText = caseSensitive ? selectedText : selectedText.toLowerCase();
     
-    if (searchRegex.test(selectedText)) {
+    if (compareText === searchValue) {
       editor.chain().focus().deleteRange({ 
         from: currentSelection.from, 
         to: currentSelection.to 
@@ -148,34 +161,27 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
     if (!searchTerm.trim()) return;
     
     const content = editor.getText();
-    let searchRegex;
-    try {
-      searchRegex = new RegExp(
-        caseSensitive ? searchTerm : `(?i)${searchTerm}`,
-        'g'
-      );
-    } catch {
-      searchRegex = new RegExp(
-        searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        caseSensitive ? 'g' : 'gi'
-      );
+    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+    const textToSearch = caseSensitive ? content : content.toLowerCase();
+    
+    let newContent = content;
+    let position = 0;
+    let result = "";
+    
+    while (position < textToSearch.length) {
+      const foundIndex = textToSearch.indexOf(searchValue, position);
+      if (foundIndex === -1) {
+        result += newContent.slice(position);
+        break;
+      }
+      
+      result += newContent.slice(position, foundIndex) + replaceTerm;
+      position = foundIndex + searchValue.length;
     }
     
-    const newContent = content.replace(searchRegex, replaceTerm);
-    editor.chain().focus().setContent(newContent).run();
-    
-    // Limpar os destaques após substituir tudo
+    editor.chain().focus().setContent(result).run();
     clearHighlights();
   };
-
-  // Limpar os destaques quando o componente for desmontado
-  useEffect(() => {
-    return () => {
-      if (editor) {
-        editor.chain().focus().unsetMark('highlight').run();
-      }
-    };
-  }, [editor]);
 
   return (
     <Popover onOpenChange={(open) => !open && clearHighlights()}>
@@ -214,7 +220,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded bg-zinc-900 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
               {searchTerm && (
                 <button
@@ -237,7 +243,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
               value={replaceTerm}
               onChange={(e) => setReplaceTerm(e.target.value)}
               className="w-full px-3 py-2 text-sm rounded bg-zinc-900 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyPress={(e) => e.key === 'Enter' && handleReplace()}
+              onKeyDown={(e) => e.key === 'Enter' && handleReplace()}
             />
           </div>
 
@@ -263,6 +269,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
                   onClick={goToPrevMatch}
                   className="p-1.5 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition"
                   title="Anterior"
+                  disabled={totalMatches <= 1}
                 >
                   <ChevronUp className="w-3 h-3" />
                 </button>
@@ -270,6 +277,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
                   onClick={goToNextMatch}
                   className="p-1.5 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition"
                   title="Próximo"
+                  disabled={totalMatches <= 1}
                 >
                   <ChevronDown className="w-3 h-3" />
                 </button>
@@ -296,7 +304,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
             <button
               onClick={handleReplaceAll}
               className="flex-1 px-3 py-1.5 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition flex items-center justify-center gap-1"
-              disabled={!searchTerm}
+              disabled={!searchTerm || totalMatches === 0}
             >
               <Replace className="w-3 h-3" />
               Todos

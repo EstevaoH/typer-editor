@@ -198,17 +198,14 @@ p {
   pointer-events: none;
 }
 
-.highlight {
-  padding: 0.1rem 0.2rem;
+.search-highlight {
+  background-color: #f04;
+  padding: 0.1rem 0;
   border-radius: 0.2rem;
 }
 
-.bg-yellow-400 {
-  background-color: #facc15;
-}
-
-.bg-yellow-200\/30 {
-  background-color: rgba(254, 240, 138, 0.3);
+.search-highlight.current {
+  background-color: #ffd700;
 }
 
 /* .tiptap.ProseMirror {
