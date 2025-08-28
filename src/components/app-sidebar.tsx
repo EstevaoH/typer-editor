@@ -62,13 +62,13 @@ export function AppSidebar({
               <SidebarMenuItem>
                 {state === "collapsed" && (
                   <div className="flex flex-col items-center py-4 border-b border-zinc-700 ">
-                    <button
+                    <SidebarMenuButton
                       className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
                       title="Buscar"
                       onClick={() => toggleSidebar()}
                     >
                       <Search className="w-5 h-5" />
-                    </button>
+                    </SidebarMenuButton>
                   </div>
                 )}
                 {

@@ -32,7 +32,8 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                 </span>
 
                 {/* Botão de Favoritar */}
-                <button
+                <div
+                role="button"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -54,10 +55,10 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                     ) : (
                         <Star className="w-4 h-4" />
                     )}
-                </button>
+                </div>
 
-                {/* Botão de Excluir */}
-                <button
+                <div
+                role="button"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -71,7 +72,7 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                     title="Excluir documento"
                 >
                     <Trash2 className="w-4 h-4" />
-                </button>
+                </div>
             </SidebarMenuButton>
         </SidebarMenuItem>
     )

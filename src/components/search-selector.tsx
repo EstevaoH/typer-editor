@@ -1,317 +1,512 @@
 import { Editor } from "@tiptap/react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Search, Replace, ChevronUp, ChevronDown, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, Replace, ChevronUp, ChevronDown, X, CaseSensitive, Regex, WholeWord } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export function SearchSelector({ editor }: { editor: Editor | null }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [replaceTerm, setReplaceTerm] = useState("");
-  const [caseSensitive, setCaseSensitive] = useState(false);
-  const [currentMatch, setCurrentMatch] = useState(0);
-  const [totalMatches, setTotalMatches] = useState(0);
-  const [matches, setMatches] = useState<Array<{from: number, to: number}>>([]);
-  
-  if (!editor) return null;
+    const [searchTerm, setSearchTerm] = useState("");
+    const [replaceTerm, setReplaceTerm] = useState("");
+    const [caseSensitive, setCaseSensitive] = useState(false);
+    const [useRegex, setUseRegex] = useState(false);
+    const [wholeWord, setWholeWord] = useState(false);
+    const [currentMatch, setCurrentMatch] = useState(0);
+    const [totalMatches, setTotalMatches] = useState(0);
+    const [matches, setMatches] = useState<Array<{ from: number, to: number }>>([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [showReplace, setShowReplace] = useState(false);
+    
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Função para buscar no conteúdo
-  const handleSearch = () => {
-    if (!searchTerm.trim()) {
-      clearHighlights();
-      return;
-    }
-    
-    const content = editor.getText();
-    const newMatches: Array<{from: number, to: number}> = [];
-    
-    // Abordagem mais simples sem regex complexo
-    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
-    const textToSearch = caseSensitive ? content : content.toLowerCase();
-    
-    let position = 0;
-    while (position < textToSearch.length) {
-      const foundIndex = textToSearch.indexOf(searchValue, position);
-      if (foundIndex === -1) break;
-      
-      newMatches.push({
-        from: foundIndex,
-        to: foundIndex + searchValue.length
-      });
-      
-      position = foundIndex + 1;
-    }
-    
-    setMatches(newMatches);
-    setTotalMatches(newMatches.length);
-    setCurrentMatch(newMatches.length > 0 ? 1 : 0);
-    
-    // Destacar os resultados
-    highlightMatches(newMatches);
-  };
+    if (!editor) return null;
 
-  // Função para destacar as correspondências
-  const highlightMatches = (matches: Array<{from: number, to: number}>) => {
-    // Primeiro, remover destaques anteriores
-    clearHighlights();
-    
-    if (matches.length === 0) return;
-    
-    // Salvar a posição original do cursor
-    const originalPosition = editor.state.selection.anchor;
-    
-    // Adicionar novos destaques
-    matches.forEach((match, index) => {
-      editor.chain().setTextSelection({
-        from: match.from,
-        to: match.to,
-      }).run();
-      
-      // Aplicar marcação
-      editor.chain().setHighlight({ color: index === 0 ? '#ffd700' : '#fffacd' }).run();
-    });
-    
-    // Mover para o primeiro match
-    if (matches.length > 0) {
-      editor.chain().setTextSelection({
-        from: matches[0].from,
-        to: matches[0].to,
-      }).scrollIntoView().run();
-    }
-    
-    setCurrentMatch(1);
-  };
+    // Função para buscar no conteúdo
+    const handleSearch = useCallback(() => {
+        if (!searchTerm.trim()) {
+            clearHighlights();
+            setMatches([]);
+            setTotalMatches(0);
+            setCurrentMatch(0);
+            return;
+        }
 
-  // Função para limpar os destaques
-  const clearHighlights = () => {
-    editor.chain().focus().unsetHighlight().run();
-    setMatches([]);
-    setTotalMatches(0);
-    setCurrentMatch(0);
-  };
+        const content = editor.getText();
+        const newMatches: Array<{ from: number, to: number }> = [];
 
-  // Navegar entre os resultados - FUNÇÃO CORRIGIDA
-  const navigateToMatch = (index: number) => {
-    if (matches.length === 0 || index < 0 || index >= matches.length) return;
-    
-    const match = matches[index];
-    
-    // Primeiro limpar todos os destaques
-    clearHighlights();
-    
-    // Destacar todos os matches novamente, com o atual em destaque
-    matches.forEach((otherMatch, otherIndex) => {
-      editor.chain().setTextSelection({
-        from: otherMatch.from,
-        to: otherMatch.to,
-      }).run();
-      
-      if (otherIndex === index) {
-        editor.chain().setHighlight({ color: '#ffd700' }).run(); // Amarelo forte para o atual
-      } else {
-        editor.chain().setHighlight({ color: '#fffacd' }).run(); // Amarelo claro para os outros
-      }
-    });
-    
-    // Mover cursor e scroll para o match atual
-    editor.chain().focus().setTextSelection({
-      from: match.from,
-      to: match.to,
-    }).scrollIntoView().run();
-    
-    setCurrentMatch(index + 1);
-  };
-
-  // Ir para o próximo match - FUNÇÃO CORRIGIDA
-  const goToNextMatch = () => {
-    if (matches.length === 0) return;
-    const nextIndex = currentMatch % matches.length;
-    navigateToMatch(nextIndex);
-  };
-
-  // Ir para o match anterior - FUNÇÃO CORRIGIDA
-  const goToPrevMatch = () => {
-    if (matches.length === 0) return;
-    const prevIndex = (currentMatch - 2 + matches.length) % matches.length;
-    navigateToMatch(prevIndex);
-  };
-
-  // Função para substituir
-  const handleReplace = () => {
-    if (!searchTerm.trim() || matches.length === 0) return;
-    
-    const currentSelection = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(currentSelection.from, currentSelection.to, " ");
-    
-    // Verificar se a seleção atual corresponde ao termo de busca
-    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
-    const compareText = caseSensitive ? selectedText : selectedText.toLowerCase();
-    
-    if (compareText === searchValue) {
-      editor.chain().focus().deleteRange({ 
-        from: currentSelection.from, 
-        to: currentSelection.to 
-      }).insertContent(replaceTerm).run();
-      
-      // Atualizar a busca após a substituição
-      setTimeout(handleSearch, 100);
-    }
-  };
-
-  // Função para substituir todos
-  const handleReplaceAll = () => {
-    if (!searchTerm.trim()) return;
-    
-    const content = editor.getText();
-    const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
-    const textToSearch = caseSensitive ? content : content.toLowerCase();
-    
-    let newContent = content;
-    let position = 0;
-    let result = "";
-    
-    while (position < textToSearch.length) {
-      const foundIndex = textToSearch.indexOf(searchValue, position);
-      if (foundIndex === -1) {
-        result += newContent.slice(position);
-        break;
-      }
-      
-      result += newContent.slice(position, foundIndex) + replaceTerm;
-      position = foundIndex + searchValue.length;
-    }
-    
-    editor.chain().focus().setContent(result).run();
-    clearHighlights();
-  };
-
-  return (
-    <Popover onOpenChange={(open) => !open && clearHighlights()}>
-      <PopoverTrigger asChild>
-        <button
-          className={`p-2 rounded relative text-zinc-300 hover:bg-zinc-700`}
-          title="Buscar no documento (Ctrl+F)"
-        >
-          <Search className="w-4 h-4" />
-          {totalMatches > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-500 text-xs flex items-center justify-center">
-              {totalMatches}
-            </span>
-          )}
-        </button>
-      </PopoverTrigger>
-
-      <PopoverContent className="w-80 p-4 bg-zinc-800 border border-zinc-700 rounded shadow-lg">
-        <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-zinc-300 mb-2 flex justify-between items-center">
-            <span>Buscar no Documento</span>
-            {totalMatches > 0 && (
-              <span className="text-xs text-zinc-400">
-                {currentMatch} de {totalMatches}
-              </span>
-            )}
-          </h3>
-          
-          {/* Campo de busca */}
-          <div className="space-y-2">
-            <label className="text-xs text-zinc-400">Buscar por:</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Digite o texto para buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded bg-zinc-900 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              {searchTerm && (
-                <button
-                  onClick={clearHighlights}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
-                  title="Limpar busca"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Campo de substituição */}
-          <div className="space-y-2">
-            <label className="text-xs text-zinc-400">Substituir por:</label>
-            <input
-              type="text"
-              placeholder="Digite o texto de substituição..."
-              value={replaceTerm}
-              onChange={(e) => setReplaceTerm(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded bg-zinc-900 border border-zinc-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyDown={(e) => e.key === 'Enter' && handleReplace()}
-            />
-          </div>
-
-          {/* Opções */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="case-sensitive"
-              checked={caseSensitive}
-              onChange={(e) => setCaseSensitive(e.target.checked)}
-              className="w-4 h-4 rounded bg-zinc-700 border-zinc-600 text-blue-500 focus:ring-blue-500"
-            />
-            <label htmlFor="case-sensitive" className="text-xs text-zinc-400">
-              Diferenciar maiúsculas/minúsculas
-            </label>
-          </div>
-
-          {/* Navegação e botões de ação */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            {totalMatches > 0 && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={goToPrevMatch}
-                  className="p-1.5 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition"
-                  title="Anterior"
-                  disabled={totalMatches <= 1}
-                >
-                  <ChevronUp className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={goToNextMatch}
-                  className="p-1.5 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition"
-                  title="Próximo"
-                  disabled={totalMatches <= 1}
-                >
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              </div>
-            )}
+        try {
+            let pattern = searchTerm;
             
-            <button
-              onClick={handleSearch}
-              className="flex-1 px-3 py-1.5 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition flex items-center justify-center gap-1"
-            >
-              <Search className="w-3 h-3" />
-              Buscar
-            </button>
+            if (!useRegex) {
+                pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
             
-            <button
-              onClick={handleReplace}
-              className="flex-1 px-3 py-1.5 text-sm rounded bg-green-600 text-white hover:bg-green-700 transition flex items-center justify-center gap-1"
-              disabled={!searchTerm || totalMatches === 0}
+            if (wholeWord && !useRegex) {
+                pattern = `\\b${pattern}\\b`;
+            }
+
+            const flags = caseSensitive ? 'g' : 'gi';
+            const searchRegex = new RegExp(pattern, flags);
+
+            let match;
+            while ((match = searchRegex.exec(content)) !== null) {
+                newMatches.push({
+                    from: match.index,
+                    to: match.index + match[0].length
+                });
+                
+                if (match[0].length === 0) {
+                    searchRegex.lastIndex++;
+                }
+            }
+        } catch (error) {
+            console.log('Erro no regex, usando fallback simples:', error);
+            const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+            const textToSearch = caseSensitive ? content : content.toLowerCase();
+
+            let position = 0;
+            while (position < textToSearch.length) {
+                const foundIndex = textToSearch.indexOf(searchValue, position);
+                if (foundIndex === -1) break;
+
+                if (wholeWord && !useRegex) {
+                    const isWholeWord = checkWholeWord(content, foundIndex, searchValue.length);
+                    if (!isWholeWord) {
+                        position = foundIndex + 1;
+                        continue;
+                    }
+                }
+
+                newMatches.push({
+                    from: foundIndex,
+                    to: foundIndex + searchValue.length
+                });
+                position = foundIndex + 1;
+            }
+        }
+
+        setMatches(newMatches);
+        setTotalMatches(newMatches.length);
+        
+        // Se encontrou novos matches, vai para o primeiro
+        if (newMatches.length > 0) {
+            setCurrentMatch(1);
+            navigateToMatch(0); // Navega para o primeiro match
+        } else {
+            setCurrentMatch(0);
+            clearHighlights();
+        }
+    }, [searchTerm, caseSensitive, useRegex, wholeWord, editor]);
+
+    // Verificar se é uma palavra completa
+    const checkWholeWord = (text: string, index: number, length: number): boolean => {
+        const before = index > 0 ? text[index - 1] : '';
+        const after = index + length < text.length ? text[index + length] : '';
+        
+        const wordBoundaryRegex = /[^a-zA-Z0-9_]/;
+        return (index === 0 || wordBoundaryRegex.test(before)) && 
+               (index + length === text.length || wordBoundaryRegex.test(after));
+    };
+
+    // Função para destacar as correspondências
+    const highlightMatches = useCallback((matchesToHighlight: Array<{ from: number, to: number }>) => {
+        // Primeiro remover todos os destaques
+        editor.chain().unsetHighlight().run();
+
+        if (matchesToHighlight.length === 0) return;
+
+        // Aplicar destaques para todos os matches
+        matchesToHighlight.forEach((match, index) => {
+            editor.chain().setTextSelection({
+                from: match.from,
+                to: match.to,
+            }).run();
+
+            if (index === currentMatch - 1) {
+                editor.chain().setHighlight({ color: '#ffd700' }).run(); // Amarelo forte para o atual
+            } else {
+                editor.chain().setHighlight({ color: 'rgba(255, 215, 0, 0.3)' }).run(); // Amarelo claro para outros
+            }
+        });
+
+        // Restaurar seleção para o match atual
+        if (currentMatch > 0 && currentMatch <= matchesToHighlight.length) {
+            const currentMatchObj = matchesToHighlight[currentMatch - 1];
+            editor.chain()
+                .setTextSelection({ from: currentMatchObj.from, to: currentMatchObj.to })
+                .scrollIntoView()
+                .run();
+        }
+    }, [editor, currentMatch]);
+
+    // Limpar destaques
+    const clearHighlights = useCallback(() => {
+        editor.chain().unsetHighlight().run();
+    }, [editor]);
+
+    // Navegar para um match específico
+    const navigateToMatch = useCallback((index: number) => {
+        if (matches.length === 0 || index < 0 || index >= matches.length) return;
+
+        const match = matches[index];
+        
+        // Primeiro limpar e depois destacar
+        clearHighlights();
+        
+        // Destacar todos os matches
+        matches.forEach((otherMatch, otherIndex) => {
+            editor.chain().setTextSelection({
+                from: otherMatch.from,
+                to: otherMatch.to,
+            }).run();
+
+            if (otherIndex === index) {
+                editor.chain().setHighlight({ color: '#ffd700' }).run();
+            } else {
+                editor.chain().setHighlight({ color: 'rgba(255, 215, 0, 0.3)' }).run();
+            }
+        });
+
+        // Mover cursor e scroll para o match atual
+        editor.chain()
+            .setTextSelection({ from: match.from, to: match.to })
+            .scrollIntoView()
+            .run();
+
+        setCurrentMatch(index + 1);
+    }, [editor, matches, clearHighlights]);
+
+    // Próximo match
+    const goToNextMatch = useCallback(() => {
+        if (matches.length === 0) return;
+        const nextIndex = currentMatch % matches.length;
+        navigateToMatch(nextIndex);
+    }, [matches, currentMatch, navigateToMatch]);
+
+    // Match anterior
+    const goToPrevMatch = useCallback(() => {
+        if (matches.length === 0) return;
+        const prevIndex = (currentMatch - 2 + matches.length) % matches.length;
+        navigateToMatch(prevIndex);
+    }, [matches, currentMatch, navigateToMatch]);
+
+    // Substituir
+    const handleReplace = useCallback(() => {
+        if (!searchTerm.trim() || matches.length === 0) return;
+
+        const currentSelection = editor.state.selection;
+        const selectedText = editor.state.doc.textBetween(currentSelection.from, currentSelection.to, " ");
+
+        try {
+            let pattern = searchTerm;
+            if (!useRegex) {
+                pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            if (wholeWord && !useRegex) {
+                pattern = `\\b${pattern}\\b`;
+            }
+
+            const flags = caseSensitive ? '' : 'i';
+            const searchRegex = new RegExp(pattern, flags);
+
+            if (searchRegex.test(selectedText)) {
+                editor.chain()
+                    .deleteRange({ from: currentSelection.from, to: currentSelection.to })
+                    .insertContent(replaceTerm)
+                    .run();
+
+                // Atualizar busca após um pequeno delay
+                setTimeout(handleSearch, 100);
+            }
+        } catch {
+            const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+            const compareText = caseSensitive ? selectedText : selectedText.toLowerCase();
+
+            if (compareText === searchValue) {
+                editor.chain()
+                    .deleteRange({ from: currentSelection.from, to: currentSelection.to })
+                    .insertContent(replaceTerm)
+                    .run();
+                setTimeout(handleSearch, 100);
+            }
+        }
+    }, [searchTerm, replaceTerm, caseSensitive, useRegex, wholeWord, editor, handleSearch, matches]);
+
+    // Substituir todos
+    const handleReplaceAll = useCallback(() => {
+        if (!searchTerm.trim()) return;
+
+        const content = editor.getText();
+
+        try {
+            let pattern = searchTerm;
+            if (!useRegex) {
+                pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            if (wholeWord && !useRegex) {
+                pattern = `\\b${pattern}\\b`;
+            }
+
+            const flags = caseSensitive ? 'g' : 'gi';
+            const searchRegex = new RegExp(pattern, flags);
+
+            const newContent = content.replace(searchRegex, replaceTerm);
+            editor.chain().setContent(newContent).run();
+        } catch {
+            const searchValue = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+            const textToSearch = caseSensitive ? content : content.toLowerCase();
+
+            let newContent = content;
+            let position = 0;
+            let result = "";
+
+            while (position < textToSearch.length) {
+                const foundIndex = textToSearch.indexOf(searchValue, position);
+                if (foundIndex === -1) {
+                    result += newContent.slice(position);
+                    break;
+                }
+
+                if (wholeWord && !checkWholeWord(newContent, foundIndex, searchValue.length)) {
+                    position = foundIndex + 1;
+                    continue;
+                }
+
+                result += newContent.slice(position, foundIndex) + replaceTerm;
+                position = foundIndex + searchValue.length;
+            }
+
+            editor.chain().setContent(result).run();
+        }
+
+        clearHighlights();
+        setMatches([]);
+        setTotalMatches(0);
+        setCurrentMatch(0);
+    }, [searchTerm, replaceTerm, caseSensitive, useRegex, wholeWord, editor]);
+
+    // Atualizar os destaques quando currentMatch ou matches mudarem
+    useEffect(() => {
+        if (matches.length > 0) {
+            highlightMatches(matches);
+        }
+    }, [currentMatch, matches, highlightMatches]);
+
+    // Buscar automaticamente quando os parâmetros mudarem
+    useEffect(() => {
+        const timeoutId = setTimeout(handleSearch, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, caseSensitive, useRegex, wholeWord, handleSearch]);
+
+    // Atalhos de teclado
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                setIsOpen(true);
+                setTimeout(() => searchInputRef.current?.focus(), 100);
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+                e.preventDefault();
+                setIsOpen(true);
+                setShowReplace(true);
+                setTimeout(() => searchInputRef.current?.focus(), 100);
+            }
+            if (e.key === 'Escape' && isOpen) {
+                e.preventDefault();
+                setIsOpen(false);
+                clearHighlights();
+            }
+            if (e.key === 'Enter' && isOpen && e.shiftKey) {
+                e.preventDefault();
+                goToPrevMatch();
+            }
+            if (e.key === 'Enter' && isOpen && !e.shiftKey) {
+                e.preventDefault();
+                goToNextMatch();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, goToNextMatch, goToPrevMatch, clearHighlights]);
+
+    // Focar no input quando abrir
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        } else {
+            clearHighlights();
+        }
+    }, [isOpen]);
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    className="p-2 rounded relative text-zinc-300 hover:bg-zinc-700 transition-colors"
+                    title="Buscar no documento (Ctrl+F)"
+                    onClick={() => setIsOpen(true)}
+                >
+                    <Search className="w-4 h-4" />
+                    {totalMatches > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-500 text-xs flex items-center justify-center">
+                            {totalMatches}
+                        </span>
+                    )}
+                </button>
+            </PopoverTrigger>
+
+            <PopoverContent 
+                className="w-96 p-0 bg-zinc-900 border border-zinc-700 rounded shadow-xl"
+                align="end"
+                onInteractOutside={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('.search-popover-content')) {
+                        setIsOpen(false);
+                    }
+                }}
             >
-              <Replace className="w-3 h-3" />
-              Substituir
-            </button>
-            
-            <button
-              onClick={handleReplaceAll}
-              className="flex-1 px-3 py-1.5 text-sm rounded bg-purple-600 text-white hover:bg-purple-700 transition flex items-center justify-center gap-1"
-              disabled={!searchTerm || totalMatches === 0}
-            >
-              <Replace className="w-3 h-3" />
-              Todos
-            </button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
+                <div className="search-popover-content">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-3 border-b border-zinc-700">
+                        <div className="flex items-center gap-2 flex-1">
+                            <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                placeholder="Buscar"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="bg-transparent border-none text-white placeholder-zinc-500 focus:outline-none flex-1 min-w-0"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && e.shiftKey) {
+                                        e.preventDefault();
+                                        goToPrevMatch();
+                                    }
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        goToNextMatch();
+                                    }
+                                }}
+                            />
+                        </div>
+                        
+                        <div className="flex items-center gap-1 shrink-0">
+                            <button
+                                onClick={() => setCaseSensitive(!caseSensitive)}
+                                className={`p-1 rounded ${caseSensitive ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                                title="Diferenciar maiúsculas/minúsculas"
+                            >
+                                <CaseSensitive className="w-3 h-3" />
+                            </button>
+                            <button
+                                onClick={() => setUseRegex(!useRegex)}
+                                className={`p-1 rounded ${useRegex ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                                title="Expressão regular"
+                            >
+                                <Regex className="w-3 h-3" />
+                            </button>
+                            <button
+                                onClick={() => setWholeWord(!wholeWord)}
+                                className={`p-1 rounded ${wholeWord ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                                title="Palavra completa"
+                            >
+                                <WholeWord className="w-3 h-3" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Replace Section */}
+                    {showReplace && (
+                        <div className="flex items-center gap-2 p-3 border-b border-zinc-700">
+                            <Replace className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <input
+                                type="text"
+                                placeholder="Substituir"
+                                value={replaceTerm}
+                                onChange={(e) => setReplaceTerm(e.target.value)}
+                                className="bg-transparent border-none text-white placeholder-zinc-500 focus:outline-none flex-1"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleReplace();
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {totalMatches > 0 ? (
+                                <span className="text-xs text-zinc-400">
+                                    {currentMatch} de {totalMatches}
+                                </span>
+                            ) : searchTerm && (
+                                <span className="text-xs text-zinc-500">Nenhum resultado</span>
+                            )}
+                            
+                            {totalMatches > 0 && (
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={goToPrevMatch}
+                                        disabled={totalMatches <= 1}
+                                        className="p-1 rounded text-zinc-400 hover:text-zinc-200 disabled:opacity-50"
+                                        title="Anterior (Shift+Enter)"
+                                    >
+                                        <ChevronUp className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                        onClick={goToNextMatch}
+                                        disabled={totalMatches <= 1}
+                                        className="p-1 rounded text-zinc-400 hover:text-zinc-200 disabled:opacity-50"
+                                        title="Próximo (Enter)"
+                                    >
+                                        <ChevronDown className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {showReplace && (
+                                <>
+                                    <button
+                                        onClick={handleReplace}
+                                        disabled={!searchTerm || totalMatches === 0}
+                                        className="px-2 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                        Substituir
+                                    </button>
+                                    <button
+                                        onClick={handleReplaceAll}
+                                        disabled={!searchTerm || totalMatches === 0}
+                                        className="px-2 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                                    >
+                                        Todos
+                                    </button>
+                                </>
+                            )}
+                            
+                            <button
+                                onClick={() => setShowReplace(!showReplace)}
+                                className="px-2 py-1 text-xs rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                                title={showReplace ? 'Ocultar substituição' : 'Mostrar substituição'}
+                            >
+                                {showReplace ? '▲' : '▼'}
+                            </button>
+                            
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-1 rounded text-zinc-400 hover:text-zinc-200"
+                                title="Fechar (Esc)"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
 }
