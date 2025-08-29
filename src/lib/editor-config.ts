@@ -27,6 +27,7 @@ import Youtube from '@tiptap/extension-youtube'
 import Blockquote from '@tiptap/extension-blockquote'
 import Document from '@tiptap/extension-document'
 import { Placeholder } from '@tiptap/extensions'
+import SearchNReplace from '@sereneinserenade/tiptap-search-and-replace';
 
 const limit = 42400;
 const lowlight = createLowlight(all);
@@ -42,6 +43,11 @@ export const editorExtensions: any[] = [
   }),
   Placeholder.configure({
     placeholder: 'Começe a escrever por aqui...',
+  }),
+  SearchNReplace.configure({
+    searchResultClass: 'search-result',
+    // : 'search-result-current',
+    disableRegex: false, // also no need to explain
   }),
   Document,
   Underline,
@@ -98,9 +104,11 @@ export const editorExtensions: any[] = [
       }
     },
   }),
-  Highlight.configure({ multicolor: true, HTMLAttributes:{
-    class: 'search-highlight',
-  } },),
+  Highlight.configure({
+    multicolor: true, HTMLAttributes: {
+      class: 'search-highlight',
+    }
+  },),
   CodeBlockLowlight.configure({
     lowlight,
   }),

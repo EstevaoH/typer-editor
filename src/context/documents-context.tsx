@@ -32,6 +32,7 @@ interface DocumentsContextType {
   getSharedDocument: (token: string) => Document | null
   toggleFavorite: (id: string) => void
   isLoading: boolean
+  handleFirstInput: () => void
 }
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(undefined)
@@ -40,6 +41,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [currentDocId, setCurrentDocId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false)
 
   useEffect(() => {
     const savedDocs = localStorage.getItem('savedDocuments')
@@ -69,6 +71,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   }, [documents, isLoading])
 
   const currentDocument = documents.find(doc => doc.id === currentDocId) || null
+
+
   const createDocument = useCallback((title = 'Novo documento',) => {
     const newDoc: Document = {
       id: uuidv4(),
@@ -81,7 +85,15 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     }
     setDocuments(prev => [newDoc, ...prev])
     setCurrentDocId(newDoc.id)
+    setHasHandledFirstInput(true)
   }, [])
+
+  const handleFirstInput = useCallback(() => {
+    if (documents.length === 0 && !hasHandledFirstInput) {
+      createDocument('Documento sem título');
+      setHasHandledFirstInput(true);
+    }
+  }, [documents.length, hasHandledFirstInput, createDocument]);
 
 
   const updateDocument = useCallback((updates: Partial<Document>) => {
@@ -103,6 +115,9 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     if (currentDocId === id) {
       const remainingDocs = documents.filter(doc => doc.id !== id)
       setCurrentDocId(remainingDocs.length > 0 ? remainingDocs[0].id : null)
+    }
+    if (documents.length === 1) {
+      setHasHandledFirstInput(false)
     }
   }, [currentDocId, documents])
 
@@ -387,7 +402,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     stopSharing,
     getSharedDocument,
     isLoading,
-    toggleFavorite
+    toggleFavorite,
+    handleFirstInput
   }
 
   return (

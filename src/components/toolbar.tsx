@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useState } from 'react';
 import { ReferenceDialog } from './reference-dialog';
 
 import { ListSelector } from './list-selector';
@@ -14,11 +14,11 @@ import { BoldIcon, Code2Icon, ItalicIcon, QuoteIcon, Redo2, StrikethroughIcon, U
 import { SearchSelector } from './search-selector';
 
 export function ToolBar({ editor }: { editor: any }) {
+
     if (!editor) return null;
     return (
         <div className="flex h-12 items-center justify-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700 sticky top-0 z-50">
             <div
-                // ref={scrollContainerRef}
                 className="flex h-12 w-full items-center gap-2 p-2 overflow-x-auto scrollbar-hide md:justify-center"
             >
                 <button
@@ -76,8 +76,6 @@ export function ToolBar({ editor }: { editor: any }) {
                 <HeadingSelector editor={editor} />
                 <AlignmentSelector editor={editor} />
                 <ListSelector editor={editor} />
-                <SearchSelector editor={editor} />
-                {/* <LanguageSelector editor={editor} /> */}
 
                 <div className="control-group">
                     <div className="button-group flex items-center gap-1">
