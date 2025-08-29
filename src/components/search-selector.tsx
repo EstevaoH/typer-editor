@@ -17,11 +17,9 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
     
     const searchInputRef = useRef<HTMLInputElement>(null);
 
-    if (!editor) return null;
-
     // Função para buscar no conteúdo
     const handleSearch = useCallback(() => {
-        if (!searchTerm.trim()) {
+        if (!editor || !searchTerm.trim()) {
             clearHighlights();
             setMatches([]);
             setTotalMatches(0);
@@ -108,6 +106,8 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
 
     // Função para destacar as correspondências
     const highlightMatches = useCallback((matchesToHighlight: Array<{ from: number, to: number }>) => {
+        if (!editor) return;
+        
         // Primeiro remover todos os destaques
         editor.chain().unsetHighlight().run();
 
@@ -139,12 +139,13 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
 
     // Limpar destaques
     const clearHighlights = useCallback(() => {
+        if (!editor) return;
         editor.chain().unsetHighlight().run();
     }, [editor]);
 
     // Navegar para um match específico
     const navigateToMatch = useCallback((index: number) => {
-        if (matches.length === 0 || index < 0 || index >= matches.length) return;
+        if (!editor || matches.length === 0 || index < 0 || index >= matches.length) return;
 
         const match = matches[index];
         
@@ -190,7 +191,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
 
     // Substituir
     const handleReplace = useCallback(() => {
-        if (!searchTerm.trim() || matches.length === 0) return;
+        if (!editor || !searchTerm.trim() || matches.length === 0) return;
 
         const currentSelection = editor.state.selection;
         const selectedText = editor.state.doc.textBetween(currentSelection.from, currentSelection.to, " ");
@@ -232,7 +233,7 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
 
     // Substituir todos
     const handleReplaceAll = useCallback(() => {
-        if (!searchTerm.trim()) return;
+        if (!editor || !searchTerm.trim()) return;
 
         const content = editor.getText();
 
@@ -285,10 +286,10 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
 
     // Atualizar os destaques quando currentMatch ou matches mudarem
     useEffect(() => {
-        if (matches.length > 0) {
+        if (editor && matches.length > 0) {
             highlightMatches(matches);
         }
-    }, [currentMatch, matches, highlightMatches]);
+    }, [currentMatch, matches, highlightMatches, editor]);
 
     // Buscar automaticamente quando os parâmetros mudarem
     useEffect(() => {
@@ -336,7 +337,10 @@ export function SearchSelector({ editor }: { editor: Editor | null }) {
         } else {
             clearHighlights();
         }
-    }, [isOpen]);
+    }, [isOpen, clearHighlights]);
+
+    // Retorno condicional deve vir DEPOIS de todos os hooks
+    if (!editor) return null;
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
