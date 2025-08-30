@@ -14,6 +14,10 @@ import { useDocuments } from '@/context/documents-context';
 import { editorExtensions } from '@/lib/editor-config';
 import { ChevronsLeftRightEllipsis, FilePenLine } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { KeyboardShortcuts } from '@/components/key-board-shortcuts';
+import { FloatingShortcutButton } from '@/components/floating-shortcut-button';
+
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -29,6 +33,36 @@ export function Editor() {
     const editorRef = useRef<HTMLDivElement>(null)
     const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false)
     const [showSearch, setShowSearch] = useState(false);
+
+    const [showShortcuts, setShowShortcuts] = useState(false);
+
+    const [showFloatingButton, setShowFloatingButton] = useState(true);
+
+    // Mostrar/ocultar floating button baseado no scroll e foco
+    useEffect(() => {
+        const handleScroll = () => {
+            // Oculta o botão quando o usuário está rolando rapidamente
+            setShowFloatingButton(false);
+            setTimeout(() => setShowFloatingButton(true), 1000);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Atalho para abrir atalhos
+    useHotkeys('ctrl+/, cmd+/', (e) => {
+        e.preventDefault();
+        setShowShortcuts(true);
+    });
+
+    // Fechar atalhos com ESC
+    useHotkeys('esc', () => {
+        if (showShortcuts) {
+            setShowShortcuts(false);
+        }
+    }, { enabled: showShortcuts });
+
     const editor = useEditor({
         extensions: editorExtensions,
         content: currentDocument?.content || '',
@@ -60,7 +94,17 @@ export function Editor() {
         },
         immediatelyRender: false
     });
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                setShowShortcuts(true);
+            }
+        };
 
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (editorRef.current && !editorRef.current.contains(event.target as Node)) {
@@ -153,6 +197,14 @@ export function Editor() {
                     onClose={() => setShowSearch(false)}
                 />
             )}
+            <KeyboardShortcuts
+                isOpen={showShortcuts}
+                onClose={() => setShowShortcuts(false)}
+            />
+            <FloatingShortcutButton
+                onClick={() => setShowShortcuts(true)}
+                isVisible={showFloatingButton && !showShortcuts}
+            />
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
                     <div className="max-w-screen mx-auto prose prose-violet tiptap">

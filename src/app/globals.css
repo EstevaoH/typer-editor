@@ -198,6 +198,29 @@ p {
   pointer-events: none;
 }
 
+.floating-button {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+kbd {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 2rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+kbd:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
 
 
 .search-result {
