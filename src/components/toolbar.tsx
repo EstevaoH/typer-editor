@@ -10,10 +10,16 @@ import { HignlightSelector } from './hignlight-selector';
 import { VideoSelector } from './video-selector';
 import { ImageSelector } from './image-selector';
 import { LinkSelector } from './link-selector';
-import { BoldIcon, Code2Icon, ItalicIcon, QuoteIcon, Redo2, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
-import { SearchSelector } from './search-selector';
+import { BoldIcon, Code2Icon, ItalicIcon, Keyboard, QuoteIcon, Redo2, Search, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
+import { Editor } from '@tiptap/react';
 
-export function ToolBar({ editor }: { editor: any }) {
+interface ToolBarProps {
+    editor: Editor | null;
+    onShowSearch: () => void;
+    onShowShortcuts?: () => void;
+}
+
+export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps) {
 
     if (!editor) return null;
     return (
@@ -76,6 +82,23 @@ export function ToolBar({ editor }: { editor: any }) {
                 <HeadingSelector editor={editor} />
                 <AlignmentSelector editor={editor} />
                 <ListSelector editor={editor} />
+                <button
+                    onClick={onShowSearch}
+                    className={`p-2 rounded  hover:bg-zinc-600 text-white cursor-pointer`}
+                    title="Buscar no documento (Ctrl+F)"
+                >
+                    <Search className="w-4 h-4" />
+                </button>
+
+                {/* <div className="h-6 w-px bg-border mx-2" /> */}
+
+                {/* <button
+                    onClick={onShowShortcuts}
+                    className="p-2 hover:bg-muted rounded-md transition-colors"
+                    title="Atalhos de teclado (Ctrl+/)"
+                >
+                    <Keyboard className="w-4 h-4" />
+                </button> */}
 
                 <div className="control-group">
                     <div className="button-group flex items-center gap-1">

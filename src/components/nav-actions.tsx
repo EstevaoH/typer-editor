@@ -11,9 +11,9 @@ export function NavActions() {
             <SidebarGroupLabel className="text-zinc-400">Ações</SidebarGroupLabel>
             <SidebarGroupContent>
                 <SidebarMenu>
-                    <SidebarMenuItem className="dark">
+                    {/* <SidebarMenuItem className="dark">
                         <ShareButton />
-                    </SidebarMenuItem>
+                    </SidebarMenuItem> */}
                     <SidebarMenuItem className="dark">
                         <DownloadButton />
                     </SidebarMenuItem>

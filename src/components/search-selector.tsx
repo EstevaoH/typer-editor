@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface SearchSelectorProps {
     editor: Editor | null;
@@ -30,6 +31,31 @@ export function SearchSelector({ editor, onClose }: SearchSelectorProps) {
     useEffect(() => {
         searchRef.current?.focus();
         searchRef.current?.select();
+    }, []);
+    // Fechar com ESC
+    // useHotkeys('esc', onClose, { enabled: true });
+
+    // Prevenir Ctrl+F dentro do search selector
+    useHotkeys('ctrl+f, cmd+f', (e) => {
+        e.preventDefault();
+    }, { enabled: true });
+
+    useEffect(() => {
+        // Focar no input de busca quando abrir
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        if (input) {
+            input.focus();
+            input.select();
+        }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, []);
 
     return (
