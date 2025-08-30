@@ -1,4 +1,3 @@
-// components/editor.tsx (atualizado)
 "use client"
 import React, { useEffect, useRef, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -35,18 +34,14 @@ export function Editor() {
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showFloatingButton, setShowFloatingButton] = useState(true);
 
-    // Gerenciamento centralizado de teclas
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Ctrl+F - Alternar busca
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
                 e.stopPropagation();
                 setShowSearch(prev => !prev);
                 return false;
             }
-
-            // Ctrl+/ - Abrir atalhos
             if ((e.ctrlKey || e.metaKey) && e.key === '/') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -54,11 +49,10 @@ export function Editor() {
                 return false;
             }
 
-            // ESC - Fechar modais
             if (e.key === 'Escape') {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (showSearch) {
                     setShowSearch(false);
                 } else if (showShortcuts) {
@@ -67,7 +61,6 @@ export function Editor() {
                 return false;
             }
 
-            // Ctrl+D - Favoritar
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
                 if (currentDocument) {
@@ -77,12 +70,10 @@ export function Editor() {
             }
         };
 
-        // Use capture phase para pegar o evento antes do navegador
         window.addEventListener('keydown', handleKeyDown, true);
         return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, [showSearch, showShortcuts, currentDocument, toggleFavorite]);
 
-    // Mostrar/ocultar floating button baseado no scroll
     useEffect(() => {
         const handleScroll = () => {
             setShowFloatingButton(false);
@@ -178,6 +169,7 @@ export function Editor() {
 
             {showSearch && (
                 <SearchSelector
+                    isOpen={showSearch}
                     editor={editor}
                     onClose={() => setShowSearch(false)}
                 />
@@ -222,13 +214,11 @@ export function Editor() {
                                         editor?.commands.focus();
                                     }
 
-                                    // Prevenir Ctrl+F no textarea também
                                     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                                         e.preventDefault();
                                         setShowSearch(prev => !prev);
                                     }
-                                    
-                                    // Prevenir ESC no textarea
+
                                     if (e.key === 'Escape') {
                                         e.preventDefault();
                                         if (showSearch) {
@@ -257,13 +247,11 @@ export function Editor() {
                                 }`}
                             onClick={() => editor?.commands.focus()}
                             onKeyDown={(e) => {
-                                // Prevenir Ctrl+F no editor também
                                 if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                                     e.preventDefault();
                                     setShowSearch(prev => !prev);
                                 }
-                                
-                                // Prevenir ESC no editor
+
                                 if (e.key === 'Escape') {
                                     e.preventDefault();
                                     if (showSearch) {
