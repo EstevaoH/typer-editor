@@ -15,7 +15,7 @@ export function ColorSelector({ editor }: { editor: Editor | null }) {
         <Popover>
             <PopoverTrigger asChild>
                 <button
-                    className={`p-2 rounded relative ${editor.isActive('textStyle', { color: editor.getAttributes('textStyle').color })
+                    className={`p-2 rounded cursor-pointer relative ${editor.isActive('textStyle', { color: editor.getAttributes('textStyle').color })
                         ? 'bg-zinc-600 text-white'
                         : 'text-zinc-300 hover:bg-zinc-700'
                         }`}

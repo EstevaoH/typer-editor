@@ -129,30 +129,26 @@ export const editorExtensions: any[] = [
   }),
   BulletList.configure({
     HTMLAttributes: {
-      class: 'inline-list',
+      class: 'inline-list list-disc pl-6',
     },
     itemTypeName: 'listItem',
     keepMarks: true,
   }),
   OrderedList.configure({
     HTMLAttributes: {
-      class: 'inline-list',
+      class: 'inline-list list-decimal pl-6',
     },
     keepMarks: true,
   }),
   TaskList.configure({
     HTMLAttributes: {
-      class: 'inline-task-list',
+      class: 'inline-task-lis task-list pl-6t',
     },
   }),
-  ListItem.configure({
-    HTMLAttributes: {
-      class: 'inline-item',
-    },
-  }),
+  ListItem,
   TaskItem.configure({
     HTMLAttributes: {
-      class: 'inline-task-item',
+      class: 'inline-task-item task-list-item',
     },
     nested: true,
   }),

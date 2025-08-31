@@ -1,4 +1,3 @@
-// components/Toast.tsx
 "use client"
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';

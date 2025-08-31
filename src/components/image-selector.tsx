@@ -1,15 +1,30 @@
 import { FileImage } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Editor } from "@tiptap/react";
+import { useEffect, useState } from "react";
 
 export function ImageSelector({ editor }: { editor: Editor | null }) {
+    const [isOpen, setIsOpen] = useState(false);
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                setIsOpen(prev => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+    }, []);
     if (!editor) return null
     return (
-        <Popover>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <button
-                    className={`p-2 rounded text-zinc-300 hover:bg-zinc-700`}
+                    className={`p-2 rounded cursor-pointer text-zinc-300 hover:bg-zinc-700`}
                     title="Inserir imagem (Ctrl+Shift+I)"
                 >
                     <FileImage className="w-4 h-4" />

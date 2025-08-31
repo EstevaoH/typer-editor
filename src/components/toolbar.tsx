@@ -29,7 +29,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
             >
                 <button
                     onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={`p-2 rounded ${editor.isActive('bold') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('bold') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Negrito (Ctrl+B)"
                 >
                     <BoldIcon className="w-4 h-4" />
@@ -37,7 +37,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
 
                 <button
                     onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={`p-2 rounded ${editor.isActive('italic') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('italic') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Itálico (Ctrl+I)"
                 >
                     <ItalicIcon className="w-4 h-4" />
@@ -45,14 +45,14 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
 
                 <button
                     onClick={() => editor.chain().focus().toggleStrike().run()}
-                    className={`p-2 rounded ${editor.isActive('strike') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('strike') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Tachado (Ctrl+Shift+X)"
                 >
                     <StrikethroughIcon className="w-4 h-4" />
                 </button>
                 <button
                     onClick={() => editor.chain().focus().toggleUnderline().run()}
-                    className={`p-2 rounded ${editor.isActive('underline') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('underline') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Sublinhado (Ctrl+U)"
                 >
                     <UnderlineIcon className="w-4 h-4" />
@@ -67,7 +67,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                 </button>
                 <button
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                    className={`p-2 rounded ${editor.isActive('blockquote') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('blockquote') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Destaque (Ctrl+Shift+B)"
                 >
                     <QuoteIcon className="w-4 h-4" />
@@ -76,7 +76,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                 <LinkSelector editor={editor} />
                 <ImageSelector editor={editor} />
                 <VideoSelector editor={editor} />
-                <ReferenceDialog editor={editor} />
+                <ReferenceDialog  editor={editor} />
                 <HignlightSelector editor={editor} />
                 <ColorSelector editor={editor} />
                 <HeadingSelector editor={editor} />
@@ -84,7 +84,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                 <ListSelector editor={editor} />
                 <button
                     onClick={onShowSearch}
-                    className={`p-2 rounded  hover:bg-zinc-600 text-white cursor-pointer`}
+                    className={`p-2 rounded hover:bg-zinc-600 text-white cursor-pointer`}
                     title="Buscar no documento (Ctrl+F)"
                 >
                     <Search className="w-4 h-4" />
@@ -103,7 +103,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                 <div className="control-group">
                     <div className="button-group flex items-center gap-1">
                         <button
-                            className={`p-2 rounded text-zinc-300 hover:bg-zinc-700 ${!editor.can().undo() ? "opacity-50 cursor-not-allowed" : ""
+                            className={`p-2 rounded cursor-pointer text-zinc-300 hover:bg-zinc-700 ${!editor.can().undo() ? "opacity-50 cursor-not-allowed" : ""
                                 }`}
                             onClick={() => editor.chain().focus().undo().run()}
                             disabled={!editor.can().undo()}
@@ -112,7 +112,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                             <Undo2 className="w-4 h-4" />
                         </button>
                         <button
-                            className={`p-2 rounded text-zinc-300 hover:bg-zinc-700 ${!editor.can().redo() ? "opacity-50 cursor-not-allowed" : ""
+                            className={`p-2 rounded  text-zinc-300 hover:bg-zinc-700 ${!editor.can().redo() ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                                 }`}
                             onClick={() => editor.chain().focus().redo().run()}
                             disabled={!editor.can().redo()}

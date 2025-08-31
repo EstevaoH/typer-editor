@@ -39,10 +39,6 @@ export function SearchSelector({ editor, onClose, isOpen }: SearchSelectorProps)
         }
     }, [isOpen]);
 
-    useHotkeys('ctrl+f, cmd+f', (e) => {
-        e.preventDefault();
-    }, { enabled: true });
-
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -80,7 +76,7 @@ export function SearchSelector({ editor, onClose, isOpen }: SearchSelectorProps)
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onKeyDown={(e) => {
-                                            if (e.key === 'Escape') {
+                                    if (e.key === 'Escape') {
                                         e.preventDefault();
                                         onClose();
                                     }

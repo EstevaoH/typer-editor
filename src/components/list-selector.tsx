@@ -10,7 +10,7 @@ export function ListSelector({ editor }: { editor: Editor | null }) {
     < Popover >
         <PopoverTrigger asChild>
             <button
-                className={`p-2 rounded relative ${editor.isActive('bulletList') ||
+                className={`p-2 rounded cursor-pointer relative ${editor.isActive('bulletList') ||
                     editor.isActive('orderedList') ||
                     editor.isActive('taskList')
                     ? "bg-zinc-600 text-white"
@@ -37,7 +37,6 @@ export function ListSelector({ editor }: { editor: Editor | null }) {
                 >
                     <List className="w-4 h-4" />
                     Lista com marcadores
-                    <kbd className="ml-auto text-xs opacity-60">Ctrl+Shift+8</kbd>
                 </button>
                 <button
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -48,7 +47,6 @@ export function ListSelector({ editor }: { editor: Editor | null }) {
                 >
                     <ListOrdered className="w-4 h-4" />
                     Lista numerada
-                    <kbd className="ml-auto text-xs opacity-60">Ctrl+Shift+7</kbd>
                 </button>
                 <button
                     onClick={() => editor.chain().focus().toggleTaskList().run()}
@@ -70,8 +68,6 @@ export function ListSelector({ editor }: { editor: Editor | null }) {
                         }`}
                 >
                     <Indent className="w-4 h-4" />
-                    Aumentar recuo
-                    <kbd className="ml-auto text-xs opacity-60">Tab</kbd>
                 </button>
 
                 <button
@@ -83,7 +79,6 @@ export function ListSelector({ editor }: { editor: Editor | null }) {
                 >
                     <Outdent className="w-4 h-4" />
                     Diminuir recuo
-                    <kbd className="ml-auto text-xs opacity-60">Shift+Tab</kbd>
                 </button>
             </div>
         </PopoverContent>

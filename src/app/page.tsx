@@ -2,7 +2,7 @@
 
 import { ContactModal } from "@/components/contact-modal";
 import { Toast } from "@/components/toast";
-import { Download, History ,Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles, DownloadCloud, BarChart3, Search, Type, Keyboard } from "lucide-react";
+import { Download, History, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles, DownloadCloud, BarChart3, Search, Type, Keyboard } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -141,12 +141,6 @@ export default function Home() {
                 description: "Seus documentos ficam salvos localmente, apenas você tem acesso.",
                 color: "yellow"
               },
-              // {
-              //   icon: <Palette className="h-8 w-8 text-cyan-500" />,
-              //   title: "Personalização",
-              //   description: "Temas claros e escuros com interface customizável.",
-              //   color: "cyan"
-              // }
             ].map((feature, index) => (
               <div
                 key={index}
@@ -221,12 +215,12 @@ export default function Home() {
                 icon: <History className="h-8 w-8 text-blue-500" />,
                 title: "Histórico de Versões",
                 description: "Recupere versões anteriores do seu documento e restaure edições passadas.",
-                status: "Em desenvolvimento"
+                status: "Planejado"
               },
               {
                 icon: <Type className="h-8 w-8 text-green-500" />,
                 title: "Estilo de Texto",
-                description: "Formatação básica: negrito, itálico, listas e mais opções de organização.",
+                description: "Formatação avançada: negrito, itálico, listas e mais opções de organização.",
                 status: "Em breve"
               },
               {
@@ -245,13 +239,13 @@ export default function Home() {
                 icon: <DownloadCloud className="h-8 w-8 text-yellow-500" />,
                 title: "Novos Formatos de Exportação",
                 description: "Suporte para HTML, RTF, ODT e outros formatos de documento.",
-                status: "Em desenvolvimento"
+                status: "Desenvolvimento"
               },
               {
-                icon: <Keyboard className="h-8 w-8 text-cyan-500" />,
-                title: "Atalhos de Teclado",
-                description: "Ctrl+S para salvar, Ctrl+D para favoritar e muitos outros atalhos úteis.",
-                status: "Em breve"
+                icon: <Palette className="h-8 w-8 text-cyan-500" />,
+                title: "Personalização",
+                description: "Temas claros e escuros com interface customizável.",
+                status: "Breve"
               }
             ].map((feature, index) => (
               <div
@@ -265,8 +259,8 @@ export default function Home() {
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-2xl font-semibold">{feature.title}</h3>
                   <span className={`text-xs px-2 py-1 rounded-full ${feature.status === "Em desenvolvimento" ? "bg-blue-500/20 text-blue-400" :
-                      feature.status === "Em breve" ? "bg-green-500/20 text-green-400" :
-                        "bg-purple-500/20 text-purple-400"
+                    feature.status === "Em breve" ? "bg-green-500/20 text-green-400" :
+                      "bg-purple-500/20 text-purple-400"
                     }`}>
                     {feature.status}
                   </span>
@@ -282,7 +276,7 @@ export default function Home() {
             </p>
             <button
               onClick={() => setIsContactModalOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:to-purple-700 hover:from-blue-600 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:to-purple-700 hover:from-blue-600 mt-4 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
             >
               <span>Envie sua ideia</span>
               <ArrowRight className="h-4 w-4" />

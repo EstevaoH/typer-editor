@@ -1,9 +1,7 @@
-// components/keyboard-shortcuts.tsx (atualizado)
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { X, Keyboard } from 'lucide-react'
-import { useHotkeys } from 'react-hotkeys-hook'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface KeyboardShortcutsProps {
@@ -12,8 +10,6 @@ interface KeyboardShortcutsProps {
 }
 
 export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
-  useHotkeys('esc', onClose, { enabled: isOpen })
-
   const shortcuts = [
     { keys: ['Ctrl', 'S'], description: 'Salvar documento' },
     { keys: ['Ctrl', 'F'], description: 'Buscar no documento' },
@@ -30,7 +26,30 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
     { keys: ['Shift', 'Tab'], description: 'Remover indentação' },
     { keys: ['Ctrl', 'Z'], description: 'Desfazer' },
     { keys: ['Ctrl', 'Y'], description: 'Refazer' },
+    { keys: ['Ctrl', 'Shift', '8'], description: 'Lista com marcadores' },
+    { keys: ['Ctrl', 'Shift', '7'], description: 'Lista numerada' },
+    { keys: ['Ctrl', 'Shift', '9'], description: 'Lista de tarefas' },
+    { keys: ['Tab'], description: 'Aumentar recuo (em listas)' },
+    { keys: ['Shift', 'Tab'], description: 'Diminuir recuo (em listas)' },
   ]
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -44,7 +63,7 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
             onClick={onClose}
             className="fixed inset-0 bg-black/50 z-50"
           />
-          
+
           {/* Modal com animação */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}

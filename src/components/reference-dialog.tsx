@@ -11,6 +11,7 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
+    DialogClose,
 } from "@/components/ui/dialog"
 import {
     Form,
@@ -23,12 +24,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useReferenceFormatter } from "@/hooks/useReferenceFormatter"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { DatePicker } from "./date-picker"
 
 export function ReferenceDialog({ editor }: { editor: any }) {
     const [isOpenDialog, setIsOpenDialog] = useState(false)
     const { formatABNTReference, referenceSchema } = useReferenceFormatter()
+    const dialogTriggerRef = useRef<HTMLButtonElement>(null)
+
     const form = useForm({
         resolver: zodResolver(referenceSchema),
         defaultValues: {
@@ -47,6 +50,21 @@ export function ReferenceDialog({ editor }: { editor: any }) {
         }
     })
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsOpenDialog(true)
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown, { capture: true })
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown, { capture: true })
+        }
+    }, [])
+
     const onSubmit = (data: z.infer<typeof referenceSchema>) => {
         const { html } = formatABNTReference(data)
         console.log(html)
@@ -59,22 +77,22 @@ export function ReferenceDialog({ editor }: { editor: any }) {
         form.reset()
     }
 
-
     return (
         <Dialog open={isOpenDialog} onOpenChange={setIsOpenDialog}>
             <DialogTrigger asChild>
                 <button
-                    className={`p-2 rounded relative ${editor?.isActive('highlight')
+                    className={`p-2 rounded cursor-pointer relative ${editor?.isActive('highlight')
                         ? 'bg-zinc-600 text-white'
                         : 'text-zinc-300 hover:bg-zinc-700'
                         }`}
-                    title="Criar referência"
+                    title="Criar referência (Ctrl+Shift+R)"
+                    onClick={() => setIsOpenDialog(true)}
                 >
                     <BookMarkedIcon className="w-4 h-4" />
                 </button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-[700px] dark">
+            <DialogContent className="sm:max-w-[700px]" onInteractOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle>Adicionar Referência ABNT</DialogTitle>
                     <DialogDescription>
@@ -92,7 +110,18 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Sobrenome do autor*</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="SOBRENOME" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="SOBRENOME"
+                                                {...field}
+                                                value={field.value || ""}
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -106,7 +135,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Primeiro nome do autor*</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Nome" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Nome"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -121,7 +160,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                 <FormItem>
                                     <FormLabel>Título do artigo*</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Título completo do artigo" {...field} value={field.value || ""} />
+                                        <Input
+                                            placeholder="Título completo do artigo"
+                                            {...field}
+                                            value={field.value || ""}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    e.preventDefault();
+                                                    setIsOpenDialog(false);
+                                                }
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -135,7 +184,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                 <FormItem>
                                     <FormLabel>Título da Revista*</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Nome da revista científica" {...field} value={field.value || ""} />
+                                        <Input
+                                            placeholder="Nome da revista científica"
+                                            {...field}
+                                            value={field.value || ""}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    e.preventDefault();
+                                                    setIsOpenDialog(false);
+                                                }
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -150,7 +209,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Local de publicação*</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Cidade, País" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Cidade, País"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -164,7 +233,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Volume (opcional)</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: 12" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Ex: 12"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -178,7 +257,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Número (opcional)</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: 3" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Ex: 3"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -194,7 +283,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Página inicial*</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: 45" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Ex: 45"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -208,7 +307,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                     <FormItem>
                                         <FormLabel>Página final*</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Ex: 52" {...field} value={field.value || ""} />
+                                            <Input
+                                                placeholder="Ex: 52"
+                                                {...field}
+                                                value={field.value || ""}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        e.preventDefault();
+                                                        setIsOpenDialog(false);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -240,7 +349,17 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                                 <FormItem>
                                     <FormLabel>URL (opcional)</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="https://exemplo.com/artigo" {...field} value={field.value || ""} />
+                                        <Input
+                                            placeholder="https://exemplo.com/artigo"
+                                            {...field}
+                                            value={field.value || ""}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    e.preventDefault();
+                                                    setIsOpenDialog(false);
+                                                }
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

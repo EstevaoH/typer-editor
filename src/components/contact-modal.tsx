@@ -39,7 +39,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 reset();
                 setTimeout(() => {
                     onClose();
-                }, 3000); // Fecha após 3 segundos no caso de sucesso
+                }, 3000);
             }
         }
     };
@@ -49,7 +49,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
     };
 
     const handleTryAgain = () => {
-        setResultMessage(null); // Volta para o formulário
+        setResultMessage(null);
     };
 
     return (

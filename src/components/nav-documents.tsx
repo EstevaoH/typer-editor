@@ -34,11 +34,6 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
         filteredDocuments.filter(doc => !doc.isFavorite),
         [filteredDocuments]
     )
-
-    // const filteredDocuments = useMemo(() => {
-    //     if (!searchQuery.trim()) return documents
-    //     return documents.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()) || doc.title.toUpperCase().includes(searchQuery.toUpperCase()))
-    // }, [documents, searchQuery])
     return (
         <SidebarGroup className="flex-1 overflow-hidden">
             {state === "collapsed" && (
@@ -65,7 +60,6 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
 
             <SidebarGroupContent className="overflow-y-auto">
                 <SidebarMenu>
-                    {/* Seção de Favoritos */}
                     {favoriteDocuments.length > 0 && (
                         <>
                             <SidebarGroupLabel className="text-zinc-400 text-xs mt-4">
@@ -105,8 +99,6 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
                             ))}
                         </>
                     )}
-
-                    {/* Mensagem quando não há documentos */}
                     {filteredDocuments.length === 0 && (
                         <SidebarGroupLabel className="px-3 py-2 text-sm text-zinc-400">
                             {searchQuery.trim() ?

@@ -1,4 +1,3 @@
-//@typescript-eslint/no-explicit-any
 export function Footerbar({ editor, characterLimit }: { editor: any, characterLimit: number }) {
     if (!editor) return null;
 

@@ -9,7 +9,7 @@ export function AlignmentSelector({ editor }: { editor: Editor | null }) {
         <Popover>
             <PopoverTrigger asChild>
                 <button
-                    className={`p-2 rounded ${editor.isActive({ textAlign: "center" }) ||
+                    className={`p-2 rounded cursor-pointer ${editor.isActive({ textAlign: "center" }) ||
                         editor.isActive({ textAlign: "right" }) ||
                         editor.isActive({ textAlign: "justify" })
                         ? "bg-zinc-600 text-white"

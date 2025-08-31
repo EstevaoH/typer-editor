@@ -42,7 +42,7 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                     className={cn(
                         "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
                         "text-yellow-400 hover:text-yellow-300",
-                        doc.isFavorite && "opacity-100" // Sempre mostrar se for favorito
+                        doc.isFavorite && "opacity-100" 
                     )}
                     title={doc.isFavorite ? "Desfavoritar" : "Favoritar"}
                 >

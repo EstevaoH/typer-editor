@@ -15,7 +15,7 @@ export function HignlightSelector({ editor }: { editor: Editor | null }) {
         <Popover>
             <PopoverTrigger asChild>
                 <button
-                    className={`p-2 rounded relative ${editor.isActive('highlight')
+                    className={`p-2 cursor-pointer rounded relative ${editor.isActive('highlight')
                         ? 'bg-zinc-600 text-white'
                         : 'text-zinc-300 hover:bg-zinc-700'
                         }`}

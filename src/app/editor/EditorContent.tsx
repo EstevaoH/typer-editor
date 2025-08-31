@@ -14,7 +14,6 @@ import { useDocuments } from '@/context/documents-context';
 import { editorExtensions } from '@/lib/editor-config';
 import { ChevronsLeftRightEllipsis, FilePenLine } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { KeyboardShortcuts } from '@/components/key-board-shortcuts';
 import { FloatingShortcutButton } from '@/components/floating-shortcut-button';
 
@@ -33,46 +32,21 @@ export function Editor() {
     const [showSearch, setShowSearch] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showFloatingButton, setShowFloatingButton] = useState(true);
-
+ 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowSearch(prev => !prev);
-                return false;
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowShortcuts(true);
-                return false;
-            }
-
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (showSearch) {
-                    setShowSearch(false);
-                } else if (showShortcuts) {
-                    setShowShortcuts(false);
-                }
-                return false;
-            }
-
+        const handleKeyDownFavorite = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
+                e.stopPropagation();
                 if (currentDocument) {
                     toggleFavorite(currentDocument.id);
                 }
-                return false;
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown, true);
-        return () => window.removeEventListener('keydown', handleKeyDown, true);
-    }, [showSearch, showShortcuts, currentDocument, toggleFavorite]);
+        window.addEventListener('keydown', handleKeyDownFavorite, true);
+        return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -83,6 +57,75 @@ export function Editor() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                setShowShortcuts(prev => !prev);
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                setShowSearch(prev => !prev);
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '8') {
+                e.preventDefault();
+                e.stopPropagation();
+                editor?.commands.toggleBulletList();
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '7') {
+                e.preventDefault();
+                e.stopPropagation();
+                editor?.commands.toggleOrderedList();
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
+                e.preventDefault();
+                e.stopPropagation();
+                editor?.commands.toggleTaskList();
+                return;
+            }
+
+            if (e.key === 'Tab' && !e.shiftKey && editor?.isActive('listItem')) {
+                e.preventDefault();
+                e.stopPropagation();
+                editor.commands.sinkListItem('listItem');
+                return;
+            }
+
+            if (e.key === 'Tab' && e.shiftKey && editor?.isActive('listItem')) {
+                e.preventDefault();
+                e.stopPropagation();
+                editor.commands.liftListItem('listItem');
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                if (showSearch) {
+                    setShowSearch(false);
+                    e.preventDefault();
+                    e.stopPropagation();
+                } else if (showShortcuts) {
+                    setShowShortcuts(false);
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+    }, [showSearch, showShortcuts]);
 
     const editor = useEditor({
         extensions: editorExtensions,
@@ -211,7 +254,13 @@ export function Editor() {
                                     }
                                     if (e.key === 'Tab' && !e.shiftKey) {
                                         e.preventDefault();
+                                        e.stopPropagation();
                                         editor?.commands.focus();
+                                        editor?.commands.focus('start');
+                                    }
+                                    if (e.key === 'Tab' && e.shiftKey) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                     }
 
                                     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -247,6 +296,22 @@ export function Editor() {
                                 }`}
                             onClick={() => editor?.commands.focus()}
                             onKeyDown={(e) => {
+                                if (e.key === 'Tab') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    if (editor?.isActive('listItem')) {
+                                        if (e.shiftKey) {
+                                            editor.commands.liftListItem('listItem');
+                                        } else {
+                                            editor.commands.sinkListItem('listItem');
+                                        }
+                                    } else {
+                                        editor?.commands.insertContent('\t');
+                                    }
+                                    return;
+                                }
+
                                 if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                                     e.preventDefault();
                                     setShowSearch(prev => !prev);

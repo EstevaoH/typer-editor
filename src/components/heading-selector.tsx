@@ -9,7 +9,7 @@ export function HeadingSelector({ editor }: { editor: Editor | null }) {
         <Popover>
             <PopoverTrigger asChild>
                 <button
-                    className={`p-2 rounded ${editor.isActive('heading') ||
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('heading') ||
                         editor.isActive('paragraph')
                         ? 'bg-zinc-600 text-white'
                         : 'text-zinc-300 hover:bg-zinc-700'

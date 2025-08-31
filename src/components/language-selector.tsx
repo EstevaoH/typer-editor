@@ -24,7 +24,7 @@ const LANGUAGES: LanguageOption[] = [
 ]
 
 export function LanguageSelector({ editor }: { editor: Editor | null }) {
-  const [currentLanguage, setCurrentLanguage] = useState('pt') // Idioma padrão
+  const [currentLanguage, setCurrentLanguage] = useState('pt')
 
   if (!editor) return null
 
