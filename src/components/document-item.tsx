@@ -1,6 +1,7 @@
 import { FileText, Star, StarOff, Trash2 } from "lucide-react";
 import { SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/context/useToast";
 
 type DocumentItemProps = {
     doc: any;
@@ -8,9 +9,18 @@ type DocumentItemProps = {
     setCurrentDocumentId: (id: string) => void;
     deleteDocument: (id: string) => void;
     toggleFavorite: (id: string) => void;
+    onDeleteClick: (doc: any) => void;
 }
 
-export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, deleteDocument, toggleFavorite }: DocumentItemProps) {
+export function DocumentItem({
+    doc,
+    currentDocument,
+    setCurrentDocumentId,
+    deleteDocument,
+    toggleFavorite,
+    onDeleteClick 
+}: DocumentItemProps) {
+    const toast = useToast()
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
@@ -31,18 +41,18 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                     {doc.title || 'Sem título'}
                 </span>
 
-                {/* Botão de Favoritar */}
                 <div
-                role="button"
+                    role="button"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         toggleFavorite(doc.id);
+                        toast.showToast(doc.isFavorite ?'⭐ Desfavoritado' : '🌟 Favoritado')
                     }}
                     className={cn(
                         "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
                         "text-yellow-400 hover:text-yellow-300",
-                        doc.isFavorite && "opacity-100" 
+                        doc.isFavorite && "opacity-100"
                     )}
                     title={doc.isFavorite ? "Desfavoritar" : "Favoritar"}
                 >
@@ -56,13 +66,12 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                         <Star className="w-4 h-4" />
                     )}
                 </div>
-
                 <div
-                role="button"
+                    role="button"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        deleteDocument(doc.id);
+                        onDeleteClick(doc);
                     }}
                     className={cn(
                         "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
@@ -75,5 +84,6 @@ export function DocumentItem({ doc, currentDocument, setCurrentDocumentId, delet
                 </div>
             </SidebarMenuButton>
         </SidebarMenuItem>
+        
     )
 }

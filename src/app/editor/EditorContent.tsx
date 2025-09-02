@@ -16,6 +16,10 @@ import { ChevronsLeftRightEllipsis, FilePenLine } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
 import { KeyboardShortcuts } from '@/components/key-board-shortcuts';
 import { FloatingShortcutButton } from '@/components/floating-shortcut-button';
+import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
+import { AnimatePresence } from 'framer-motion';
+import { useToast } from '@/context/useToast';
+
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -24,7 +28,7 @@ lowlight.register('js', js)
 lowlight.register('ts', ts)
 
 export function Editor() {
-    const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput } = useDocuments()
+    const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument } = useDocuments()
     const [title, setTitle] = useState(currentDocument?.title || '')
     const [isEditorFocused, setIsEditorFocused] = useState(false)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -32,21 +36,71 @@ export function Editor() {
     const [showSearch, setShowSearch] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showFloatingButton, setShowFloatingButton] = useState(true);
- 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false);
+    const toast = useToast()
+
+    const editor = useEditor({
+        extensions: editorExtensions,
+        content: currentDocument?.content || '',
+        onUpdate: ({ editor }) => {
+            const content = editor.getHTML();
+
+            if (!currentDocument && !hasHandledFirstInput && content.trim() !== '') {
+                handleFirstInput();
+                setHasHandledFirstInput(true);
+            }
+
+            updateDocument({ content });
+        },
+        editorProps: {
+            attributes: {
+                class: "outline-none",
+            },
+            handleDOMEvents: {
+                focus: () => {
+                    setIsEditorFocused(true);
+                    setShowFloatingButton(true);
+                    return false;
+                },
+                blur: () => {
+                    setIsEditorFocused(false);
+                    return false;
+                }
+            }
+        },
+        immediatelyRender: false
+    });
+
+    const handleToggleFavorite = (id: string) => {
+        if (currentDocument) {
+            toggleFavorite(id);
+            toast.showToast(currentDocument.isFavorite ? '⭐ Desfavoritado' : '🌟 Favoritado');
+        }
+    };
+
+    useEffect(() => {
+        const savedPreference = localStorage.getItem('skipDeleteConfirmation');
+        if (savedPreference === 'true') {
+            setSkipDeleteConfirmation(true);
+        }
+    }, []);
+
     useEffect(() => {
         const handleKeyDownFavorite = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 if (currentDocument) {
-                    toggleFavorite(currentDocument.id);
+                    handleToggleFavorite(currentDocument.id);
                 }
             }
         };
 
         window.addEventListener('keydown', handleKeyDownFavorite, true);
         return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
-    }, []);
+    }, [currentDocument, toggleFavorite, toast]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -57,9 +111,9 @@ export function Editor() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-
             if ((e.ctrlKey || e.metaKey) && e.key === '/') {
                 setShowShortcuts(prev => !prev);
                 e.preventDefault();
@@ -75,6 +129,30 @@ export function Editor() {
                 e.stopImmediatePropagation();
                 return;
             }
+
+            if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                createDocument();
+                toast.showToast('📄 Novo documento criado');
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                if (currentDocument) {
+                    if (skipDeleteConfirmation) {
+                        deleteDocument(currentDocument.id);
+                    } else {
+                        setShowDeleteConfirm(true);
+                    }
+                }
+                return;
+            }
+
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '8') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -119,45 +197,26 @@ export function Editor() {
                     setShowShortcuts(false);
                     e.preventDefault();
                     e.stopPropagation();
+                } else if (showDeleteConfirm) {
+                    setShowDeleteConfirm(false);
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown, { capture: true });
         return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-    }, [showSearch, showShortcuts]);
+    }, [showSearch, showShortcuts, createDocument, editor, currentDocument, showDeleteConfirm]);
 
-    const editor = useEditor({
-        extensions: editorExtensions,
-        content: currentDocument?.content || '',
-        onUpdate: ({ editor }) => {
-            const content = editor.getHTML();
+    const handleDeleteDocument = () => {
+        if (currentDocument) {
+            deleteDocument(currentDocument.id);
+            setShowDeleteConfirm(false);
+        }
+    };
 
-            if (!currentDocument && !hasHandledFirstInput && content.trim() !== '') {
-                handleFirstInput();
-                setHasHandledFirstInput(true);
-            }
 
-            updateDocument({ content });
-        },
-        editorProps: {
-            attributes: {
-                class: "outline-none",
-            },
-            handleDOMEvents: {
-                focus: () => {
-                    setIsEditorFocused(true);
-                    setShowFloatingButton(true);
-                    return false;
-                },
-                blur: () => {
-                    setIsEditorFocused(false);
-                    return false;
-                }
-            }
-        },
-        immediatelyRender: false
-    });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -180,7 +239,7 @@ export function Editor() {
         if (editor && currentDocument) {
             editor.commands.setContent(currentDocument.content || '', false);
         }
-    }, [currentDocument?.id]);
+    }, [currentDocument?.id, editor]);
 
     useEffect(() => {
         if (currentDocument) {
@@ -217,17 +276,23 @@ export function Editor() {
                     onClose={() => setShowSearch(false)}
                 />
             )}
-
+            <AnimatePresence>
+                {showDeleteConfirm && (
+                    <ShowDeleteConfirm
+                        currentDocument={currentDocument}
+                        handleDeleteDocument={handleDeleteDocument}
+                        setShowDeleteConfirm={setShowDeleteConfirm}
+                    />
+                )}
+            </AnimatePresence>
             <KeyboardShortcuts
                 isOpen={showShortcuts}
                 onClose={() => setShowShortcuts(false)}
             />
-
             <FloatingShortcutButton
                 onClick={() => setShowShortcuts(true)}
                 isVisible={showFloatingButton && !showShortcuts}
             />
-
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
                     <div className="max-w-screen mx-auto prose prose-violet tiptap">
@@ -248,24 +313,47 @@ export function Editor() {
                                     }
                                 }}
                                 onKeyDown={(e) => {
+                                    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        createDocument();
+                                        return;
+                                    }
+
+                                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setShowSearch(prev => !prev);
+                                        return;
+                                    }
+
+                                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (currentDocument) {
+                                            setShowDeleteConfirm(true);
+                                        }
+                                        return;
+                                    }
+
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
                                         e.currentTarget.blur();
+                                        return;
                                     }
+
                                     if (e.key === 'Tab' && !e.shiftKey) {
                                         e.preventDefault();
                                         e.stopPropagation();
                                         editor?.commands.focus();
                                         editor?.commands.focus('start');
+                                        return;
                                     }
+
                                     if (e.key === 'Tab' && e.shiftKey) {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                    }
-
-                                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                                        e.preventDefault();
-                                        setShowSearch(prev => !prev);
+                                        return;
                                     }
 
                                     if (e.key === 'Escape') {
@@ -274,7 +362,10 @@ export function Editor() {
                                             setShowSearch(false);
                                         } else if (showShortcuts) {
                                             setShowShortcuts(false);
+                                        } else if (showDeleteConfirm) {
+                                            setShowDeleteConfirm(false);
                                         }
+                                        return;
                                     }
                                 }}
                                 placeholder="Digite o título aqui..."
@@ -296,6 +387,21 @@ export function Editor() {
                                 }`}
                             onClick={() => editor?.commands.focus()}
                             onKeyDown={(e) => {
+                                if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    createDocument();
+                                    return;
+                                }
+                                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (currentDocument) {
+                                        setShowDeleteConfirm(true);
+                                    }
+                                    return;
+                                }
+
                                 if (e.key === 'Tab') {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -314,16 +420,22 @@ export function Editor() {
 
                                 if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                                     e.preventDefault();
+                                    e.stopPropagation();
                                     setShowSearch(prev => !prev);
+                                    return;
                                 }
 
                                 if (e.key === 'Escape') {
                                     e.preventDefault();
+                                    e.stopPropagation();
                                     if (showSearch) {
                                         setShowSearch(false);
                                     } else if (showShortcuts) {
                                         setShowShortcuts(false);
+                                    } else if (showDeleteConfirm) {
+                                        setShowDeleteConfirm(false);
                                     }
+                                    return;
                                 }
                             }}
                         >

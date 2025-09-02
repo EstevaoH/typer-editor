@@ -1,22 +1,34 @@
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "./ui/sidebar";
 import { useMemo } from "react";
 import { useDocuments } from "@/context/documents-context";
-import { cn } from "@/lib/utils";
 import { DocumentItem } from "./document-item";
 import { Separator } from "./ui/separator";
+import { useToast } from "@/context/useToast";
 
-export function NavDocuments({ searchQuery }: { searchQuery: string }) {
+interface NavDocumentsProps {
+    searchQuery: string;
+    onDeleteClick: (doc: any) => void;
+    deleteDocument: (id: string) => void;
+    toggleFavorite: (id: string) => void;
+    setCurrentDocumentId: (id: string) => void;
+}
+
+export function NavDocuments({
+    searchQuery,
+    onDeleteClick,
+    deleteDocument,
+    toggleFavorite,
+    setCurrentDocumentId
+}: NavDocumentsProps) {
     const {
         documents,
         currentDocument,
         createDocument,
-        deleteDocument,
-        setCurrentDocumentId,
-        toggleFavorite
     } = useDocuments()
 
     const { state } = useSidebar()
+    const toast = useToast()
 
     const filteredDocuments = useMemo(() => {
         if (!searchQuery.trim()) return documents
@@ -41,7 +53,10 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
                     <button
                         className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
                         title="Novo documento"
-                        onClick={() => createDocument()}
+                        onClick={() => {
+                            createDocument()
+                            toast.showToast('📄 Novo documento criado');
+                        }}
                     >
                         <Plus className="w-5 h-5" />
                     </button>
@@ -50,7 +65,10 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
             <div className="flex items-center justify-between">
                 <SidebarGroupLabel className="text-zinc-400">Documentos</SidebarGroupLabel>
                 <button
-                    onClick={() => createDocument()}
+                    onClick={() => {
+                        createDocument()
+                        toast.showToast('📄 Novo documento criado');
+                    }}
                     className="p-1 rounded hover:bg-zinc-700 transition-colors cursor-pointer"
                     title="Novo documento"
                 >
@@ -73,6 +91,7 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
                                     setCurrentDocumentId={setCurrentDocumentId}
                                     deleteDocument={deleteDocument}
                                     toggleFavorite={toggleFavorite}
+                                    onDeleteClick={onDeleteClick}
                                 />
                             ))}
                         </>
@@ -95,6 +114,7 @@ export function NavDocuments({ searchQuery }: { searchQuery: string }) {
                                     setCurrentDocumentId={setCurrentDocumentId}
                                     deleteDocument={deleteDocument}
                                     toggleFavorite={toggleFavorite}
+                                    onDeleteClick={onDeleteClick}
                                 />
                             ))}
                         </>

@@ -33,7 +33,6 @@ export default function RootLayout({
           <KeyboardShortcutsProvider>
             {children}
           </KeyboardShortcutsProvider>
-
         </DocumentsProvider>
       </body>
     </html>

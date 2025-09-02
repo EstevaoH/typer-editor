@@ -1,9 +1,7 @@
 'use client'
 
 import { ContactModal } from "@/components/contact-modal";
-import { Toast } from "@/components/toast";
 import { Download, History, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles, DownloadCloud, BarChart3, Search, Type, Keyboard } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
