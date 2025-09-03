@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ✍️ TyperEditor
 
-## Getting Started
+Um editor de texto moderno, simples e seguro — **sem cadastro, com privacidade garantida e exportação em múltiplos formatos**.  
+Acesse agora: [typer-editor.vercel.app](https://typer-editor-he1g.vercel.app/)
 
-First, run the development server:
+---
+
+## 🚀 Funcionalidades
+
+- 📝 **Editor de texto minimalista** com interface limpa e intuitiva  
+- 🔒 **Privacidade total** — os documentos são salvos apenas no seu navegador  
+- 📂 **Multi-exportação** — baixe em `.txt`, `.md`, `.docx` ou `.pdf`  
+- 🎨 **Syntax highlight** para linguagens de programação  
+- 📱 **100% responsivo** — use no desktop, tablet ou smartphone  
+- ⚡ **Sem login** — comece a usar imediatamente  
+
+---
+
+## 🖼️ Demonstração
+
+![screenshot](link_para_imagem_ou_gif_do_editor)
+
+---
+
+## 📌 Como usar
+
+1. Acesse [TyperEditor](https://typer-editor-he1g.vercel.app/)  
+2. Clique em **“Novo Documento”**  
+3. Escreva livremente  
+4. Use os botões para **compartilhar** ou **exportar** seu texto  
+5. Seus documentos ficam salvos no navegador automaticamente ✅  
+
+---
+
+## 💡 Exemplos de uso
+
+- Escrever anotações rápidas  
+- Criar rascunhos de artigos ou posts  
+- Editar documentos em Markdown  
+- Testar snippets de código com syntax highlight  
+- Produzir textos para exportar em DOCX ou PDF  
+
+---
+
+## 🛠️ Tecnologias
+
+- [Next.js](https://nextjs.org/)  
+- [React](https://react.dev/)  
+- [TipTap](https://tiptap.dev/) — editor de rich text  
+- [TailwindCSS](https://tailwindcss.com/) — estilização  
+- [Highlight.js](https://highlightjs.org/) — syntax highlight  
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas!  
+Para sugerir melhorias, abra uma **issue** ou envie um **pull request**.
 
 ```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/typer-editor.git
+
+# Instale as dependências
+npm install
+
+# Rode o projeto localmente
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
