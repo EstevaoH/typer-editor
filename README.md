@@ -66,3 +66,11 @@ npm install
 
 # Rode o projeto localmente
 npm run dev
+
+## 📜 Licença
+
+Este projeto está licenciado sob a licença **MIT** — veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
+
+## ✨ Autor
+
+Feito com 💚 por [Estevão Ferreira](https://github.com/estevaoh)
