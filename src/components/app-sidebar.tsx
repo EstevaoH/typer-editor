@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "./ui/input"
 import { NavDocuments } from "./nav-documents"
 import { NavActions } from "./nav-actions"
@@ -20,6 +20,7 @@ import { Separator } from "./ui/separator"
 import Link from "next/link"
 import { ShowDeleteConfirm } from "./show-delete-confirm"
 import { useDocuments } from "@/context/documents-context"
+import { KeyboardShortcuts } from "./key-board-shortcuts"
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>
@@ -42,10 +43,15 @@ export function AppSidebar({
   const { state, toggleSidebar } = useSidebar()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<any>(null)
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const handleDeleteClick = (doc: any) => {
     setDocumentToDelete(doc)
     setShowDeleteConfirm(true)
+  }
+
+  const handleKeyboardShortcuts = () => {
+    setShowShortcuts(true)
   }
 
   const handleConfirmDelete = () => {
@@ -55,6 +61,21 @@ export function AppSidebar({
       setShowDeleteConfirm(false)
     }
   }
+
+  useEffect(() => {
+    const handleKeyDownFavorite = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        setShowShortcuts(prev => !prev);
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDownFavorite, true);
+    return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
+  }, [showShortcuts]);
 
   return (
     <>
@@ -129,10 +150,18 @@ export function AppSidebar({
             setCurrentDocumentId={setCurrentDocumentId}
           />
 
-          <NavActions />
+          <NavActions isOpenKeyBoardShortcuts={handleKeyboardShortcuts} />
           <Separator orientation="horizontal" className="bg-zinc-700" />
         </SidebarContent>
       </Sidebar>
+      {
+        showShortcuts && (
+          <KeyboardShortcuts
+            isOpen={showShortcuts}
+            onClose={() => setShowShortcuts(false)}
+          />
+        )
+      }
       {showDeleteConfirm && (
         <ShowDeleteConfirm
           currentDocument={documentToDelete}

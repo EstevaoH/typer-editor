@@ -15,7 +15,6 @@ import { editorExtensions } from '@/lib/editor-config';
 import { ChevronsLeftRightEllipsis, FilePenLine } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
 import { KeyboardShortcuts } from '@/components/key-board-shortcuts';
-import { FloatingShortcutButton } from '@/components/floating-shortcut-button';
 import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/useToast';
@@ -285,14 +284,10 @@ export function Editor() {
                     />
                 )}
             </AnimatePresence>
-            <KeyboardShortcuts
+            {/* <KeyboardShortcuts
                 isOpen={showShortcuts}
                 onClose={() => setShowShortcuts(false)}
-            />
-            <FloatingShortcutButton
-                onClick={() => setShowShortcuts(true)}
-                isVisible={showFloatingButton && !showShortcuts}
-            />
+            /> */}
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
                     <div className="max-w-screen mx-auto prose prose-violet tiptap">
