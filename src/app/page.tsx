@@ -243,7 +243,7 @@ export default function Home() {
                 icon: <Palette className="h-8 w-8 text-cyan-500" />,
                 title: "Personalização",
                 description: "Temas claros e escuros com interface customizável.",
-                status: "Breve"
+                status: "Em Breve"
               }
             ].map((feature, index) => (
               <div

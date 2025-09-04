@@ -12,27 +12,27 @@ interface Document {
   title: string
   content: string
   updatedAt: string
-  shareToken?: string
-  isPublic?: boolean
+  isPrivate?: boolean
   isFavorite: boolean
+  isShared?: boolean // Nova propriedade
+  sharedWith?: string[]
 }
 type DownloadFormat = 'txt' | 'md' | 'docx' | 'pdf';
 
 interface DocumentsContextType {
   documents: Document[]
   currentDocument: Document | null
+  isLoading: boolean
   createDocument: (title?: string) => void
   updateDocument: (updates: Partial<Document>) => void
   deleteDocument: (id: string) => void
   saveDocument: (title: string) => void
   setCurrentDocumentId: (id: string | null) => void
   downloadDocument: (id: string, format?: DownloadFormat) => void
-  shareDocument: (id: string) => Promise<string | null>
-  stopSharing: (id: string) => void
-  getSharedDocument: (token: string) => Document | null
   toggleFavorite: (id: string) => void
-  isLoading: boolean
   handleFirstInput: () => void
+  updateDocumentPrivacy: (id: string, isPrivate: boolean) => void
+  updateDocumentSharing: (id: string, isShared: boolean, sharedWith?: string[]) => void
 }
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(undefined)
@@ -78,9 +78,9 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       id: uuidv4(),
       title,
       content: '',
-      isPublic: false,
+      isPrivate: false,
+      isShared: true,
       isFavorite: false,
-      shareToken: uuidv4(),
       updatedAt: new Date().toISOString()
     }
     setDocuments(prev => [newDoc, ...prev])
@@ -111,7 +111,6 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const deleteDocument = useCallback((id: string) => {
     setDocuments(prev => prev.filter(doc => doc.id !== id))
 
-    // Se estiver deletando o documento atual, definir o próximo como atual
     if (currentDocId === id) {
       const remainingDocs = documents.filter(doc => doc.id !== id)
       setCurrentDocId(remainingDocs.length > 0 ? remainingDocs[0].id : null)
@@ -165,24 +164,19 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
     return await Packer.toBlob(doc);
   };
-  // Função para converter conteúdo em PDF usando jsPDF
   const convertToPdf = (content: string, title: string): Blob => {
     const doc = new jsPDF();
     const plainText = htmlToPlainText(content);
-
-    // Configurar margens
     const margin = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const maxWidth = pageWidth - (margin * 2);
 
-    // Adicionar título
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     const titleLines = doc.splitTextToSize(title, maxWidth);
     let yPosition = margin;
 
-    // Adicionar título e verificar se cabe na página
     if (yPosition + (titleLines.length * 10) > pageHeight - margin) {
       doc.addPage();
       yPosition = margin;
@@ -191,7 +185,6 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     doc.text(titleLines, margin, yPosition);
     yPosition += (titleLines.length * 10) + 10;
 
-    // Adicionar conteúdo
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
 
@@ -199,15 +192,13 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     let currentLine = 0;
 
     while (currentLine < contentLines.length) {
-      // Verificar se precisa de nova página
       if (yPosition > pageHeight - margin) {
         doc.addPage();
         yPosition = margin;
       }
 
-      // Adicionar quantas linhas couberem na página atual
       const linesForThisPage = [];
-      let lineHeight = 7; // Altura aproximada de cada linha
+      let lineHeight = 7;
 
       while (currentLine < contentLines.length &&
         yPosition + lineHeight <= pageHeight - margin) {
@@ -221,7 +212,6 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Adicionar número da página
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -260,7 +250,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         mimeType = 'text/markdown';
         break;
 
-      default: // txt
+      default:
         const txtContent = htmlToFormattedText(document.content, 'txt');
         blob = new Blob([txtContent], { type: 'text/plain' });
         filename = `${document.title}.txt`;
@@ -286,20 +276,16 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         console.error('Erro ao salvar arquivo:', error);
       }
     } else {
-      // Fallback para navegadores mais antigos
       fallbackDownload(blob, filename);
     }
   }, [documents])
 
-  // Fallback para download usando URL.createObjectURL
   const fallbackDownload = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
 
-    // Usar uma abordagem mais limpa com fetch e headers
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        // Criar um link temporário mas sem adicioná-lo ao DOM
         const tempLink = document.createElement('a');
         const objectUrl = URL.createObjectURL(blob);
 
@@ -319,75 +305,38 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         }, 100);
       });
   };
-  const shareDocument = useCallback(async (id: string): Promise<string | null> => {
-    const document = documents.find(doc => doc.id === id);
-    if (!document) return null;
+  const updateDocumentPrivacy = (id: string, isPrivate: boolean) => {
+    setDocuments(prev => prev.map(doc =>
+      doc.id === id ? { ...doc, isPrivate, updatedAt: new Date().toISOString() } : doc
+    ))
 
-    try {
-      setDocuments(prev =>
-        prev.map(doc =>
-          doc.id === id
-            ? {
-              ...doc,
-              isPublic: true,
-              updatedAt: new Date().toISOString()
-            }
-            : doc
-        )
-      );
+    const updatedDocs = documents.map(doc =>
+      doc.id === id ? { ...doc, isPrivate, updatedAt: new Date().toISOString() } : doc
+    )
+    localStorage.setItem('documents', JSON.stringify(updatedDocs))
+  }
 
-      // Criar URL de compartilhamento
-      const shareUrl = `${window.location.origin}/shared/${document.shareToken}`;
+  const updateDocumentSharing = (id: string, isShared: boolean, sharedWith: string[] = []) => {
+    setDocuments(prev => prev.map(doc =>
+      doc.id === id ? {
+        ...doc,
+        isShared,
+        sharedWith,
+        updatedAt: new Date().toISOString()
+      } : doc
+    ))
 
-      // Verificar se a API de compartilhamento nativa está disponível
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: document.title,
-            text: `Confira este documento: ${document.title}`,
-            url: shareUrl
-          });
-        } catch (shareError) {
-          console.log('Compartilhamento nativo cancelado ou não suportado');
-        }
-      }
+    const updatedDocs = documents.map(doc =>
+      doc.id === id ? {
+        ...doc,
+        isShared,
+        sharedWith,
+        updatedAt: new Date()
+      } : doc
+    )
+    localStorage.setItem('documents', JSON.stringify(updatedDocs))
+  }
 
-      // Copiar para a área de transferência
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        console.log('URL copiada para a área de transferência');
-      } catch (copyError) {
-        console.log('Não foi possível copiar para a área de transferência');
-      }
-
-      return shareUrl;
-    } catch (error) {
-      console.error('Erro ao compartilhar documento:', error);
-      return null;
-    }
-  }, [documents]);
-
-  // Função para parar de compartilhar
-  const stopSharing = useCallback((id: string) => {
-    setDocuments(prev =>
-      prev.map(doc =>
-        doc.id === id
-          ? {
-            ...doc,
-            shareToken: undefined,
-            isPublic: false,
-            updatedAt: new Date().toISOString()
-          }
-          : doc
-      )
-    );
-  }, []);
-
-  // Função para obter documento compartilhado
-  const getSharedDocument = useCallback((token: string): Document | null => {
-    console.log(documents)
-    return documents.find(doc => doc.shareToken === token && doc.isPublic) || null;
-  }, [documents]);
 
   const value = {
     documents,
@@ -398,12 +347,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     saveDocument,
     setCurrentDocumentId: setCurrentDocId,
     downloadDocument,
-    shareDocument,
-    stopSharing,
-    getSharedDocument,
     isLoading,
     toggleFavorite,
-    handleFirstInput
+    handleFirstInput,
+    updateDocumentPrivacy,
+    updateDocumentSharing
+
   }
 
   return (

@@ -15,11 +15,11 @@ import { Editor } from '@tiptap/react';
 
 interface ToolBarProps {
     editor: Editor | null;
-    onShowSearch: () => void;
-    onShowShortcuts?: () => void;
+    // onShowSearch: () => void;
+    // onShowShortcuts?: () => void;
 }
 
-export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps) {
+export function ToolBar({ editor }: ToolBarProps) {
 
     if (!editor) return null;
     return (
@@ -60,7 +60,7 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
 
                 <button
                     onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                    className={`p-2 rounded ${editor.isActive('codeBlock') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('codeBlock') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
                     title="Bloco de código (Ctrl+Alt+C)"
                 >
                     <Code2Icon className="w-4 h-4" />
@@ -76,30 +76,12 @@ export function ToolBar({ editor, onShowSearch, onShowShortcuts }: ToolBarProps)
                 <LinkSelector editor={editor} />
                 <ImageSelector editor={editor} />
                 <VideoSelector editor={editor} />
-                <ReferenceDialog  editor={editor} />
+                <ReferenceDialog editor={editor} />
                 <HignlightSelector editor={editor} />
                 <ColorSelector editor={editor} />
                 <HeadingSelector editor={editor} />
                 <AlignmentSelector editor={editor} />
                 <ListSelector editor={editor} />
-                <button
-                    onClick={onShowSearch}
-                    className={`p-2 rounded hover:bg-zinc-600 text-white cursor-pointer`}
-                    title="Buscar no documento (Ctrl+F)"
-                >
-                    <Search className="w-4 h-4" />
-                </button>
-
-                {/* <div className="h-6 w-px bg-border mx-2" /> */}
-
-                {/* <button
-                    onClick={onShowShortcuts}
-                    className="p-2 hover:bg-muted rounded-md transition-colors"
-                    title="Atalhos de teclado (Ctrl+/)"
-                >
-                    <Keyboard className="w-4 h-4" />
-                </button> */}
-
                 <div className="control-group">
                     <div className="button-group flex items-center gap-1">
                         <button

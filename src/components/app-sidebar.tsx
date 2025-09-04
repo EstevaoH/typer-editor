@@ -21,6 +21,7 @@ import Link from "next/link"
 import { ShowDeleteConfirm } from "./show-delete-confirm"
 import { useDocuments } from "@/context/documents-context"
 import { KeyboardShortcuts } from "./key-board-shortcuts"
+import { ShareModal } from "./share-modal"
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>
@@ -39,19 +40,38 @@ export function AppSidebar({
   const [searchQuery, setSearchQuery] = useState('')
   const { deleteDocument,
     toggleFavorite,
-    setCurrentDocumentId, } = useDocuments()
+    setCurrentDocumentId, currentDocument, updateDocumentPrivacy, updateDocumentSharing } = useDocuments()
   const { state, toggleSidebar } = useSidebar()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<any>(null)
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const handleDeleteClick = (doc: any) => {
     setDocumentToDelete(doc)
     setShowDeleteConfirm(true)
   }
+  const handlePrivacyChange = (isPrivate: boolean) => {
+    if (currentDocument) {
+      updateDocumentPrivacy(currentDocument.id, isPrivate)
+    }
+  }
+  const handleShareSuccess = (recipients: string[]) => {
+    if (currentDocument) {
+      updateDocumentSharing(currentDocument.id, true, recipients)
+    }
+  }
 
   const handleKeyboardShortcuts = () => {
     setShowShortcuts(true)
+  }
+
+  const handleShare = () => {
+    setShowShareModal(true)
+  }
+
+  const handleCloseShareModal = () => {
+    setShowShareModal(false)
   }
 
   const handleConfirmDelete = () => {
@@ -63,7 +83,7 @@ export function AppSidebar({
   }
 
   useEffect(() => {
-    const handleKeyDownFavorite = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         setShowShortcuts(prev => !prev);
         e.preventDefault();
@@ -71,10 +91,16 @@ export function AppSidebar({
         e.stopImmediatePropagation();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        e.stopPropagation()
+        setShowShareModal(true)
+        return
+      }
     };
 
-    window.addEventListener('keydown', handleKeyDownFavorite, true);
-    return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [showShortcuts]);
 
   return (
@@ -143,6 +169,7 @@ export function AppSidebar({
             </SidebarGroupContent>
           </SidebarGroup>
           <NavDocuments
+            onShareClick={handleShare}
             searchQuery={searchQuery}
             onDeleteClick={handleDeleteClick}
             deleteDocument={deleteDocument}
@@ -150,7 +177,7 @@ export function AppSidebar({
             setCurrentDocumentId={setCurrentDocumentId}
           />
 
-          <NavActions isOpenKeyBoardShortcuts={handleKeyboardShortcuts} />
+          <NavActions isOpenKeyBoardShortcuts={handleKeyboardShortcuts} isOpenShareModal={handleShare} />
           <Separator orientation="horizontal" className="bg-zinc-700" />
         </SidebarContent>
       </Sidebar>
@@ -169,6 +196,19 @@ export function AppSidebar({
           setShowDeleteConfirm={setShowDeleteConfirm}
         />
       )}
+      {
+        showShareModal && (
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={handleCloseShareModal}
+            documentContent={currentDocument?.content || ''}
+            documentTitle={currentDocument?.title || 'Documento sem título'}
+            isPrivate={currentDocument?.isPrivate !== false}
+            onPrivacyChange={handlePrivacyChange}
+            onShareSuccess={handleShareSuccess} // Passe a função
+          />
+        )
+      }
     </>
   )
 }

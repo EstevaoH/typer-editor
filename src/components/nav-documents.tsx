@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useDocuments } from "@/context/documents-context";
 import { DocumentItem } from "./document-item";
 import { Separator } from "./ui/separator";
-import { useToast } from "@/context/useToast";
+import { useToast } from "@/context/toast-context";
 
 interface NavDocumentsProps {
     searchQuery: string;
@@ -12,6 +12,7 @@ interface NavDocumentsProps {
     deleteDocument: (id: string) => void;
     toggleFavorite: (id: string) => void;
     setCurrentDocumentId: (id: string) => void;
+    onShareClick: (doc: any) => void; 
 }
 
 export function NavDocuments({
@@ -19,7 +20,8 @@ export function NavDocuments({
     onDeleteClick,
     deleteDocument,
     toggleFavorite,
-    setCurrentDocumentId
+    setCurrentDocumentId,
+    onShareClick
 }: NavDocumentsProps) {
     const {
         documents,
@@ -46,6 +48,7 @@ export function NavDocuments({
         filteredDocuments.filter(doc => !doc.isFavorite),
         [filteredDocuments]
     )
+
     return (
         <SidebarGroup className="flex-1 overflow-hidden">
             {state === "collapsed" && (
@@ -92,6 +95,7 @@ export function NavDocuments({
                                     deleteDocument={deleteDocument}
                                     toggleFavorite={toggleFavorite}
                                     onDeleteClick={onDeleteClick}
+                                    onShareClick={onShareClick} // Passe a prop
                                 />
                             ))}
                         </>
@@ -115,6 +119,7 @@ export function NavDocuments({
                                     deleteDocument={deleteDocument}
                                     toggleFavorite={toggleFavorite}
                                     onDeleteClick={onDeleteClick}
+                                    onShareClick={onShareClick}
                                 />
                             ))}
                         </>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DocumentsProvider } from "@/context/documents-context";
-import { KeyboardShortcutsProvider } from "@/context/keyboard-shortcuts-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,9 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <DocumentsProvider>
-          <KeyboardShortcutsProvider>
-            {children}
-          </KeyboardShortcutsProvider>
+          {children}
         </DocumentsProvider>
       </body>
     </html>

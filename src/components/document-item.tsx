@@ -1,7 +1,7 @@
-import { FileText, Star, StarOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, FileText, Star, StarOff, Trash2, Share, Users, LockKeyhole, LockKeyholeOpen } from "lucide-react";
 import { SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/context/useToast";
+import { useToast } from "@/context/toast-context";
 
 type DocumentItemProps = {
     doc: any;
@@ -10,6 +10,7 @@ type DocumentItemProps = {
     deleteDocument: (id: string) => void;
     toggleFavorite: (id: string) => void;
     onDeleteClick: (doc: any) => void;
+    onShareClick: (doc: any) => void;
 }
 
 export function DocumentItem({
@@ -18,9 +19,11 @@ export function DocumentItem({
     setCurrentDocumentId,
     deleteDocument,
     toggleFavorite,
-    onDeleteClick 
+    onDeleteClick,
+    onShareClick
 }: DocumentItemProps) {
     const toast = useToast()
+
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
@@ -34,6 +37,7 @@ export function DocumentItem({
                     "w-4 h-4 flex-shrink-0 text-zinc-300",
                     currentDocument?.id === doc.id && "text-blue-400"
                 )} />
+
                 <span className={cn(
                     "text-zinc-100 truncate flex-1",
                     currentDocument?.id === doc.id && "text-blue-400 font-medium"
@@ -41,31 +45,40 @@ export function DocumentItem({
                     {doc.title || 'Sem título'}
                 </span>
 
+                {doc.isShared && (
+                    <div
+                        title="Compartilhado com outras pessoas"
+                        className={cn(
+                            "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
+                            "text-green-400 hover:text-green-300",
+                            currentDocument?.id === doc.id && "opacity-100"
+                        )}
+                    >
+                        <Users className="w-3 h-3" />
+                    </div>
+                )}
                 <div
                     role="button"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         toggleFavorite(doc.id);
-                        toast.showToast(doc.isFavorite ?'⭐ Desfavoritado' : '🌟 Favoritado')
+                        toast.showToast(doc.isFavorite ? '⭐ Desfavoritado' : '🌟 Favoritado')
                     }}
                     className={cn(
                         "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
                         "text-yellow-400 hover:text-yellow-300",
-                        doc.isFavorite && "opacity-100"
+                        currentDocument?.id === doc.id && "opacity-100"
                     )}
                     title={doc.isFavorite ? "Desfavoritar" : "Favoritar"}
                 >
                     {doc.isFavorite ? (
-                        <StarOff className={cn(
-                            "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4",
-                            "text-yellow-400 hover:text-yellow-300",
-                            currentDocument?.id === doc.id && "opacity-100"
-                        )} />
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     ) : (
                         <Star className="w-4 h-4" />
                     )}
                 </div>
+
                 <div
                     role="button"
                     onClick={(e) => {
@@ -82,8 +95,8 @@ export function DocumentItem({
                 >
                     <Trash2 className="w-4 h-4" />
                 </div>
+
             </SidebarMenuButton>
         </SidebarMenuItem>
-        
     )
 }

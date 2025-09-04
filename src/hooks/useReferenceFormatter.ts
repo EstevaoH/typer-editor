@@ -20,19 +20,16 @@ export const referenceSchema = z.object({
 export type ReferenceData = z.infer<typeof referenceSchema>
 
 export function useReferenceFormatter() {
-    //@typescript-eslint/no-unused-vars
     const formatABNTReference = (data: ReferenceData, index?: number) => {
         const authorName = `${data.lastName.toUpperCase()}, ${data.firstName}`
         const publicationMonth = format(data.publicationDate, 'MMM', { locale: ptBR }).toLowerCase()
         const accessDateFormatted = format(data.accessDate, 'dd/MM/yyyy')
 
-        // Construção em partes para melhor controle
         const referenceParts = [
             `${authorName}. ${data.articleTitle}.`,
             `${data.journalTitle}, ${data.location},`,
         ]
 
-        // Adiciona volume e número se existirem
         const volumeNumber = []
         if (data.volume?.trim()) volumeNumber.push(`v. ${data.volume.trim()}`)
         if (data.number?.trim()) volumeNumber.push(`n. ${data.number.trim()}`)
@@ -44,17 +41,14 @@ export function useReferenceFormatter() {
         referenceParts.push(`p. ${data.startPage}-${data.endPage},`)
         referenceParts.push(`${publicationMonth}. ${data.publicationDate.getFullYear()}.`)
 
-        // Adiciona URL e data de acesso se existir
         if (data.url?.trim()) {
             referenceParts.push(`Disponível em: ${data.url.trim()}. Acesso em: ${accessDateFormatted}.`)
         }
 
-        // Junta todas as partes e remove espaços extras
-        //@typescript-eslint/no-unused-vars
         let reference = referenceParts.join(' ')
-            .replace(/\s+/g, ' ') // Remove múltiplos espaços
-            .replace(/, ,/g, ',') // Remove vírgulas com espaços extras
-            .replace(/, \./g, '.') // Corrige ponto após vírgula
+            .replace(/\s+/g, ' ')
+            .replace(/, ,/g, ',')
+            .replace(/, \./g, '.') 
 
         return {
             plainText: reference,
@@ -62,7 +56,7 @@ export function useReferenceFormatter() {
                 <div class="" style="text-align: justify">
                     <div>${reference}</div>
                 </div>
-            `.replace(/\s+/g, ' ').trim() // Remove espaços extras no HTML
+            `.replace(/\s+/g, ' ').trim()
         }
     }
 

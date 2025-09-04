@@ -12,13 +12,11 @@ import { MenuFloating } from '@/components/menu-floating';
 import { MenuBubble } from '@/components/menu-bubble';
 import { useDocuments } from '@/context/documents-context';
 import { editorExtensions } from '@/lib/editor-config';
-import { ChevronsLeftRightEllipsis, FilePenLine } from 'lucide-react';
+import { ChevronsLeftRightEllipsis, FilePenLine, Loader2 } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
-import { KeyboardShortcuts } from '@/components/key-board-shortcuts';
 import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
-import { useToast } from '@/context/useToast';
-
+import { useToast } from '@/context/toast-context';
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -37,6 +35,7 @@ export function Editor() {
     const [showFloatingButton, setShowFloatingButton] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar o carregamento
     const toast = useToast()
 
     const editor = useEditor({
@@ -68,7 +67,11 @@ export function Editor() {
                 }
             }
         },
-        immediatelyRender: false
+        immediatelyRender: false,
+        onCreate: () => {
+            // Marcar como carregado quando o editor for criado
+            setIsLoaded(true);
+        }
     });
 
     const handleToggleFavorite = (id: string) => {
@@ -215,8 +218,6 @@ export function Editor() {
         }
     };
 
-
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (editorRef.current && !editorRef.current.contains(event.target as Node)) {
@@ -260,12 +261,22 @@ export function Editor() {
         return () => clearTimeout(timer)
     }, [title, currentDocument, updateDocument, saveDocument])
 
+    // Se o editor ainda não carregou, mostrar um loading
+    if (!isLoaded) {
+        return (
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Carregando editor...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <ToolBar
                 editor={editor}
-                onShowSearch={() => setShowSearch(prev => !prev)}
-                onShowShortcuts={() => setShowShortcuts(true)}
             />
 
             {showSearch && (
@@ -284,10 +295,6 @@ export function Editor() {
                     />
                 )}
             </AnimatePresence>
-            {/* <KeyboardShortcuts
-                isOpen={showShortcuts}
-                onClose={() => setShowShortcuts(false)}
-            /> */}
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
                     <div className="max-w-screen mx-auto prose prose-violet tiptap">

@@ -74,7 +74,7 @@ export function ToastProvider({ children, defaultDuration = 6000 }: ToastProvide
     </ToastContext.Provider>
   )
 }
-// Componente Toast interno (não precisa ser exportado)
+
 function ToastInternal({ message, isVisible, onClose }: {
   message: string
   isVisible: boolean
