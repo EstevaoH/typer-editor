@@ -21,7 +21,7 @@ export function useContactForm() {
             message: ""
         }
     });
-    
+
     const [isLoading, setIsLoading] = useState(false);
 
     const onSubmit = async (data: contactMailType) => {
@@ -33,8 +33,8 @@ export function useContactForm() {
             });
 
             const emailPromise = emailjs.send(
-                'service_e3oczeq',
-                'template_97bmg7b',
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_CONTACT_ID!,
                 {
                     from_name: data.name.trim(),
                     from_email: data.mail.trim(),
@@ -44,7 +44,7 @@ export function useContactForm() {
                     reply_to: data.mail.trim(),
                     date: new Date().toLocaleDateString('pt-BR')
                 },
-                'Di2GGzxtm2lfmC5WN'
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
             );
 
             const response = await Promise.race([emailPromise, timeoutPromise]);
@@ -53,17 +53,17 @@ export function useContactForm() {
                 throw new Error(`Erro no envio: Status ${(response as any).status}`);
             }
 
-            return { 
-                success: true, 
-                message: 'Mensagem enviada com sucesso! Retornaremos em até 24 horas.' 
+            return {
+                success: true,
+                message: 'Mensagem enviada com sucesso! Retornaremos em até 24 horas.'
             };
 
         } catch (error: any) {
             console.error('Erro detalhado:', error);
             const errorMessage = getErrorMessage(error);
-            return { 
-                success: false, 
-                message: errorMessage 
+            return {
+                success: false,
+                message: errorMessage
             };
 
         } finally {

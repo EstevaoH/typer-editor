@@ -70,6 +70,11 @@ export function AppSidebar({
     setShowShareModal(true)
   }
 
+  const handleShareClick = (doc: any) => {
+    setCurrentDocumentId(doc.id)
+    setShowShareModal(true)
+  }
+
   const handleCloseShareModal = () => {
     setShowShareModal(false)
   }
@@ -196,19 +201,18 @@ export function AppSidebar({
           setShowDeleteConfirm={setShowDeleteConfirm}
         />
       )}
-      {
-        showShareModal && (
-          <ShareModal
-            isOpen={showShareModal}
-            onClose={handleCloseShareModal}
-            documentContent={currentDocument?.content || ''}
-            documentTitle={currentDocument?.title || 'Documento sem título'}
-            isPrivate={currentDocument?.isPrivate !== false}
-            onPrivacyChange={handlePrivacyChange}
-            onShareSuccess={handleShareSuccess} // Passe a função
-          />
-        )
-      }
+      {showShareModal && currentDocument && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={handleCloseShareModal}
+          documentContent={currentDocument?.content || ''}
+          documentTitle={currentDocument?.title || 'Documento sem título'}
+          isPrivate={currentDocument?.isPrivate !== false}
+          sharedWith={currentDocument?.sharedWith || []} 
+          onPrivacyChange={handlePrivacyChange}
+          onShareSuccess={handleShareSuccess}
+        />
+      )}
     </>
   )
 }

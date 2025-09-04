@@ -337,6 +337,16 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('documents', JSON.stringify(updatedDocs))
   }
 
+  // const handleShareSuccess = (recipients: string[]) => {
+  //   if (currentDocument) {
+  //     updateDocumentSharing(currentDocument.id, true, recipients);
+  //     // Opcional: marcar como não privado se escolhido no formulário
+  //     if (!formValues.makePublic) {
+  //       updateDocumentPrivacy(currentDocument.id, false);
+  //     }
+  //   }
+  // };
+
 
   const value = {
     documents,
