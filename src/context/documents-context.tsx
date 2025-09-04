@@ -79,7 +79,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       title,
       content: '',
       isPrivate: false,
-      isShared: true,
+      isShared: false,
       isFavorite: false,
       updatedAt: new Date().toISOString()
     }
