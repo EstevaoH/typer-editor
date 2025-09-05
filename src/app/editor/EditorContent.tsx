@@ -25,7 +25,7 @@ lowlight.register('js', js)
 lowlight.register('ts', ts)
 
 export function Editor() {
-    const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument } = useDocuments()
+    const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument, } = useDocuments()
     const [title, setTitle] = useState(currentDocument?.title || '')
     const [isEditorFocused, setIsEditorFocused] = useState(false)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -35,7 +35,7 @@ export function Editor() {
     const [showFloatingButton, setShowFloatingButton] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false); // Estado para controlar o carregamento
+    const [isLoaded, setIsLoaded] = useState(false);
     const toast = useToast()
 
     const editor = useEditor({
@@ -69,7 +69,6 @@ export function Editor() {
         },
         immediatelyRender: false,
         onCreate: () => {
-            // Marcar como carregado quando o editor for criado
             setIsLoaded(true);
         }
     });
@@ -261,7 +260,6 @@ export function Editor() {
         return () => clearTimeout(timer)
     }, [title, currentDocument, updateDocument, saveDocument])
 
-    // Se o editor ainda não carregou, mostrar um loading
     if (!isLoaded) {
         return (
             <div className="flex h-[calc(100vh-4rem)] items-center justify-center">

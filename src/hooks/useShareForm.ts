@@ -1,4 +1,3 @@
-// hooks/use-share-form.ts
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from "zod"
@@ -21,9 +20,16 @@ interface UseShareFormProps {
     onSuccess?: (emails: string[]) => void;
 }
 
-export function useShareForm({ documentTitle, documentContent, onSuccess, sharedWith }: UseShareFormProps) {
+interface EmailStatus {
+    email: string;
+    status: 'pending' | 'sending' | 'success' | 'error';
+    error?: string;
+}
+
+export function useShareForm({ documentTitle, documentContent, onSuccess, sharedWith = [] }: UseShareFormProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const [recipients, setRecipients] = useState<string[]>([]);
+    const [sentEmails, setSentEmails] = useState<EmailStatus[]>([]);
+    const [showSentList, setShowSentList] = useState(false);
     const toast = useToast();
 
     const form = useForm<ShareMailType>({
@@ -34,49 +40,30 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
         }
     });
 
-    const canAddMoreEmails = recipients.length + (sharedWith?.length || 0) < 10
-
-    const addRecipient = (email: string) => {
-        const trimmedEmail = email.trim();
-        if (!trimmedEmail) return { success: false, error: "E-mail não pode estar vazio" };
-
-        if (!z.string().email().safeParse(trimmedEmail).success) {
-            return { success: false, error: "E-mail inválido" };
-        }
-
-        if (recipients.includes(trimmedEmail) || sharedWith?.includes(trimmedEmail)) {
-            return { success: false, error: "E-mail já adicionado" };
-        }
-
-        if (!canAddMoreEmails) {
-            return { success: false, error: "Máximo de 10 e-mails permitido" };
-        }
-
-        setRecipients(prev => [...prev, trimmedEmail]);
-        form.setValue('emails', [...recipients, trimmedEmail]);
-        return { success: true };
-    };
-
-    const removeRecipient = (email: string) => {
-        setRecipients(prev => prev.filter(e => e !== email));
-        form.setValue('emails', recipients.filter(e => e !== email));
-    };
-
-    const clearRecipients = () => {
-        setRecipients([]);
-        form.setValue('emails', []);
-    };
+    const currentEmails = form.watch('emails');
+    const canAddMoreEmails = (currentEmails.length + sharedWith.length) < 10;
 
     const onSubmit = async (data: ShareMailType) => {
         setIsLoading(true);
 
+        const initialEmailStatus: EmailStatus[] = data.emails.map(email => ({
+            email,
+            status: 'pending'
+        }));
+        
+        setSentEmails(initialEmailStatus);
+        setShowSentList(true);
+
         try {
-            // Validação
             if (data.emails.length === 0) {
                 throw new Error('Nenhum destinatário especificado');
             }
 
-            // Preparar dados para o Resend
+            setSentEmails(prev => prev.map(item => ({
+                ...item,
+                status: 'sending'
+            })));
+
             const payload = {
                 to_email: data.emails.join(', '),
                 document_title: documentTitle.trim(),
@@ -86,7 +73,6 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
 
             console.log('Enviando para Resend:', payload);
 
-            // Enviar para API route
             const response = await fetch('/api/send', {
                 method: 'POST',
                 headers: {
@@ -101,15 +87,30 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
                 throw new Error(result.error || 'Falha ao enviar email');
             }
 
+
+            setSentEmails(prev => prev.map(item => ({
+                ...item,
+                status: 'success'
+            })));
+
             toast.showToast('📧 Documento compartilhado com sucesso!');
 
-            // Sucesso - atualizar estado
             onSuccess?.(data.emails);
-            clearRecipients();
-            form.reset();
+            form.reset({ emails: [], makePublic: false });
+
+            setTimeout(() => {
+                setShowSentList(false);
+                setSentEmails([]);
+            }, 5000);
 
         } catch (error) {
             console.error('Erro ao compartilhar:', error);
+
+            setSentEmails(prev => prev.map(item => ({
+                ...item,
+                status: 'error',
+                error: error instanceof Error ? error.message : 'Erro desconhecido'
+            })));
 
             let errorMessage = '❌ Erro ao compartilhar documento. Tente novamente.';
 
@@ -127,16 +128,47 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
         }
     };
 
+    const getEmailStatusIcon = (status: EmailStatus['status']) => {
+        switch (status) {
+            case 'pending': return '⏳';
+            case 'sending': return '📤';
+            case 'success': return '✅';
+            case 'error': return '❌';
+            default: return '📧';
+        }
+    };
+
+    const getEmailStatusText = (status: EmailStatus['status']) => {
+        switch (status) {
+            case 'pending': return 'Pendente';
+            case 'sending': return 'Enviando...';
+            case 'success': return 'Enviado';
+            case 'error': return 'Falha no envio';
+            default: return 'Desconhecido';
+        }
+    };
+
+    const allEmailsSuccessful = sentEmails.length > 0 && sentEmails.every(email => email.status === 'success');
+    const hasErrors = sentEmails.some(email => email.status === 'error');
+
     return {
         form,
         isLoading,
-        recipients,
-        addRecipient,
-        removeRecipient,
-        clearRecipients,
         onSubmit: form.handleSubmit(onSubmit),
         setMakePublic: (value: boolean) => form.setValue('makePublic', value),
         makePublic: form.watch('makePublic'),
-        canAddMoreEmails
+        canAddMoreEmails,
+
+        sentEmails,
+        showSentList,
+        setShowSentList,
+        getEmailStatusIcon,
+        getEmailStatusText,
+        allEmailsSuccessful,
+        hasErrors,
+
+        totalSent: sentEmails.length,
+        successfulSent: sentEmails.filter(e => e.status === 'success').length,
+        failedSent: sentEmails.filter(e => e.status === 'error').length
     };
 }

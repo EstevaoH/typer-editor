@@ -15,8 +15,6 @@ import { Editor } from '@tiptap/react';
 
 interface ToolBarProps {
     editor: Editor | null;
-    // onShowSearch: () => void;
-    // onShowShortcuts?: () => void;
 }
 
 export function ToolBar({ editor }: ToolBarProps) {

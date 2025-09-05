@@ -8,7 +8,7 @@ interface KeyboardShortcutsProps {
   isOpen: boolean
   onClose: () => void
 }
-// Mapeamento de ícones para cada atalho
+
 const shortcutIcons: Record<string, React.ReactNode> = {
   'Salvar documento': <Save className="w-4 h-4" />,
   'Buscar no documento': <Search className="w-4 h-4" />,

@@ -213,37 +213,37 @@ export default function Home() {
                 icon: <History className="h-8 w-8 text-blue-500" />,
                 title: "Histórico de Versões",
                 description: "Recupere versões anteriores do seu documento e restaure edições passadas.",
-                status: "Planejado"
+                status: "Breve"
               },
               {
                 icon: <Type className="h-8 w-8 text-green-500" />,
                 title: "Estilo de Texto",
                 description: "Formatação avançada: negrito, itálico, listas e mais opções de organização.",
-                status: "Em breve"
+                status: "Breve"
               },
               {
                 icon: <Search className="h-8 w-8 text-purple-500" />,
                 title: "Pesquisa Avançada",
                 description: "Campo de busca na sidebar para encontrar conteúdo em todos os seus documentos.",
-                status: "Planejado"
+                status: "Breve"
               },
               {
                 icon: <BarChart3 className="h-8 w-8 text-pink-500" />,
                 title: "Widgets de Estatísticas",
                 description: "Contador de palavras, tempo estimado de leitura e outras métricas úteis.",
-                status: "Planejado"
+                status: "Breve"
               },
               {
                 icon: <DownloadCloud className="h-8 w-8 text-yellow-500" />,
                 title: "Novos Formatos de Exportação",
                 description: "Suporte para HTML, RTF, ODT e outros formatos de documento.",
-                status: "Desenvolvimento"
+                status: "Breve"
               },
               {
                 icon: <Palette className="h-8 w-8 text-cyan-500" />,
                 title: "Personalização",
                 description: "Temas claros e escuros com interface customizável.",
-                status: "Em Breve"
+                status: "Breve"
               }
             ].map((feature, index) => (
               <div

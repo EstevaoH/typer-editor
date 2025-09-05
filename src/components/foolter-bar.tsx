@@ -1,8 +1,6 @@
 export function Footerbar({ editor, characterLimit }: { editor: any, characterLimit: number }) {
     if (!editor) return null;
 
-    // const percentage = Math.round((100 / characterLimit) * editor.storage.characterCount.characters());
-
     return (
         <>
             <div className="fixed bottom-0 bottom w-full flex justify-end text-white gap-2 py-2 bg-zinc-800 border-t border-zinc-700">

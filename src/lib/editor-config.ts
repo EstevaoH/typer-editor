@@ -1,8 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+
 import StarterKit from '@tiptap/starter-kit';
-import { EditorContent, useEditor } from '@tiptap/react';
 import "highlight.js/styles/atom-one-dark.css";
-import { ToolBar } from '@/components/toolbar';
 import css from 'highlight.js/lib/languages/css'
 import js from 'highlight.js/lib/languages/javascript'
 import ts from 'highlight.js/lib/languages/typescript'
@@ -46,8 +44,7 @@ export const editorExtensions: any[] = [
   }),
   SearchNReplace.configure({
     searchResultClass: 'search-result',
-    // : 'search-result-current',
-    disableRegex: false, // also no need to explain
+    disableRegex: false, 
   }),
   Document,
   Underline,

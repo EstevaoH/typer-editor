@@ -1,4 +1,3 @@
-// components/email-templates/document-share-template.tsx
 export interface DocumentShareTemplateProps {
   documentTitle: string;
   documentContent: string;
@@ -135,7 +134,6 @@ export function getDocumentShareHTML(props: DocumentShareTemplateProps): string 
   `.trim();
 }
 
-// Versão em texto simples
 export function getDocumentShareText(props: DocumentShareTemplateProps): string {
   const { documentTitle, documentContent, documentUrl, senderName = 'Sistema de Documentos' } = props;
 

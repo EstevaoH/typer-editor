@@ -95,7 +95,7 @@ export function NavDocuments({
                                     deleteDocument={deleteDocument}
                                     toggleFavorite={toggleFavorite}
                                     onDeleteClick={onDeleteClick}
-                                    onShareClick={onShareClick} // Passe a prop
+                                    onShareClick={onShareClick}
                                 />
                             ))}
                         </>

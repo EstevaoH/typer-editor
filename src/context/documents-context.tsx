@@ -14,8 +14,9 @@ interface Document {
   updatedAt: string
   isPrivate?: boolean
   isFavorite: boolean
-  isShared?: boolean // Nova propriedade
-  sharedWith?: string[]
+  isShared?: boolean
+  sharedWith: string[]
+  isTutorial?: boolean;
 }
 type DownloadFormat = 'txt' | 'md' | 'docx' | 'pdf';
 
@@ -33,6 +34,8 @@ interface DocumentsContextType {
   handleFirstInput: () => void
   updateDocumentPrivacy: (id: string, isPrivate: boolean) => void
   updateDocumentSharing: (id: string, isShared: boolean, sharedWith?: string[]) => void
+  addToSharedWith: (id: string, emails: string[]) => void;
+  removeFromSharedWith: (id: string, email: string) => void;
 }
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(undefined)
@@ -59,7 +62,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('savedDocuments', JSON.stringify(documents))
-
+      console.log(localStorage.getItem("savedDocuments"))
       if (documents.length > 0 && !currentDocId) {
         setCurrentDocId(documents[0].id)
       }
@@ -81,6 +84,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       isPrivate: false,
       isShared: false,
       isFavorite: false,
+      sharedWith: [],
       updatedAt: new Date().toISOString()
     }
     setDocuments(prev => [newDoc, ...prev])
@@ -335,18 +339,39 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       } : doc
     )
     localStorage.setItem('documents', JSON.stringify(updatedDocs))
+
   }
+  const addToSharedWith = useCallback((id: string, emails: string[]) => {
+    console.log(emails)
+    setDocuments(prev => prev.map(doc => {
+      if (doc.id === id) {
+        const existingEmails = doc.sharedWith || [];
+        const newEmails = emails.filter(email => !existingEmails.includes(email));
+        return {
+          ...doc,
+          isShared: true,
+          sharedWith: [...existingEmails, ...newEmails],
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return doc;
+    }));
+  }, []);
 
-  // const handleShareSuccess = (recipients: string[]) => {
-  //   if (currentDocument) {
-  //     updateDocumentSharing(currentDocument.id, true, recipients);
-  //     // Opcional: marcar como não privado se escolhido no formulário
-  //     if (!formValues.makePublic) {
-  //       updateDocumentPrivacy(currentDocument.id, false);
-  //     }
-  //   }
-  // };
-
+  const removeFromSharedWith = useCallback((id: string, email: string) => {
+    setDocuments(prev => prev.map(doc => {
+      if (doc.id === id) {
+        const updatedSharedWith = (doc.sharedWith || []).filter(e => e !== email);
+        return {
+          ...doc,
+          isShared: updatedSharedWith.length > 0,
+          sharedWith: updatedSharedWith,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return doc;
+    }));
+  }, []);
 
   const value = {
     documents,
@@ -361,8 +386,9 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     toggleFavorite,
     handleFirstInput,
     updateDocumentPrivacy,
-    updateDocumentSharing
-
+    updateDocumentSharing,
+    addToSharedWith,
+    removeFromSharedWith
   }
 
   return (
