@@ -208,7 +208,6 @@ export function AppSidebar({
           documentContent={currentDocument?.content || ''}
           documentTitle={currentDocument?.title || 'Documento sem título'}
           isPrivate={currentDocument?.isPrivate !== false}
-          sharedWith={currentDocument?.sharedWith || []} 
           onPrivacyChange={handlePrivacyChange}
           onShareSuccess={handleShareSuccess}
         />
