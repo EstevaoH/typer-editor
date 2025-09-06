@@ -1,7 +1,7 @@
 'use client'
 
 import { ContactModal } from "@/components/contact-modal";
-import { Download, History, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles, DownloadCloud, BarChart3, Search, Type, Keyboard } from "lucide-react";
+import { Download, History, Edit, Share, Code, Zap, Lock, Cloud, Smartphone, Palette, Languages, ArrowRight, CheckCircle, Sparkles, DownloadCloud, BarChart3, Search, Type, Keyboard, Coffee } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -330,6 +330,14 @@ export default function Home() {
               {
                 question: "Funciona em smartphones e tablets?",
                 answer: "Sim! O TyperEditor é totalmente responsivo e funciona em qualquer dispositivo com navegador moderno."
+              },
+              {
+                question: "Como posso apoiar o projeto?",
+                answer: "Você pode apoiar o desenvolvimento do TyperEditor me pagando um café! Todo apoio ajuda a manter e melhorar a ferramenta. Clique no botão 'Me pague um café' no rodapé ou no menu lateral."
+              },
+              {
+                question: "O projeto é open source?",
+                answer: "Sim! O TyperEditor é desenvolvido de forma aberta e transparente. Você pode acompanhar o desenvolvimento e contribuir no GitHub."
               }
             ].map((faq, index) => (
               <div
@@ -342,6 +350,19 @@ export default function Home() {
                   {faq.question}
                 </h3>
                 <p className="text-zinc-300 leading-relaxed">{faq.answer}</p>
+                {faq.question === "Como posso apoiar o projeto?" && (
+                  <div className="mt-4">
+                    <a
+                      href="https://mepagaumcafe.com.br/estevao/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <Coffee className="h-4 w-4" />
+                      Apoiar o projeto ☕
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
 
