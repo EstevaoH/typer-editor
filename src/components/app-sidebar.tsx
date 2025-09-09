@@ -142,6 +142,7 @@ export function AppSidebar({
                       >
                         <Search className="w-5 h-5" />
                       </SidebarMenuButton>
+
                     </div>
                   )}
                   {
@@ -184,17 +185,36 @@ export function AppSidebar({
 
           <NavActions isOpenKeyBoardShortcuts={handleKeyboardShortcuts} isOpenShareModal={handleShare} />
           <Separator orientation="horizontal" className="bg-zinc-700" />
-          <SidebarMenuItem>
-            <a
-              href="https://mepagaumcafe.com.br/estevao/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Coffee className="w-4 h-4" />
-              Apoie o projeto ☕
-            </a>
-          </SidebarMenuItem>
+          <SidebarGroup>
+            {
+              state != "collapsed" ? (
+                <SidebarMenuItem>
+                  <a
+                    href="https://mepagaumcafe.com.br/estevao/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Coffee className="w-4 h-4" />
+                    Apoie o projeto ☕
+                  </a>
+                </SidebarMenuItem>
+
+              ) : (
+                <SidebarMenuItem>
+                  <a
+                    href="https://mepagaumcafe.com.br/estevao/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Coffee className="w-4 h-4" />
+                  </a>
+                </SidebarMenuItem>
+              )
+            }
+
+          </SidebarGroup>
         </SidebarContent>
       </Sidebar>
       {

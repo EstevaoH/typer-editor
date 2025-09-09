@@ -5,7 +5,7 @@ export interface DocumentShareTemplateProps {
   senderName?: string;
 }
 export function getDocumentShareHTML(props: DocumentShareTemplateProps): string {
-  const { documentTitle, documentContent, documentUrl, senderName = 'Sistema de Documentos' } = props;
+  const { documentTitle, documentContent, documentUrl, senderName = 'TyperEditor' } = props;
 
   return `
 <!DOCTYPE html>
@@ -74,7 +74,7 @@ export function getDocumentShareHTML(props: DocumentShareTemplateProps): string 
 <body>
     <div class="header">
         <h1 style="color: #007bff; margin: 0; font-size: 24px; font-weight: bold;">
-            📄 Sistema de Documentos
+            📄 TyperEditor
         </h1>
         <p style="color: #666; margin: 8px 0 0 0; font-size: 14px;">
             Compartilhamento seguro de documentos
@@ -100,11 +100,6 @@ export function getDocumentShareHTML(props: DocumentShareTemplateProps): string 
             </div>
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${documentUrl}" class="button">
-                🔗 Acessar Documento Completo
-            </a>
-        </div>
 
         <div class="security-notice">
             <p style="color: #856404; margin: 0; font-size: 13px; line-height: 1.4;">
@@ -116,15 +111,15 @@ export function getDocumentShareHTML(props: DocumentShareTemplateProps): string 
 
     <div class="footer">
         <p style="color: #666; margin: 0 0 10px 0; font-size: 12px;">
-            💡 Esta mensagem foi enviada automaticamente pelo Sistema de Documentos
+            💡 Esta mensagem foi enviada automaticamente pelo TyperEditor
         </p>
         
         <p style="color: #999; margin: 0; font-size: 11px;">
-            © ${new Date().getFullYear()} Sistema de Documentos. Todos os direitos reservados.
+            © ${new Date().getFullYear()} TyperEditor. Todos os direitos reservados.
         </p>
         
         <p style="color: #999; margin: 10px 0 0 0; font-size: 11px;">
-            <a href="mailto:support@seusistema.com" style="color: #999; textDecoration: none;">
+            <a href="mailto:typereditoronlline@gmail.com" style="color: #999; textDecoration: none;">
                 📧 Precisa de ajuda? Contate nosso suporte
             </a>
         </p>
@@ -161,6 +156,6 @@ Não compartilhe este link com outras pessoas.
 💡 Esta mensagem foi enviada automaticamente pelo Sistema de Documentos.
 
 © ${new Date().getFullYear()} Sistema de Documentos. Todos os direitos reservados.
-📧 Suporte: support@seusistema.com
+📧 Suporte: typereditoronlline@gmail.com
   `.trim();
 }

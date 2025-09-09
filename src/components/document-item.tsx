@@ -54,7 +54,7 @@ export function DocumentItem({
                             currentDocument?.id === doc.id && "opacity-100"
                         )}
                     >
-                        <Users className="w-3 h-3" />
+                        <Users className="w-4 h-4" />
                     </div>
                 )}
                 <div

@@ -169,10 +169,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                     <p className="text-sm text-zinc-400 text-center">
                         Ou envie diretamente para:{" "}
                         <a
-                            href="mailto:estevaohenril@gmail.com"
+                            href="mailto:typereditoronlline@gmail.com"
                             className="text-blue-400 hover:underline"
                         >
-                            estevaohenril@gmail.com
+                            typereditoronlline@gmail.com
                         </a>
                     </p>
                 </div>
