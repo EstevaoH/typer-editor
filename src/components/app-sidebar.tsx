@@ -1,5 +1,5 @@
-"use client"
-import { Search, Home, X, Coffee } from "lucide-react"
+"use client";
+import { Search, Home, X, Coffee } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,102 +10,108 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
-import { Input } from "./ui/input"
-import { NavDocuments } from "./nav-documents"
-import { NavActions } from "./nav-actions"
-import { Separator } from "./ui/separator"
-import Link from "next/link"
-import { ShowDeleteConfirm } from "./show-delete-confirm"
-import { useDocuments } from "@/context/documents-context"
-import { KeyboardShortcuts } from "./key-board-shortcuts"
-import { ShareModal } from "./share-modal"
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { Input } from "./ui/input";
+import { NavDocuments } from "./nav-documents";
+import { NavActions } from "./nav-actions";
+import { Separator } from "./ui/separator";
+import Link from "next/link";
+import { ShowDeleteConfirm } from "./show-delete-confirm";
+import { Document, useDocuments } from "@/context/documents-context";
+import { KeyboardShortcuts } from "./key-board-shortcuts";
+import { ShareModal } from "./share-modal";
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  documents?: Array<{ id: string; title: string; content: string }>
-  currentDocId?: string | null
+  documents?: Array<{ id: string; title: string; content: string }>;
+  currentDocId?: string | null;
   user?: {
-    name?: string
-    email?: string
-    image?: string
-  }
+    name?: string;
+    email?: string;
+    image?: string;
+  };
 }
 
-export function AppSidebar({
-  className,
-  ...props
-}: AppSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const { deleteDocument,
+export function AppSidebar({ className, ...props }: AppSidebarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    deleteDocument,
     toggleFavorite,
-    setCurrentDocumentId, currentDocument, updateDocumentPrivacy, updateDocumentSharing } = useDocuments()
-  const { state, toggleSidebar } = useSidebar()
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [documentToDelete, setDocumentToDelete] = useState<any>(null)
+    setCurrentDocumentId,
+    currentDocument,
+    updateDocumentPrivacy,
+    updateDocumentSharing,
+  } = useDocuments();
+  const { state, toggleSidebar } = useSidebar();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false);
 
-  const handleDeleteClick = (doc: any) => {
-    setDocumentToDelete(doc)
-    setShowDeleteConfirm(true)
-  }
+  const handleDeleteClick = (doc: Document) => {
+    setDocumentToDelete(doc);
+    setShowDeleteConfirm(true);
+  };
   const handlePrivacyChange = (isPrivate: boolean) => {
     if (currentDocument) {
-      updateDocumentPrivacy(currentDocument.id, isPrivate)
+      updateDocumentPrivacy(currentDocument.id, isPrivate);
     }
-  }
+  };
   const handleShareSuccess = (recipients: string[]) => {
     if (currentDocument) {
-      updateDocumentSharing(currentDocument.id, true, recipients)
+      updateDocumentSharing(currentDocument.id, true, recipients);
     }
-  }
+  };
 
   const handleKeyboardShortcuts = () => {
-    setShowShortcuts(true)
-  }
+    setShowShortcuts(true);
+  };
 
   const handleShare = () => {
-    setShowShareModal(true)
-  }
+    setShowShareModal(true);
+  };
 
   const handleShareClick = (doc: any) => {
-    setCurrentDocumentId(doc.id)
-    setShowShareModal(true)
-  }
+    setCurrentDocumentId(doc.id);
+    setShowShareModal(true);
+  };
 
   const handleCloseShareModal = () => {
-    setShowShareModal(false)
-  }
+    setShowShareModal(false);
+  };
 
   const handleConfirmDelete = () => {
     if (documentToDelete) {
-      deleteDocument(documentToDelete.id)
-      setDocumentToDelete(null)
-      setShowDeleteConfirm(false)
+      deleteDocument(documentToDelete.id);
+      setDocumentToDelete(null);
+      setShowDeleteConfirm(false);
     }
-  }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-        setShowShortcuts(prev => !prev);
+      if ((e.ctrlKey || e.metaKey) && e.key === "/") {
+        setShowShortcuts((prev) => !prev);
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
-        e.preventDefault()
-        e.stopPropagation()
-        setShowShareModal(true)
-        return
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "e"
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowShareModal(true);
+        return;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [showShortcuts]);
 
   return (
@@ -121,7 +127,9 @@ export function AppSidebar({
       >
         <SidebarContent className="h-full flex flex-col bg-zinc-800 dark border-none">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-zinc-400">Navegação</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-zinc-400">
+              Navegação
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -142,89 +150,83 @@ export function AppSidebar({
                       >
                         <Search className="w-5 h-5" />
                       </SidebarMenuButton>
-
                     </div>
                   )}
-                  {
-                    state !== "collapsed" && (
-                      <div className="py-2 border-b border-zinc-700">
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                            <Search className="w-4 h-4 text-zinc-400" />
-                          </div>
-                          <Input
-                            placeholder="Buscar documentos..."
-                            className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                          />
-                          {searchQuery && (
-                            <button
-                              onClick={() => setSearchQuery('')}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
+                  {state !== "collapsed" && (
+                    <div className="py-2 border-b border-zinc-700">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                          <Search className="w-4 h-4 text-zinc-400" />
                         </div>
+                        <Input
+                          placeholder="Buscar documentos..."
+                          className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-8"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                    )
-                  }
+                    </div>
+                  )}
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
           <NavDocuments
+            onDeleteClick={handleDeleteClick}
             onShareClick={handleShare}
             searchQuery={searchQuery}
-            onDeleteClick={handleDeleteClick}
             deleteDocument={deleteDocument}
             toggleFavorite={toggleFavorite}
             setCurrentDocumentId={setCurrentDocumentId}
           />
 
-          <NavActions isOpenKeyBoardShortcuts={handleKeyboardShortcuts} isOpenShareModal={handleShare} />
+          <NavActions
+            isOpenKeyBoardShortcuts={handleKeyboardShortcuts}
+            isOpenShareModal={handleShare}
+          />
           <Separator orientation="horizontal" className="bg-zinc-700" />
           <SidebarGroup>
-            {
-              state != "collapsed" ? (
-                <SidebarMenuItem>
-                  <a
-                    href="https://mepagaumcafe.com.br/estevao/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Coffee className="w-4 h-4" />
-                    Apoie o projeto ☕
-                  </a>
-                </SidebarMenuItem>
-
-              ) : (
-                <SidebarMenuItem>
-                  <a
-                    href="https://mepagaumcafe.com.br/estevao/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Coffee className="w-4 h-4" />
-                  </a>
-                </SidebarMenuItem>
-              )
-            }
-
+            {state != "collapsed" ? (
+              <SidebarMenuItem>
+                <a
+                  href="https://mepagaumcafe.com.br/estevao/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Coffee className="w-4 h-4" />
+                  Apoie o projeto ☕
+                </a>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem>
+                <a
+                  href="https://mepagaumcafe.com.br/estevao/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Coffee className="w-4 h-4" />
+                </a>
+              </SidebarMenuItem>
+            )}
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      {
-        showShortcuts && (
-          <KeyboardShortcuts
-            isOpen={showShortcuts}
-            onClose={() => setShowShortcuts(false)}
-          />
-        )
-      }
+      {showShortcuts && (
+        <KeyboardShortcuts
+          isOpen={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
+        />
+      )}
       {showDeleteConfirm && (
         <ShowDeleteConfirm
           currentDocument={documentToDelete}
@@ -236,13 +238,13 @@ export function AppSidebar({
         <ShareModal
           isOpen={showShareModal}
           onClose={handleCloseShareModal}
-          documentContent={currentDocument?.content || ''}
-          documentTitle={currentDocument?.title || 'Documento sem título'}
+          documentContent={currentDocument?.content || ""}
+          documentTitle={currentDocument?.title || "Documento sem título"}
           isPrivate={currentDocument?.isPrivate !== false}
           onPrivacyChange={handlePrivacyChange}
           onShareSuccess={handleShareSuccess}
         />
       )}
     </>
-  )
+  );
 }

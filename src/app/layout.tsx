@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DocumentsProvider } from "@/context/documents-context";
+import { ToastProvider } from "@/context/toast-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "TyperEditor - Editor de Texto Online",
-  description: "Crie, edite e compartilhe documentos diretamente no seu navegador",
+  description:
+    "Crie, edite e compartilhe documentos diretamente no seu navegador",
 };
 
 export default function RootLayout({
@@ -28,9 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DocumentsProvider>
-          {children}
-        </DocumentsProvider>
+        <ToastProvider>
+          <DocumentsProvider>{children}</DocumentsProvider>
+        </ToastProvider>
       </body>
     </html>
   );

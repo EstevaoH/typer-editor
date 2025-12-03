@@ -12,13 +12,6 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
     const [rememberChoice, setRememberChoice] = useState(false);
     const toast = useToast()
 
-    useEffect(() => {
-        const savedPreference = localStorage.getItem('skipDeleteConfirmation');
-        if (savedPreference === 'true') {
-            setRememberChoice(true);
-        }
-    }, []);
-
     const handleClose = () => {
         setShowDeleteConfirm(false);
     };
@@ -72,22 +65,7 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                         Tem certeza que deseja excluir o documento "{currentDocument?.title}"?
                         Esta ação não pode ser desfeita.
                     </p>
-
-                    <div className="flex items-center my-3">
-                        <label className="flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={rememberChoice}
-                                onChange={handleRememberChange}
-                                className="w-4 h-4 text-red-600 bg-zinc-800 border-zinc-600 rounded "
-                            />
-                            <span className="ml-2 text-sm text-zinc-400">
-                                Não mostrar esta mensagem novamente
-                            </span>
-                        </label>
-                    </div>
-
-                    <div className="flex gap-3 justify-end">
+                    <div className="flex gap-3 justify-end mt-4">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

@@ -1,6 +1,7 @@
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { DownloadButton } from "./dowload-button";
 import { Keyboard, Share } from "lucide-react";
+import { ShareButton } from "./share-button";
 
 interface NavActionsProps {
     isOpenKeyBoardShortcuts: () => void,
@@ -24,13 +25,7 @@ export function NavActions({ isOpenKeyBoardShortcuts, isOpenShareModal }: NavAct
                                 <Keyboard className="w-4 h-4 text-zinc-300" />
                                 <span className="text-zinc-100">Atalhos</span>
                             </SidebarMenuButton>
-                            <SidebarMenuButton
-                                className="hover:bg-zinc-700 cursor-pointer"
-                                onClick={() => isOpenShareModal()}
-                            >
-                                <Share className="w-4 h-4 text-zinc-300" />
-                                <span className="text-zinc-100">Compartilhar</span>
-                            </SidebarMenuButton>
+                            <ShareButton isOpenShareModal={isOpenShareModal} />
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>
