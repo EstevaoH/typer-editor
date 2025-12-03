@@ -295,7 +295,7 @@ export function Editor() {
             </AnimatePresence>
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 pr-4">
-                    <div className="max-w-screen mx-auto prose prose-violet tiptap">
+                    <div className="max-w-screen mx-auto prose prose-violet dark:prose-invert tiptap">
                         <div className="mb-6 relative group">
                             <textarea
                                 value={title}

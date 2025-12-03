@@ -12,6 +12,8 @@ import { ImageSelector } from './image-selector';
 import { LinkSelector } from './link-selector';
 import { BoldIcon, Code2Icon, ItalicIcon, Keyboard, QuoteIcon, Redo2, Search, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
 import { Editor } from '@tiptap/react';
+import { ThemeToggle } from './theme-toggle';
+import { VersionHistoryDialog } from './version-history-dialog';
 
 interface ToolBarProps {
     editor: Editor | null;
@@ -101,6 +103,10 @@ export function ToolBar({ editor }: ToolBarProps) {
                             <Redo2 className="w-4 h-4" />
                         </button>
                     </div>
+                </div>
+                <div className="ml-2 border-l border-zinc-700 pl-2 flex items-center gap-2">
+                    <VersionHistoryDialog editor={editor} />
+                    <ThemeToggle />
                 </div>
             </div>
 

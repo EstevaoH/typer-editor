@@ -37,6 +37,15 @@ export interface Document {
   sharedWith: string[];
   isTutorial?: boolean;
 }
+
+export interface Version {
+  id: string;
+  documentId: string;
+  content: string;
+  title: string;
+  createdAt: string;
+}
+
 type DownloadFormat = "txt" | "md" | "docx" | "pdf";
 
 interface DocumentsContextType {
@@ -61,7 +70,11 @@ interface DocumentsContextType {
   addToSharedWith: (id: string, emails: string[]) => void;
   removeFromSharedWith: (id: string, email: string) => void;
   skipDeleteConfirm: boolean;
-  setSkipDeleteConfirm: any
+  setSkipDeleteConfirm: any;
+  versions: Version[];
+  createVersion: (documentId: string) => void;
+  restoreVersion: (versionId: string) => void;
+  deleteVersion: (versionId: string) => void;
 }
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(
@@ -73,7 +86,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false);
-  const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false)
+  const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false);
+  const [versions, setVersions] = useState<Version[]>([])
   const { canCreate, isLimitReached, remaining, checkLimit } = useDocumentLimit(
     documents,
     MAX_DOCUMENTS
@@ -97,6 +111,19 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       setSkipDeleteConfirm(JSON.parse(stored));
     }
   }, []);
+
+  useEffect(() => {
+    const savedVersions = localStorage.getItem("documentVersions");
+    if (savedVersions) {
+      setVersions(JSON.parse(savedVersions));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem("documentVersions", JSON.stringify(versions));
+    }
+  }, [versions, isLoading]);
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem("savedDocuments", JSON.stringify(documents));
@@ -470,6 +497,38 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const createVersion = useCallback((documentId: string) => {
+    const doc = documents.find((d) => d.id === documentId);
+    if (!doc) return;
+
+    const newVersion: Version = {
+      id: uuidv4(),
+      documentId,
+      content: doc.content,
+      title: doc.title,
+      createdAt: new Date().toISOString(),
+    };
+
+    setVersions((prev) => [newVersion, ...prev]);
+  }, [documents]);
+
+  const restoreVersion = useCallback((versionId: string) => {
+    const version = versions.find((v) => v.id === versionId);
+    if (!version) return;
+
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === version.documentId
+          ? { ...doc, content: version.content, title: version.title, updatedAt: new Date().toISOString() }
+          : doc
+      )
+    );
+  }, [versions]);
+
+  const deleteVersion = useCallback((versionId: string) => {
+    setVersions((prev) => prev.filter((v) => v.id !== versionId));
+  }, []);
+
   const value = {
     documents,
     currentDocument,
@@ -489,6 +548,10 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     skipDeleteConfirm,
     setSkipDeleteConfirm,
     MAX_DOCUMENTS,
+    versions,
+    createVersion,
+    restoreVersion,
+    deleteVersion,
   };
 
   return (
