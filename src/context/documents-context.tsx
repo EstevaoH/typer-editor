@@ -40,6 +40,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   // Load from localStorage
   useEffect(() => {
     const savedDocs = localStorage.getItem("savedDocuments");
+    const hasVisited = localStorage.getItem("hasVisited");
+
     if (savedDocs) {
       const parsedDocs = JSON.parse(savedDocs);
       setDocuments(parsedDocs);
@@ -47,6 +49,47 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       if (parsedDocs.length > 0 && !currentDocId) {
         setCurrentDocId(parsedDocs[0].id);
       }
+    } else if (!hasVisited) {
+      // First access: Create welcome document
+      const welcomeDoc: Document = {
+        id: crypto.randomUUID(),
+        title: "Bem-vindo ao Typer Editor! 👋",
+        content: `
+          <h1>Bem-vindo ao Typer Editor! 🚀</h1>
+          <p>Este é o seu novo editor de texto minimalista e poderoso. Aqui estão algumas dicas para começar:</p>
+          
+          <h2>📝 Formatação Básica</h2>
+          <ul>
+            <li><strong>Negrito</strong>: Selecione o texto e pressione <code>Ctrl+B</code></li>
+            <li><em>Itálico</em>: Selecione o texto e pressione <code>Ctrl+I</code></li>
+            <li><u>Sublinhado</u>: Selecione o texto e pressione <code>Ctrl+U</code></li>
+          </ul>
+
+          <h2>⚡ Atalhos Úteis</h2>
+          <ul>
+            <li><code>Ctrl+S</code>: Salvar documento (embora salvamos automaticamente!)</li>
+            <li><code>Ctrl+Shift+E</code>: Compartilhar documento</li>
+            <li><code>Ctrl+/</code>: Ver todos os atalhos</li>
+          </ul>
+
+          <h2>🎨 Recursos Legais</h2>
+          <ul>
+            <li>Suporte a Markdown</li>
+            <li>Histórico de versões</li>
+            <li>Modo escuro automático</li>
+          </ul>
+
+          <p>Sinta-se à vontade para editar ou excluir este documento e começar a escrever suas próprias ideias!</p>
+        `,
+        updatedAt: new Date().toISOString(),
+        isFavorite: false,
+        isPrivate: true,
+        sharedWith: [],
+      };
+
+      setDocuments([welcomeDoc]);
+      setCurrentDocId(welcomeDoc.id);
+      localStorage.setItem("hasVisited", "true");
     }
     setIsLoading(false);
   }, []);

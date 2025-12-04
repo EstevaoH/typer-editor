@@ -142,6 +142,18 @@ body {
   .sidebar-item-selected-text {
     @apply text-blue-400 font-medium;
   }
+
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+
+  .font-serif {
+    font-family: var(--font-roboto-slab);
+  }
+
+  .font-mono {
+    font-family: var(--font-jetbrains-mono);
+  }
 }
 
 .character-count {

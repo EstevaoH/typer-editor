@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Roboto_Slab, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { DocumentsProvider } from "@/context/documents-context";
 import { ToastProvider } from "@/context/toast-context";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SettingsProvider } from "@/context/settings-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,6 +13,21 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const robotoSlab = Roboto_Slab({
+  variable: "--font-roboto-slab",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -29,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${robotoSlab.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <ToastProvider>
           <ThemeProvider
@@ -38,7 +54,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <DocumentsProvider>{children}</DocumentsProvider>
+            <SettingsProvider>
+              <DocumentsProvider>{children}</DocumentsProvider>
+            </SettingsProvider>
           </ThemeProvider>
         </ToastProvider>
       </body>

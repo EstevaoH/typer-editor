@@ -23,6 +23,7 @@ import { Document, useDocuments } from "@/context/documents-context";
 import { KeyboardShortcuts } from "./key-board-shortcuts";
 import { ShareModal } from "./share-modal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { FontSelector } from "./font-selector";
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>;
@@ -142,8 +143,8 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                     </div>
                   )}
                   {state !== "collapsed" && (
-                    <div className="py-2 border-b border-zinc-700">
-                      <div className="relative">
+                    <div className="py-2 border-b border-zinc-700 flex items-center gap-2">
+                      <div className="relative flex-1">
                         <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
                           <Search className="w-4 h-4 text-zinc-400" />
                         </div>
@@ -162,6 +163,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                           </button>
                         )}
                       </div>
+                      <FontSelector />
                     </div>
                   )}
                 </SidebarMenuItem>

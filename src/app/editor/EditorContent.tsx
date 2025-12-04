@@ -18,6 +18,8 @@ import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/toast-context';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useSettings } from "@/context/settings-context";
+import { cn } from "@/lib/utils";
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -26,7 +28,18 @@ lowlight.register('js', js)
 lowlight.register('ts', ts)
 
 export function Editor() {
+    const { fontFamily } = useSettings();
     const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument, } = useDocuments()
+    
+    const getFontClass = () => {
+        switch (fontFamily) {
+            case 'inter': return 'font-inter';
+            case 'serif': return 'font-serif';
+            case 'mono': return 'font-mono';
+            default: return 'font-sans';
+        }
+    };
+
     const [title, setTitle] = useState(currentDocument?.title || '')
     const [isEditorFocused, setIsEditorFocused] = useState(false)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -215,8 +228,12 @@ export function Editor() {
     }, [currentDocument])
 
     useEffect(() => {
-        if (editor && currentDocument) {
-            editor.commands.setContent(currentDocument.content || '', false);
+        if (editor) {
+            if (currentDocument) {
+                editor.commands.setContent(currentDocument.content || '', false);
+            } else {
+                editor.commands.setContent('', false);
+            }
         }
     }, [currentDocument?.id, editor]);
 
@@ -275,7 +292,10 @@ export function Editor() {
             </AnimatePresence>
             <div className="flex h-[calc(100vh-4rem)]">
                 <div className="flex-1 overflow-auto pt-4 px-2 sm:px-4">
-                    <div className="max-w-full sm:max-w-screen mx-auto prose prose-violet dark:prose-invert tiptap">
+                    <div className={cn(
+                        "max-w-full sm:max-w-screen mx-auto prose prose-violet dark:prose-invert tiptap",
+                        getFontClass()
+                    )}>
                         <div className="mb-6 relative group">
                             <textarea
                                 value={title}
