@@ -34,14 +34,14 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
         
         // Show custom toast with undo button
         const toastElement = document.createElement('div');
-        toastElement.className = 'fixed bottom-4 right-4 bg-zinc-800 border border-zinc-700 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-4 max-w-md';
+        toastElement.className = 'fixed bottom-4 right-4 bg-popover border border-border text-popover-foreground px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center gap-4 max-w-md';
         toastElement.style.transition = 'opacity 0.3s';
         toastElement.innerHTML = `
             <div class="flex-1">
                 <p class="font-medium mb-1">🗑️ Documento excluído</p>
-                <p class="text-sm text-zinc-400">Você tem <span id="countdown" class="font-semibold text-white">5</span> segundos para desfazer</p>
+                <p class="text-sm text-muted-foreground">Você tem <span id="countdown" class="font-semibold text-foreground">5</span> segundos para desfazer</p>
             </div>
-            <button id="undo-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md font-medium transition-colors whitespace-nowrap">
+            <button id="undo-btn" class="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-medium transition-colors whitespace-nowrap">
                 Desfazer
             </button>
         `;
@@ -121,7 +121,7 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                 animate={{ opacity: 0.5 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black z-50"
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
                 onClick={handleClose}
             />
 
@@ -136,37 +136,37 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                         stiffness: 300,
                         duration: 0.3
                     }}
-                    className="bg-zinc-900 border border-zinc-700 p-6 rounded-lg shadow-2xl max-w-md w-full mx-4"
+                    className="bg-popover border border-border p-4 sm:p-6 rounded-lg shadow-2xl max-w-md w-full mx-4"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex items-start gap-3 mb-4">
-                        <div className="p-2 bg-red-500/10 rounded-lg">
-                            <AlertTriangle className="w-6 h-6 text-red-500" />
+                        <div className="p-2 bg-destructive/10 rounded-lg">
+                            <AlertTriangle className="w-6 h-6 text-destructive" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-zinc-100 mb-1">
+                            <h3 className="text-lg font-semibold text-popover-foreground mb-1">
                                 Confirmar exclusão
                             </h3>
-                            <p className="text-sm text-zinc-400">
+                            <p className="text-sm text-muted-foreground">
                                 Você terá 5 segundos para desfazer
                             </p>
                         </div>
                     </div>
                     
-                    <div className="bg-zinc-800/50 rounded-lg p-4 mb-4 space-y-2">
-                        <div className="flex items-center gap-2 text-zinc-300">
-                            <FileText className="w-4 h-4 text-zinc-500" />
+                    <div className="bg-muted/50 rounded-lg p-4 mb-4 space-y-2">
+                        <div className="flex items-center gap-2 text-foreground">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
                             <span className="font-medium">{currentDocument?.title || "Sem título"}</span>
                         </div>
                         {versionCount > 0 && (
-                            <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                                <Clock className="w-4 h-4 text-zinc-500" />
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
                                 <span>{versionCount} {versionCount === 1 ? 'versão salva' : 'versões salvas'}</span>
                             </div>
                         )}
                     </div>
 
-                    <p className="text-zinc-400 text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                         {versionCount > 0 
                             ? `O documento e suas ${versionCount} ${versionCount === 1 ? 'versão' : 'versões'} serão excluídos.`
                             : 'O documento será excluído.'}
@@ -177,19 +177,19 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                             type="checkbox"
                             checked={rememberChoice}
                             onChange={handleRememberChange}
-                            className="w-4 h-4 rounded border-zinc-600 bg-zinc-700 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                            className="w-4 h-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors">
+                        <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                             Não perguntar novamente
                         </span>
                     </label>
 
-                    <div className="flex gap-3 justify-end">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleClose}
-                            className="px-4 py-2 text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-md hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                            className="px-4 py-2 text-foreground bg-secondary border border-border rounded-md hover:bg-secondary/80 cursor-pointer transition-colors duration-200 w-full sm:w-auto"
                         >
                             Cancelar
                         </motion.button>
@@ -197,7 +197,7 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleDelete}
-                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer transition-colors duration-200 font-medium"
+                            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 cursor-pointer transition-colors duration-200 font-medium w-full sm:w-auto"
                         >
                             Excluir documento
                         </motion.button>

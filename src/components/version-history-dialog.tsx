@@ -48,20 +48,20 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button
-          className="p-2 rounded cursor-pointer text-zinc-300 hover:bg-zinc-700"
+          className="p-2 rounded cursor-pointer text-muted-foreground hover:bg-secondary"
           title="Histórico de Versões"
         >
           <Clock className="w-4 h-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-zinc-900 border-zinc-800 text-zinc-100">
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-popover border-border text-popover-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Histórico de Versões</span>
             <Button
               onClick={handleCreateVersion}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
               <Plus className="w-4 h-4" />
               Criar Snapshot
@@ -71,7 +71,7 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
 
         <div className="flex-1 overflow-hidden mt-4">
           {documentVersions.length === 0 ? (
-            <div className="text-center text-zinc-500 py-10">
+            <div className="text-center text-muted-foreground py-10">
               <Clock className="w-12 h-12 mx-auto mb-4 opacity-20" />
               <p>Nenhuma versão salva para este documento.</p>
             </div>
@@ -81,18 +81,18 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
                 {documentVersions.map((version) => (
                   <div
                     key={version.id}
-                    className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50 hover:border-zinc-600 transition-colors"
+                    className="bg-muted/50 rounded-lg p-4 border border-border hover:border-border/70 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h4 className="font-medium text-zinc-200">
+                        <h4 className="font-medium text-foreground">
                           {format(
                             new Date(version.createdAt),
                             "dd 'de' MMMM 'às' HH:mm",
                             { locale: ptBR }
                           )}
                         </h4>
-                        <p className="text-xs text-zinc-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {version.title}
                         </p>
                       </div>
@@ -101,7 +101,7 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRestoreVersion(version)}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                          className="text-primary hover:text-primary/80 hover:bg-primary/10"
                           title="Restaurar esta versão"
                         >
                           <RotateCcw className="w-4 h-4" />
@@ -110,14 +110,14 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteVersion(version.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                          className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
                           title="Excluir versão"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
-                    <div className="bg-zinc-950/50 rounded p-3 text-xs text-zinc-400 font-mono line-clamp-3">
+                    <div className="bg-muted rounded p-3 text-xs text-muted-foreground font-mono line-clamp-3">
                       {version.content.replace(/<[^>]*>?/gm, "")}
                     </div>
                   </div>

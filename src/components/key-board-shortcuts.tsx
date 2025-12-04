@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect } from 'react'
-import { X, Keyboard, Bold, Indent, Italic, Link, List, ListChecks, ListOrdered, Outdent, Redo, Save, Search, Star, Underline, Undo, Command } from 'lucide-react'
+import { X, Keyboard, Bold, Indent, Italic, Link, List, ListChecks, ListOrdered, Outdent, Redo, Save, Search, Star, Underline, Undo, Command, FileText, Share2, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface KeyboardShortcutsProps {
@@ -27,6 +27,9 @@ const shortcutIcons: Record<string, React.ReactNode> = {
   'Remover indentação': <Outdent className="w-4 h-4" />,
   'Aumentar recuo (em listas)': <Indent className="w-4 h-4" />,
   'Diminuir recuo (em listas)': <Outdent className="w-4 h-4" />,
+  'Criar novo documento': <FileText className="w-4 h-4" />,
+  'Compartilhar documento': <Share2 className="w-4 h-4" />,
+  'Excluir documento': <Trash2 className="w-4 h-4" />,
 }
 
 export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
@@ -38,6 +41,9 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
         { keys: ['Ctrl', 'F'], description: 'Buscar no documento' },
         { keys: ['Ctrl', 'D'], description: 'Marcar/desmarcar como favorito' },
         { keys: ['Ctrl', '/'], description: 'Abrir atalhos de teclado' },
+        { keys: ['Ctrl', 'Alt', 'N'], description: 'Criar novo documento' },
+        { keys: ['Ctrl', 'Shift', 'E'], description: 'Compartilhar documento' },
+        { keys: ['Ctrl', 'Shift', 'Delete'], description: 'Excluir documento' },
       ]
     },
     {
@@ -131,8 +137,8 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
           >
-            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-zinc-800 dark:to-zinc-800">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col mx-2">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-zinc-800 dark:to-zinc-800">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                     <Keyboard className="w-6 h-6 text-zinc-600 dark:text-blue-400" />
@@ -151,7 +157,7 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto flex-1">
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">
                 <div className="grid gap-6">
                   {shortcutCategories.map((category, categoryIndex) => (
                     <motion.div

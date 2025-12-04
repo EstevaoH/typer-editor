@@ -17,6 +17,7 @@ import { SearchSelector } from '@/components/search-selector';
 import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/toast-context';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -113,47 +114,26 @@ export function Editor() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    useKeyboardShortcuts({
+        onToggleShortcuts: () => setShowShortcuts(prev => !prev),
+        onToggleSearch: () => setShowSearch(prev => !prev),
+        onCreateDocument: () => {
+            createDocument();
+            toast.showToast('📄 Novo documento criado');
+        },
+        onDelete: () => {
+            if (currentDocument) {
+                if (skipDeleteConfirmation) {
+                    deleteDocument(currentDocument.id);
+                } else {
+                    setShowDeleteConfirm(true);
+                }
+            }
+        }
+    });
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-                setShowShortcuts(prev => !prev);
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                return;
-            }
-
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                setShowSearch(prev => !prev);
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                return;
-            }
-
-            if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                createDocument();
-                toast.showToast('📄 Novo documento criado');
-                return;
-            }
-
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                if (currentDocument) {
-                    if (skipDeleteConfirmation) {
-                        deleteDocument(currentDocument.id);
-                    } else {
-                        setShowDeleteConfirm(true);
-                    }
-                }
-                return;
-            }
-
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '8') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -208,7 +188,7 @@ export function Editor() {
 
         window.addEventListener('keydown', handleKeyDown, { capture: true });
         return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-    }, [showSearch, showShortcuts, createDocument, editor, currentDocument, showDeleteConfirm]);
+    }, [showSearch, showShortcuts, createDocument, editor, currentDocument, showDeleteConfirm, skipDeleteConfirmation, deleteDocument]);
 
     const handleDeleteDocument = () => {
         if (currentDocument) {
@@ -294,8 +274,8 @@ export function Editor() {
                 )}
             </AnimatePresence>
             <div className="flex h-[calc(100vh-4rem)]">
-                <div className="flex-1 overflow-auto pt-4 pr-4">
-                    <div className="max-w-screen mx-auto prose prose-violet dark:prose-invert tiptap">
+                <div className="flex-1 overflow-auto pt-4 px-2 sm:px-4">
+                    <div className="max-w-full sm:max-w-screen mx-auto prose prose-violet dark:prose-invert tiptap">
                         <div className="mb-6 relative group">
                             <textarea
                                 value={title}
@@ -369,7 +349,7 @@ export function Editor() {
                                     }
                                 }}
                                 placeholder="Digite o título aqui..."
-                                className="w-full bg-transparent text-4xl font-bold outline-none placeholder:text-muted-foreground/60 text-foreground resize-none overflow-hidden border-b pb-3 focus:border-primary transition-all duration-200 group-hover:border-border/60"
+                                className="w-full bg-transparent text-2xl sm:text-4xl font-bold outline-none placeholder:text-muted-foreground/60 text-foreground resize-none overflow-hidden border-b pb-3 focus:border-primary transition-all duration-200 group-hover:border-border/60"
                                 style={{ minHeight: '60px' }}
                                 rows={1}
                                 maxLength={120}
@@ -443,7 +423,7 @@ export function Editor() {
                                 editor={editor}
                                 className="outline-none min-h-screen"
                             />
-                            <div className="mt-4 pt-4 border-t border-border/30 flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="mt-4 pt-4 border-t border-border/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground">
                                 <div className="flex items-center gap-4">
                                     <span className="flex items-center gap-1">
                                         <FilePenLine className="w-4 h-4" />

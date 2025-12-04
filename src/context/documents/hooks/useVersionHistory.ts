@@ -8,11 +8,24 @@ export const useVersionHistory = (
   setVersions: React.Dispatch<React.SetStateAction<Version[]>>,
   setDocuments: React.Dispatch<React.SetStateAction<Document[]>>
 ) => {
-  const [deletedDocument, setDeletedDocument] = useState<{
+  const [deletedDocumentState, setDeletedDocumentState] = useState<{
     doc: Document;
     versions: Version[];
   } | null>(null);
+  
+  // Use a ref to track the deleted document so undoDelete always has access to the latest value
+  // even if the closure is stale
+  const deletedDocumentRef = useRef<{
+    doc: Document;
+    versions: Version[];
+  } | null>(null);
+  
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync state with ref
+  useEffect(() => {
+    deletedDocumentRef.current = deletedDocumentState;
+  }, [deletedDocumentState]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -76,12 +89,15 @@ export const useVersionHistory = (
         clearTimeout(timeoutRef.current);
       }
 
-      // Store deleted document
-      setDeletedDocument({ doc, versions: docVersions });
+      // Store deleted document in both state and ref
+      const deletedData = { doc, versions: docVersions };
+      setDeletedDocumentState(deletedData);
+      deletedDocumentRef.current = deletedData;
 
       // Set timeout to permanently delete after 5 seconds
       timeoutRef.current = setTimeout(() => {
-        setDeletedDocument(null);
+        setDeletedDocumentState(null);
+        deletedDocumentRef.current = null;
         timeoutRef.current = null;
       }, 5000);
     },
@@ -89,12 +105,15 @@ export const useVersionHistory = (
   );
 
   const undoDelete = useCallback(() => {
-    if (!deletedDocument) {
-      console.log('No deleted document to restore');
+    // Use the ref to get the latest deleted document
+    const deletedDoc = deletedDocumentRef.current;
+    
+    if (!deletedDoc) {
+      console.log('No deleted document to restore (checked ref)');
       return null;
     }
 
-    console.log('Restoring document:', deletedDocument.doc.title);
+    console.log('Restoring document:', deletedDoc.doc.title);
 
     // Clear the timeout
     if (timeoutRef.current) {
@@ -103,17 +122,18 @@ export const useVersionHistory = (
     }
 
     // Restore document and versions
-    setDocuments((prev) => [deletedDocument.doc, ...prev]);
-    setVersions((prev) => [...deletedDocument.versions, ...prev]);
+    setDocuments((prev) => [deletedDoc.doc, ...prev]);
+    setVersions((prev) => [...deletedDoc.versions, ...prev]);
 
-    const restoredId = deletedDocument.doc.id;
+    const restoredId = deletedDoc.doc.id;
 
     // Clear deleted document
-    setDeletedDocument(null);
+    setDeletedDocumentState(null);
+    deletedDocumentRef.current = null;
 
     console.log('Document restored with ID:', restoredId);
     return restoredId;
-  }, [deletedDocument, setDocuments, setVersions]);
+  }, [setDocuments, setVersions]);
 
   return {
     createVersion,
@@ -121,6 +141,6 @@ export const useVersionHistory = (
     deleteVersion,
     undoDelete,
     storeDeletedDocument,
-    hasDeletedDocument: !!deletedDocument,
+    hasDeletedDocument: !!deletedDocumentState,
   };
 };

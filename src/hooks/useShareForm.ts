@@ -87,17 +87,17 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
                 throw new Error(result.error || 'Falha ao enviar email');
             }
 
-
             setSentEmails(prev => prev.map(item => ({
                 ...item,
                 status: 'success'
             })));
 
-            toast.showToast('📧 Documento compartilhado com sucesso!');
+            toast.showToast('📧 Convites enviados com sucesso!');
 
             onSuccess?.(data.emails);
             form.reset({ emails: [], makePublic: false });
 
+            // Auto hide success list after delay
             setTimeout(() => {
                 setShowSentList(false);
                 setSentEmails([]);
@@ -112,13 +112,11 @@ export function useShareForm({ documentTitle, documentContent, onSuccess, shared
                 error: error instanceof Error ? error.message : 'Erro desconhecido'
             })));
 
-            let errorMessage = '❌ Erro ao compartilhar documento. Tente novamente.';
+            let errorMessage = '❌ Erro ao compartilhar documento.';
 
             if (error instanceof Error) {
                 if (error.message.includes('Failed to fetch')) {
                     errorMessage = '❌ Erro de conexão. Verifique sua internet.';
-                } else if (error.message.includes('Nenhum destinatário')) {
-                    errorMessage = '❌ Adicione pelo menos um destinatário.';
                 }
             }
 

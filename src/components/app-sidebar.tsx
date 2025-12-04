@@ -22,6 +22,7 @@ import { ShowDeleteConfirm } from "./show-delete-confirm";
 import { Document, useDocuments } from "@/context/documents-context";
 import { KeyboardShortcuts } from "./key-board-shortcuts";
 import { ShareModal } from "./share-modal";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>;
@@ -89,30 +90,18 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "/") {
-        setShowShortcuts((prev) => !prev);
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return;
-      }
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "e"
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        setShowShareModal(true);
-        return;
-      }
-    };
+  const handleToggleShortcuts = () => {
+    setShowShortcuts((prev) => !prev);
+  };
 
-    window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [showShortcuts]);
+  const handleOpenShare = () => {
+    setShowShareModal(true);
+  };
+
+  useKeyboardShortcuts({
+    onToggleShortcuts: handleToggleShortcuts,
+    onShare: handleOpenShare,
+  });
 
   return (
     <>
