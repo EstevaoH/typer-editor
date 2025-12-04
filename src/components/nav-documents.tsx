@@ -45,11 +45,14 @@ export function NavDocuments({
 
   const filteredDocuments = useMemo(() => {
     if (!searchQuery.trim()) return documents;
-    return documents.filter(
-      (doc) =>
-        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.title.toUpperCase().includes(searchQuery.toUpperCase())
-    );
+    const query = searchQuery.toLowerCase();
+    return documents.filter((doc) => {
+      const titleMatch = doc.title.toLowerCase().includes(query);
+      const contentMatch = doc.content
+        ? doc.content.replace(/<[^>]*>/g, "").toLowerCase().includes(query)
+        : false;
+      return titleMatch || contentMatch;
+    });
   }, [documents, searchQuery]);
 
   const favoriteDocuments = useMemo(

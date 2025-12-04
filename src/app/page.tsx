@@ -22,7 +22,7 @@ export default function Home() {
   const handleOpenContact = () => setIsContactModalOpen(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Header onOpenContact={handleOpenContact} />
       
       <Hero />

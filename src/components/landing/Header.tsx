@@ -19,9 +19,9 @@ export function Header({ onOpenContact }: HeaderProps) {
           </span>
         </div>
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">Recursos</a>
-          <a href="#how-it-works" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">Como Funciona</a>
-          <a href="#faq" className="text-zinc-300 hover:text-white transition-colors hover:scale-105">FAQ</a>
+          <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105">Recursos</a>
+          <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105">Como Funciona</a>
+          <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105">FAQ</a>
           <ThemeToggle />
         </nav>
         <Link

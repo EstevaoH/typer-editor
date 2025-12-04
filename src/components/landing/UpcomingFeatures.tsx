@@ -45,18 +45,18 @@ export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
   ];
 
   return (
-    <section id="upcoming-features" className="py-20 bg-gradient-to-br from-zinc-900 to-black">
+    <section id="upcoming-features" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Próximas Atualizações</h2>
-          <p className="text-xl text-zinc-400">Estamos sempre trabalhando em novas funcionalidades</p>
+          <p className="text-xl text-muted-foreground">Estamos sempre trabalhando em novas funcionalidades</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-zinc-800/50 p-8 rounded-2xl border border-zinc-700/30 hover:border-zinc-600 transition-all group hover:scale-105 animate-fade-in"
+              className="bg-card p-8 rounded-2xl border border-border hover:border-border/80 transition-all group hover:scale-105 animate-fade-in shadow-sm"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`bg-${feature.status === "Em desenvolvimento" ? "blue" : "purple"}-500/10 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
@@ -71,18 +71,18 @@ export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
                   {feature.status}
                 </span>
               </div>
-              <p className="text-zinc-400 leading-relaxed mb-4">{feature.description}</p>
+              <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
             </div>
           ))}
         </div>
 
         <div className="text-center mt-16">
-          <p className="text-zinc-400 text-lg mb-8">
+          <p className="text-muted-foreground text-lg mb-8">
             Tem uma sugestão de funcionalidade?
           </p>
           <button
             onClick={onOpenContact}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:to-purple-700 hover:from-blue-600 mt-4 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:to-purple-700 hover:from-blue-600 text-white mt-4 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
           >
             <span>Envie sua ideia</span>
             <ArrowRight className="h-4 w-4" />
