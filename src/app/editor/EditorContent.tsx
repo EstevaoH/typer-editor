@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import "highlight.js/styles/atom-one-dark.css";
 import { ToolBar } from '@/components/toolbar';
@@ -21,6 +21,8 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 
+import { StatisticsDialog } from '@/components/statistics-dialog';
+
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
 lowlight.register('css', css)
@@ -30,7 +32,7 @@ lowlight.register('ts', ts)
 export function Editor() {
     const { fontFamily } = useSettings();
     const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument, } = useDocuments()
-    
+
     const getFontClass = () => {
         switch (fontFamily) {
             case 'inter': return 'font-inter';
@@ -50,6 +52,7 @@ export function Editor() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isStatsOpen, setIsStatsOpen] = useState(false);
     const toast = useToast()
 
     const editor = useEditor({
@@ -87,12 +90,12 @@ export function Editor() {
         }
     });
 
-    const handleToggleFavorite = (id: string) => {
+    const handleToggleFavorite = useCallback((id: string) => {
         if (currentDocument) {
             toggleFavorite(id);
             toast.showToast(currentDocument.isFavorite ? '⭐ Desfavoritado' : '🌟 Favoritado');
         }
-    };
+    }, [currentDocument, toggleFavorite, toast]);
 
     useEffect(() => {
         const savedPreference = localStorage.getItem('skipDeleteConfirmation');
@@ -115,7 +118,7 @@ export function Editor() {
 
         window.addEventListener('keydown', handleKeyDownFavorite, true);
         return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
-    }, [currentDocument, toggleFavorite, toast]);
+    }, [currentDocument, handleToggleFavorite, toast]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -235,7 +238,7 @@ export function Editor() {
                 editor.commands.setContent('', false);
             }
         }
-    }, [currentDocument?.id, editor]);
+    }, [currentDocument, editor]);
 
     useEffect(() => {
         if (currentDocument) {
@@ -454,10 +457,14 @@ export function Editor() {
                                     </span>
 
                                     {editor && (
-                                        <span className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => setIsStatsOpen(true)}
+                                            className="flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded transition-colors cursor-pointer"
+                                            title="Ver estatísticas detalhadas"
+                                        >
                                             <ChevronsLeftRightEllipsis className="w-4 h-4" />
                                             {editor.storage.characterCount.characters()} caracteres
-                                        </span>
+                                        </button>
                                     )}
                                 </div>
 
@@ -473,6 +480,11 @@ export function Editor() {
                     </div>
                 </div>
             </div>
+            <StatisticsDialog
+                open={isStatsOpen}
+                onOpenChange={setIsStatsOpen}
+                editor={editor}
+            />
         </>
     );
 }

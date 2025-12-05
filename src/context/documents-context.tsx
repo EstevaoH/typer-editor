@@ -12,6 +12,7 @@ import { downloadDocument } from "./documents/utils/documentExport";
 import { useDocumentOperations } from "./documents/hooks/useDocumentOperations";
 import { useVersionHistory } from "./documents/hooks/useVersionHistory";
 import { useDocumentSharing } from "./documents/hooks/useDocumentSharing";
+import { useToast } from "./toast-context";
 import type {
   Document,
   Version,
@@ -36,6 +37,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [versions, setVersions] = useState<Version[]>([]);
 
   const { checkLimit } = useDocumentLimit(documents, 10);
+  const toast = useToast();
 
   // Load from localStorage
   useEffect(() => {
@@ -92,6 +94,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("hasVisited", "true");
     }
     setIsLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -126,7 +129,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         setCurrentDocId(documents.length > 0 ? documents[0].id : null);
       }
     }
-  }, [documents, isLoading]);
+  }, [documents, isLoading, currentDocId]);
 
   // Current document
   const currentDocument =
@@ -163,9 +166,15 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const handleDownloadDocument = useCallback(
     async (id: string, format?: DownloadFormat) => {
-      await downloadDocument(documents, id, format);
+      const result = await downloadDocument(documents, id, format);
+
+      if (result.success) {
+        toast.showToast(`✅ Documento exportado como ${format?.toUpperCase() || 'TXT'}`);
+      } else {
+        toast.showToast(`❌ ${result.error || 'Erro ao exportar documento'}`);
+      }
     },
-    [documents]
+    [documents, toast]
   );
 
   const handleSaveDocument = useCallback(

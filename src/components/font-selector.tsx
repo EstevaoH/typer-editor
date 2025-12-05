@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Type } from "lucide-react";
+import { FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function FontSelector() {
@@ -26,8 +26,8 @@ export function FontSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
-          <Type className="h-4 w-4" />
+        <Button size="sm" className="h-8 w-8 px-0 cursor-pointer bg-zinc-800 text-white hover:bg-zinc-700">
+          <FileType className="h-4 w-4" />
           <span className="sr-only">Mudar fonte</span>
         </Button>
       </DropdownMenuTrigger>

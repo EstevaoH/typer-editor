@@ -1,10 +1,12 @@
-import { Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { Paragraph, TextRun, HeadingLevel, AlignmentType, ExternalHyperlink } from "docx";
 
 export interface ParsedElement {
-  type: 'paragraph' | 'heading' | 'list-item';
+  type: 'paragraph' | 'heading' | 'list-item' | 'code' | 'blockquote';
   level?: number;
-  content: { text: string; bold?: boolean; italic?: boolean; underline?: boolean }[];
+  content: { text: string; bold?: boolean; italic?: boolean; underline?: boolean; code?: boolean; link?: string }[];
   alignment?: 'left' | 'center' | 'right' | 'justify';
+  language?: string; // For code blocks
+  isOrdered?: boolean; // For list items
 }
 
 export const parseHtmlToStructure = (html: string): ParsedElement[] => {
@@ -12,8 +14,8 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
   tempDiv.innerHTML = html;
   const elements: ParsedElement[] = [];
 
-  const parseTextNode = (node: Node, inherited: { bold?: boolean; italic?: boolean; underline?: boolean } = {}) => {
-    const result: { text: string; bold?: boolean; italic?: boolean; underline?: boolean }[] = [];
+  const parseTextNode = (node: Node, inherited: { bold?: boolean; italic?: boolean; underline?: boolean; code?: boolean } = {}) => {
+    const result: { text: string; bold?: boolean; italic?: boolean; underline?: boolean; code?: boolean; link?: string }[] = [];
     
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent || '';
@@ -36,6 +38,24 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
       if (element.tagName === 'U' || element.style.textDecoration?.includes('underline')) {
         styles.underline = true;
       }
+      if (element.tagName === 'CODE') {
+        styles.code = true;
+      }
+      
+      // Handle links
+      if (element.tagName === 'A') {
+        const href = element.getAttribute('href');
+        if (href) {
+          for (const child of Array.from(element.childNodes)) {
+            const childResults = parseTextNode(child, styles);
+            childResults.forEach(r => {
+              r.link = href;
+              result.push(r);
+            });
+          }
+          return result;
+        }
+      }
       
       // Handle line breaks
       if (element.tagName === 'BR') {
@@ -52,7 +72,7 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
     return result;
   };
 
-  const parseElement = (node: Element) => {
+  const parseElement = (node: Element, listContext?: { isOrdered: boolean }) => {
     const tagName = node.tagName;
     
     // Headings
@@ -61,6 +81,27 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
       const content = parseTextNode(node);
       if (content.length > 0) {
         elements.push({ type: 'heading', level, content });
+      }
+    }
+    // Code blocks
+    else if (tagName === 'PRE') {
+      const codeElement = node.querySelector('code');
+      const codeText = codeElement ? codeElement.textContent || '' : node.textContent || '';
+      const language = codeElement?.className.match(/language-(\w+)/)?.[1];
+      
+      if (codeText.trim()) {
+        elements.push({ 
+          type: 'code', 
+          content: [{ text: codeText, code: true }],
+          language 
+        });
+      }
+    }
+    // Blockquotes
+    else if (tagName === 'BLOCKQUOTE') {
+      const content = parseTextNode(node);
+      if (content.length > 0) {
+        elements.push({ type: 'blockquote', content });
       }
     }
     // Paragraphs
@@ -79,26 +120,24 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
     else if (tagName === 'LI') {
       const content = parseTextNode(node);
       if (content.length > 0) {
-        elements.push({ type: 'list-item', content });
+        elements.push({ 
+          type: 'list-item', 
+          content,
+          isOrdered: listContext?.isOrdered || false
+        });
       }
     }
     // Divs and other containers
     else if (tagName === 'DIV' || tagName === 'SECTION' || tagName === 'ARTICLE') {
       for (const child of Array.from(node.children)) {
-        parseElement(child);
+        parseElement(child, listContext);
       }
     }
     // UL/OL - process children
     else if (tagName === 'UL' || tagName === 'OL') {
+      const isOrdered = tagName === 'OL';
       for (const child of Array.from(node.children)) {
-        parseElement(child);
-      }
-    }
-    // Blockquote
-    else if (tagName === 'BLOCKQUOTE') {
-      const content = parseTextNode(node);
-      if (content.length > 0) {
-        elements.push({ type: 'paragraph', content });
+        parseElement(child, { isOrdered });
       }
     }
   };
@@ -121,14 +160,32 @@ export const parseHtmlToStructure = (html: string): ParsedElement[] => {
 
 export const convertParsedToDocx = (elements: ParsedElement[]): Paragraph[] => {
   return elements.map(element => {
-    const children = element.content.map(item => 
-      new TextRun({
+    const children = element.content.map(item => {
+      // Handle links
+      if (item.link) {
+        return new ExternalHyperlink({
+          children: [
+            new TextRun({
+              text: item.text,
+              bold: item.bold,
+              italics: item.italic,
+              underline: item.underline ? {} : undefined,
+              style: "Hyperlink"
+            })
+          ],
+          link: item.link
+        });
+      }
+      
+      return new TextRun({
         text: item.text,
         bold: item.bold,
         italics: item.italic,
         underline: item.underline ? {} : undefined,
-      })
-    );
+        font: item.code ? "Courier New" : undefined,
+        shading: item.code ? { fill: "F5F5F5" } : undefined,
+      });
+    });
 
     const alignment = element.alignment === 'center' ? AlignmentType.CENTER :
                      element.alignment === 'right' ? AlignmentType.RIGHT :
@@ -154,8 +211,30 @@ export const convertParsedToDocx = (elements: ParsedElement[]): Paragraph[] => {
     } else if (element.type === 'list-item') {
       return new Paragraph({
         children,
-        bullet: { level: 0 },
+        bullet: element.isOrdered ? undefined : { level: 0 },
+        numbering: element.isOrdered ? { reference: "default-numbering", level: 0 } : undefined,
         spacing: { after: 100 },
+      });
+    } else if (element.type === 'code') {
+      return new Paragraph({
+        children,
+        spacing: { before: 100, after: 100 },
+        shading: { fill: "F5F5F5" },
+        border: {
+          top: { color: "CCCCCC", space: 1, style: "single", size: 6 },
+          bottom: { color: "CCCCCC", space: 1, style: "single", size: 6 },
+          left: { color: "CCCCCC", space: 1, style: "single", size: 6 },
+          right: { color: "CCCCCC", space: 1, style: "single", size: 6 },
+        },
+      });
+    } else if (element.type === 'blockquote') {
+      return new Paragraph({
+        children,
+        spacing: { after: 200 },
+        indent: { left: 720 }, // 0.5 inch
+        border: {
+          left: { color: "CCCCCC", space: 1, style: "single", size: 24 },
+        },
       });
     } else {
       return new Paragraph({

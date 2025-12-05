@@ -14,6 +14,7 @@ import { BoldIcon, Code2Icon, ItalicIcon, Keyboard, QuoteIcon, Redo2, Search, St
 import { Editor } from '@tiptap/react';
 import { ThemeToggle } from './theme-toggle';
 import { VersionHistoryDialog } from './version-history-dialog';
+import { FontSelector } from './font-selector';
 
 interface ToolBarProps {
     editor: Editor | null;
@@ -72,6 +73,8 @@ export function ToolBar({ editor }: ToolBarProps) {
                 >
                     <QuoteIcon className="w-4 h-4" />
                 </button>
+                <FontSelector />
+
 
                 <LinkSelector editor={editor} />
                 <ImageSelector editor={editor} />

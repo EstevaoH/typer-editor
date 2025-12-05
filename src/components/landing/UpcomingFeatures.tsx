@@ -1,4 +1,4 @@
-import { History, Type, Search, BarChart3, DownloadCloud, Palette, ArrowRight } from "lucide-react";
+import { History, Type, Search, BarChart3, DownloadCloud, Palette, ArrowRight, Cloud, Sparkles, FolderOpen } from "lucide-react";
 
 interface UpcomingFeaturesProps {
   onOpenContact: () => void;
@@ -7,71 +7,98 @@ interface UpcomingFeaturesProps {
 export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
   const features = [
     {
-      icon: <History className="h-8 w-8 text-blue-500" />,
+      icon: <History className="h-8 w-8 text-green-500" />,
       title: "Histórico de Versões",
       description: "Recupere versões anteriores do seu documento e restaure edições passadas.",
-      status: "Breve"
+      status: "Lançado"
+    },
+    {
+      icon: <BarChart3 className="h-8 w-8 text-green-500" />,
+      title: "Widgets de Estatísticas",
+      description: "Contador de palavras, tempo estimado de leitura e outras métricas úteis.",
+      status: "Lançado"
+    },
+    {
+      icon: <DownloadCloud className="h-8 w-8 text-green-500" />,
+      title: "Novos Formatos",
+      description: "Exportação aprimorada para PDF, DOCX e Markdown com formatação preservada.",
+      status: "Lançado"
     },
     {
       icon: <Type className="h-8 w-8 text-green-500" />,
       title: "Estilo de Texto",
-      description: "Formatação avançada: negrito, itálico, listas e mais opções de organização.",
-      status: "Breve"
+      description: "Seletor de fontes, formatação avançada e melhorias visuais.",
+      status: "Lançado"
     },
     {
-      icon: <Search className="h-8 w-8 text-purple-500" />,
+      icon: <Search className="h-8 w-8 text-blue-500" />,
       title: "Pesquisa Avançada",
-      description: "Campo de busca na sidebar para encontrar conteúdo em todos os seus documentos.",
-      status: "Breve"
+      description: "Busca global de conteúdo em todos os seus documentos.",
+      status: "Em breve"
     },
     {
-      icon: <BarChart3 className="h-8 w-8 text-pink-500" />,
-      title: "Widgets de Estatísticas",
-      description: "Contador de palavras, tempo estimado de leitura e outras métricas úteis.",
-      status: "Breve"
+      icon: <Cloud className="h-8 w-8 text-purple-500" />,
+      title: "Sincronização Cloud",
+      description: "Salve seus documentos na nuvem e acesse de qualquer dispositivo.",
+      status: "Planejado"
     },
     {
-      icon: <DownloadCloud className="h-8 w-8 text-yellow-500" />,
-      title: "Novos Formatos de Exportação",
-      description: "Suporte para HTML, RTF, ODT e outros formatos de documento.",
-      status: "Breve"
+      icon: <Sparkles className="h-8 w-8 text-purple-500" />,
+      title: "Assistente IA",
+      description: "Ajuda inteligente para escrever, resumir e melhorar seus textos.",
+      status: "Planejado"
     },
     {
-      icon: <Palette className="h-8 w-8 text-cyan-500" />,
-      title: "Personalização",
-      description: "Temas claros e escuros com interface customizável.",
-      status: "Breve"
+      icon: <FolderOpen className="h-8 w-8 text-purple-500" />,
+      title: "Organização em Pastas",
+      description: "Melhor organização dos seus documentos com sistema de pastas.",
+      status: "Planejado"
     }
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Lançado": return "bg-green-500/20 text-green-400";
+      case "Em breve": return "bg-blue-500/20 text-blue-400";
+      case "Planejado": return "bg-purple-500/20 text-purple-400";
+      default: return "bg-zinc-500/20 text-zinc-400";
+    }
+  };
+
+  const getIconBgColor = (status: string) => {
+    switch (status) {
+      case "Lançado": return "bg-green-500/10";
+      case "Em breve": return "bg-blue-500/10";
+      case "Planejado": return "bg-purple-500/10";
+      default: return "bg-zinc-500/10";
+    }
+  };
 
   return (
     <section id="upcoming-features" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Próximas Atualizações</h2>
-          <p className="text-xl text-muted-foreground">Estamos sempre trabalhando em novas funcionalidades</p>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">Roadmap & Novidades</h2>
+          <p className="text-xl text-muted-foreground">Acompanhe a evolução do projeto e o que está por vir</p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-card p-8 rounded-2xl border border-border hover:border-border/80 transition-all group hover:scale-105 animate-fade-in shadow-sm"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-card p-6 rounded-2xl border border-border hover:border-border/80 transition-all group hover:scale-105 animate-fade-in shadow-sm"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className={`bg-${feature.status === "Em desenvolvimento" ? "blue" : "purple"}-500/10 p-4 rounded-2xl w-16 h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+              <div className={`${getIconBgColor(feature.status)} p-3 rounded-2xl w-14 h-14 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                 {feature.icon}
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-2xl font-semibold">{feature.title}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${feature.status === "Em desenvolvimento" ? "bg-blue-500/20 text-blue-400" :
-                  feature.status === "Em breve" ? "bg-green-500/20 text-green-400" :
-                    "bg-purple-500/20 text-purple-400"
-                  }`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">{feature.title}</h3>
+                <span className={`text-[10px] px-2 py-1 rounded-full uppercase font-medium tracking-wider ${getStatusColor(feature.status)}`}>
                   {feature.status}
                 </span>
               </div>
-              <p className="text-muted-foreground leading-relaxed mb-4">{feature.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

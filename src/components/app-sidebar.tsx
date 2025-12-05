@@ -163,7 +163,6 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                           </button>
                         )}
                       </div>
-                      <FontSelector />
                     </div>
                   )}
                 </SidebarMenuItem>
