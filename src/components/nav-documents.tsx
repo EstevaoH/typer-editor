@@ -147,6 +147,8 @@ export function NavDocuments({
                   toggleFavorite={toggleFavorite}
                   onDeleteClick={onDeleteClick}
                   onShareClick={onShareClick}
+                  folders={folders}
+                  moveDocumentToFolder={moveDocumentToFolder}
                 />
               ))}
               <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
