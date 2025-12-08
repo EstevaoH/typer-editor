@@ -64,4 +64,5 @@ export interface DocumentsContextType {
   deleteFolder: (id: string) => void;
   renameFolder: (id: string, name: string) => void;
   moveDocumentToFolder: (docId: string, folderId: string | null) => void;
+  downloadFolder: (folderId: string) => Promise<void>;
 }

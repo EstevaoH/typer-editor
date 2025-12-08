@@ -253,6 +253,25 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const handleDownloadFolder = useCallback(
+    async (folderId: string) => {
+      const folder = folders.find((f) => f.id === folderId);
+      if (!folder) return;
+
+      const folderDocs = documents.filter((doc) => doc.folderId === folderId);
+
+      const { downloadFolder } = await import("./documents/utils/folderExport");
+      const result = await downloadFolder(folder, folderDocs);
+
+      if (result.success) {
+        toast.showToast(`✅ Pasta ${folder.name} exportada com sucesso`);
+      } else {
+        toast.showToast(`❌ Erro ao exportar pasta: ${result.error}`);
+      }
+    },
+    [folders, documents, toast]
+  );
+
   // Context value
   const value: DocumentsContextType = {
     MAX_DOCUMENTS: 10,
@@ -283,6 +302,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     deleteFolder,
     renameFolder,
     moveDocumentToFolder,
+    downloadFolder: handleDownloadFolder,
   };
 
   return (

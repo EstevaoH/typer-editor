@@ -4,7 +4,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from "./ui/sidebar";
-import { ChevronRight, Folder, MoreHorizontal, Pencil, Trash2, FileText, ChevronDown } from "lucide-react";
+import { ChevronRight, Folder, MoreHorizontal, Pencil, Trash2, FileText, Plus, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -37,6 +37,12 @@ interface FolderItemProps {
     // Folder actions
     renameFolder: (id: string, name: string) => void;
     deleteFolder: (id: string) => void;
+    createDocument: (title?: string, folderId?: string) => void;
+    downloadFolder: (id: string) => void;
+
+    // Document moving
+    folders: FolderType[];
+    moveDocumentToFolder: (docId: string, folderId: string | null) => void;
 }
 
 export function FolderItem({
@@ -49,7 +55,11 @@ export function FolderItem({
     onDeleteClick,
     onShareClick,
     renameFolder,
-    deleteFolder
+    deleteFolder,
+    createDocument,
+    downloadFolder,
+    folders,
+    moveDocumentToFolder
 }: FolderItemProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -117,6 +127,22 @@ export function FolderItem({
                                     <DropdownMenuContent align="end" className="w-48">
                                         <DropdownMenuItem onClick={(e) => {
                                             e.stopPropagation();
+                                            createDocument("Novo Documento", folder.id);
+                                            setIsOpen(true);
+                                        }}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Novo Documento
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
+                                            downloadFolder(folder.id);
+                                        }}>
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Baixar Pasta
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
                                             setIsEditing(true);
                                             setIsOpen(true);
                                         }}>
@@ -140,6 +166,18 @@ export function FolderItem({
                         </CollapsibleTrigger>
                     </ContextMenuTrigger>
                     <ContextMenuContent>
+                        <ContextMenuItem onClick={() => {
+                            createDocument("Novo Documento", folder.id);
+                            setIsOpen(true);
+                        }}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Novo Documento
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => downloadFolder(folder.id)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Baixar Pasta
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
                         <ContextMenuItem onClick={() => {
                             setIsEditing(true);
                             setIsOpen(true);
@@ -174,6 +212,8 @@ export function FolderItem({
                                     toggleFavorite={toggleFavorite}
                                     onDeleteClick={onDeleteClick}
                                     onShareClick={onShareClick}
+                                    folders={folders}
+                                    moveDocumentToFolder={moveDocumentToFolder}
                                 />
                             ))
                         )}

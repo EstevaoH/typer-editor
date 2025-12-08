@@ -44,6 +44,7 @@ export function NavDocuments({
     deleteFolder,
     renameFolder,
     moveDocumentToFolder,
+    downloadFolder,
   } = useDocuments();
   const [documentToDelete, setDocumentToDelete] = useState<Document>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -172,6 +173,10 @@ export function NavDocuments({
               onShareClick={onShareClick}
               renameFolder={renameFolder}
               deleteFolder={deleteFolder}
+              createDocument={createDocument}
+              folders={folders}
+              moveDocumentToFolder={moveDocumentToFolder}
+              downloadFolder={downloadFolder}
             />
           ))}
 
