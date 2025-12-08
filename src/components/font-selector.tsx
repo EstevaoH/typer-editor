@@ -26,7 +26,7 @@ export function FontSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 w-8 px-0 cursor-pointer bg-zinc-800 text-white hover:bg-zinc-700">
+        <Button size="sm" className="h-8 w-8 px-0 rounded cursor-pointer bg-zinc-800 text-white hover:bg-zinc-700">
           <FileType className="h-4 w-4" />
           <span className="sr-only">Mudar fonte</span>
         </Button>

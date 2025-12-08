@@ -74,8 +74,6 @@ export function ToolBar({ editor }: ToolBarProps) {
                     <QuoteIcon className="w-4 h-4" />
                 </button>
                 <FontSelector />
-
-
                 <LinkSelector editor={editor} />
                 <ImageSelector editor={editor} />
                 <VideoSelector editor={editor} />

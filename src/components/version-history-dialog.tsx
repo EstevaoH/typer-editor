@@ -48,7 +48,7 @@ export function VersionHistoryDialog({ editor }: VersionHistoryDialogProps) {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button
-          className="p-2 rounded cursor-pointer text-muted-foreground hover:bg-secondary"
+          className="p-2 rounded cursor-pointer text-muted-foreground bg-zinc-800 text-white hover:bg-zinc-700"
           title="Histórico de Versões"
         >
           <Clock className="w-4 h-4" />
