@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { FolderInput, Plus } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -11,9 +11,11 @@ import {
 import { useMemo, useState } from "react";
 import { Document, useDocuments } from "@/context/documents-context";
 import { DocumentItem } from "./document-item";
+import { FolderItem } from "./folder-item";
 import { Separator } from "./ui/separator";
 import { useToast } from "@/context/toast-context";
 import { Badge } from "./ui/badge";
+import { cn } from "@/lib/utils";
 
 interface NavDocumentsProps {
   searchQuery: string;
@@ -37,6 +39,11 @@ export function NavDocuments({
     currentDocument,
     createDocument,
     MAX_DOCUMENTS,
+    folders,
+    createFolder,
+    deleteFolder,
+    renameFolder,
+    moveDocumentToFolder,
   } = useDocuments();
   const [documentToDelete, setDocumentToDelete] = useState<Document>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -70,9 +77,16 @@ export function NavDocuments({
           <button
             className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
             title="Novo documento"
-            onClick={() => createDocument}
+            onClick={() => createDocument()}
           >
             <Plus className="w-5 h-5" />
+          </button>
+          <button
+            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer mt-2"
+            title="Nova pasta"
+            onClick={() => createFolder("Nova Pasta")}
+          >
+            <FolderInput className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -84,24 +98,35 @@ export function NavDocuments({
           </Badge>
         </SidebarGroupLabel>
 
-        <button
-          disabled={documents.length >= MAX_DOCUMENTS}
-          onClick={() => {
-            createDocument();
-            toast.showToast("📄 Novo documento criado");
-          }}
-          className={`
-      p-1 rounded transition-colors 
-      ${
-        documents.length >= MAX_DOCUMENTS
-          ? "opacity-40 cursor-not-allowed"
-          : "hover:bg-zinc-700 cursor-pointer"
-      }
-    `}
-          title="Novo documento"
-        >
-          <Plus className="w-4 h-4 text-zinc-300" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              createFolder("Nova Pasta");
+              toast.showToast("📁 Nova pasta criada");
+            }}
+            className="p-1 rounded transition-colors hover:bg-zinc-700 cursor-pointer text-zinc-400 hover:text-zinc-200"
+            title="Nova pasta"
+          >
+            <FolderInput className="w-4 h-4" />
+          </button>
+
+          <button
+            disabled={documents.length >= MAX_DOCUMENTS}
+            onClick={() => {
+              createDocument();
+              toast.showToast("📄 Novo documento criado");
+            }}
+            className={cn(
+              "p-1 rounded transition-colors",
+              documents.length >= MAX_DOCUMENTS
+                ? "opacity-40 cursor-not-allowed"
+                : "hover:bg-zinc-700 cursor-pointer"
+            )}
+            title="Novo documento"
+          >
+            <Plus className="w-4 h-4 text-zinc-300" />
+          </button>
+        </div>
       </div>
 
       <SidebarGroupContent className="overflow-y-auto">
@@ -123,31 +148,52 @@ export function NavDocuments({
                   onShareClick={onShareClick}
                 />
               ))}
+              <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
             </>
           )}
-          {favoriteDocuments.length > 0 && (
-            <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
+
+          {(folders.length > 0 || regularDocuments.length > 0) && (
+            <SidebarGroupLabel className="text-zinc-400 text-xs mb-2">
+              Todos os Documentos
+            </SidebarGroupLabel>
           )}
-          {regularDocuments.length > 0 && (
-            <>
-              <SidebarGroupLabel className="text-zinc-400 text-xs mb-2">
-                Todos os Documentos
-              </SidebarGroupLabel>
-              {regularDocuments.map((doc) => (
-                <DocumentItem
-                  key={doc.id}
-                  doc={doc}
-                  currentDocument={currentDocument}
-                  setCurrentDocumentId={setCurrentDocumentId}
-                  deleteDocument={deleteDocument}
-                  toggleFavorite={toggleFavorite}
-                  onDeleteClick={onDeleteClick}
-                  onShareClick={onShareClick}
-                />
-              ))}
-            </>
-          )}
-          {filteredDocuments.length === 0 && (
+
+          {/* Folders */}
+          {folders.map(folder => (
+            <FolderItem
+              key={folder.id}
+              folder={folder}
+              documents={regularDocuments.filter(d => d.folderId === folder.id)}
+              currentDocument={currentDocument}
+              setCurrentDocumentId={setCurrentDocumentId}
+              deleteDocument={deleteDocument}
+              toggleFavorite={toggleFavorite}
+              onDeleteClick={onDeleteClick}
+              onShareClick={onShareClick}
+              renameFolder={renameFolder}
+              deleteFolder={deleteFolder}
+            />
+          ))}
+
+          {/* Root Documents */}
+          {regularDocuments
+            .filter(doc => !doc.folderId)
+            .map((doc) => (
+              <DocumentItem
+                key={doc.id}
+                doc={doc}
+                currentDocument={currentDocument}
+                setCurrentDocumentId={setCurrentDocumentId}
+                deleteDocument={deleteDocument}
+                toggleFavorite={toggleFavorite}
+                onDeleteClick={onDeleteClick}
+                onShareClick={onShareClick}
+                folders={folders}
+                moveDocumentToFolder={moveDocumentToFolder}
+              />
+            ))}
+
+          {filteredDocuments.length === 0 && folders.length === 0 && (
             <SidebarGroupLabel className="px-3 py-2 text-sm text-zinc-400">
               {searchQuery.trim()
                 ? "Nenhum documento encontrado"

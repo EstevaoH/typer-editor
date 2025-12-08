@@ -15,13 +15,14 @@ import { useDocumentSharing } from "./documents/hooks/useDocumentSharing";
 import { useToast } from "./toast-context";
 import type {
   Document,
+  Folder,
   Version,
   DownloadFormat,
   DocumentsContextType,
   MAX_DOCUMENTS,
 } from "./documents/types";
 
-export type { Document, Version, DownloadFormat };
+export type { Document, Folder, Version, DownloadFormat };
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(
   undefined
@@ -30,6 +31,7 @@ const DocumentsContext = createContext<DocumentsContextType | undefined>(
 export function DocumentsProvider({ children }: { children: ReactNode }) {
   // State
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false);
@@ -47,7 +49,16 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     if (savedDocs) {
       const parsedDocs = JSON.parse(savedDocs);
       setDocuments(parsedDocs);
+    }
 
+    // Load folders
+    const savedFolders = localStorage.getItem("savedFolders");
+    if (savedFolders) {
+      setFolders(JSON.parse(savedFolders));
+    }
+
+    if (savedDocs) {
+      const parsedDocs = JSON.parse(savedDocs);
       if (parsedDocs.length > 0 && !currentDocId) {
         setCurrentDocId(parsedDocs[0].id);
       }
@@ -131,6 +142,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     }
   }, [documents, isLoading, currentDocId]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem("savedFolders", JSON.stringify(folders));
+    }
+  }, [folders, isLoading]);
+
   // Current document
   const currentDocument =
     documents.find((doc) => doc.id === currentDocId) || null;
@@ -201,6 +218,41 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     [documents, versions, documentOps, versionOps]
   );
 
+  // Folder operations
+  const createFolder = useCallback((name: string) => {
+    const newFolder: Folder = {
+      id: crypto.randomUUID(),
+      name,
+      createdAt: new Date().toISOString(),
+    };
+    setFolders((prev) => [...prev, newFolder]);
+  }, []);
+
+  const deleteFolder = useCallback((folderId: string) => {
+    setFolders((prev) => prev.filter((f) => f.id !== folderId));
+    // Move documents from this folder to root
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.folderId === folderId ? { ...doc, folderId: null } : doc
+      )
+    );
+  }, []);
+
+  const renameFolder = useCallback((folderId: string, name: string) => {
+    setFolders((prev) =>
+      prev.map((f) => (f.id === folderId ? { ...f, name } : f))
+    );
+  }, []);
+
+  const moveDocumentToFolder = useCallback(
+    (docId: string, folderId: string | null) => {
+      setDocuments((prev) =>
+        prev.map((doc) => (doc.id === docId ? { ...doc, folderId } : doc))
+      );
+    },
+    []
+  );
+
   // Context value
   const value: DocumentsContextType = {
     MAX_DOCUMENTS: 10,
@@ -226,6 +278,11 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     restoreVersion: versionOps.restoreVersion,
     deleteVersion: versionOps.deleteVersion,
     undoDelete: versionOps.undoDelete,
+    folders,
+    createFolder,
+    deleteFolder,
+    renameFolder,
+    moveDocumentToFolder,
   };
 
   return (

@@ -1,5 +1,11 @@
 export const MAX_DOCUMENTS = 10;
 
+export interface Folder {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Document {
   id: string;
   title: string;
@@ -10,6 +16,7 @@ export interface Document {
   isShared?: boolean;
   sharedWith: string[];
   isTutorial?: boolean;
+  folderId?: string | null;
 }
 
 export interface Version {
@@ -25,9 +32,10 @@ export type DownloadFormat = "txt" | "md" | "docx" | "pdf";
 export interface DocumentsContextType {
   MAX_DOCUMENTS: number;
   documents: Document[];
+  folders: Folder[];
   currentDocument: Document | null;
   isLoading: boolean;
-  createDocument: (title?: string) => void;
+  createDocument: (title?: string, folderId?: string) => void;
   updateDocument: (updates: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
   saveDocument: (title: string) => void;
@@ -50,4 +58,10 @@ export interface DocumentsContextType {
   restoreVersion: (versionId: string) => void;
   deleteVersion: (versionId: string) => void;
   undoDelete: () => string | null;
+  
+  // Folder methods
+  createFolder: (name: string) => void;
+  deleteFolder: (id: string) => void;
+  renameFolder: (id: string, name: string) => void;
+  moveDocumentToFolder: (docId: string, folderId: string | null) => void;
 }

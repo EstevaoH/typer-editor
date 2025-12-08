@@ -13,7 +13,7 @@ export const useDocumentOperations = (
   setVersions: React.Dispatch<React.SetStateAction<Version[]>>
 ) => {
   const createDocument = useCallback(
-    (title = "Novo documento") => {
+    (title = "Novo documento", folderId?: string) => {
       if (!checkLimit()) {
         return;
       }
@@ -27,6 +27,7 @@ export const useDocumentOperations = (
         isFavorite: false,
         sharedWith: [],
         updatedAt: new Date().toISOString(),
+        folderId: folderId || null,
       };
 
       setDocuments((prev) => [newDoc, ...prev]);
