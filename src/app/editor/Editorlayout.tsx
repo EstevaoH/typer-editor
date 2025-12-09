@@ -1,5 +1,4 @@
 "use client"
-
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
@@ -8,6 +7,7 @@ import { ToastProvider } from "@/context/toast-context"
 import { AnimatePresence, motion } from "framer-motion"
 import { Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 
 export default function EditorLayout({ children }: { children: React.ReactNode }) {
     const [isMounted, setIsMounted] = useState(false)
@@ -29,20 +29,30 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                     <DocumentsProvider>
                         <SidebarProvider>
                             <ToastProvider>
-                                <div className="flex h-screen w-full">
-                                    <AppSidebar key={'sidebar'} className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:block" />
-                                    <SidebarInset>
-                                        <header className="flex h-12 items-center gap-2 px-2 bg-zinc-800">
-                                            <SidebarTrigger className="text-zinc-300 cursor-pointer hover:bg-zinc-700 hover:text-zinc-100 rounded" />
-                                        </header>
-                                    </SidebarInset>
-                                    <div className="flex flex-col w-full">
-                                        <main className="flex-1 overflow-auto">
-                                            {children}
-                                        </main>
+                                <ResizablePanelGroup direction="horizontal" className="h-screen w-full">
+                                    <ResizablePanel
+                                        defaultSize={16}
+                                        minSize={12}
+                                        maxSize={30}
+                                        className="!w-auto"
+                                    >
+                                        <AppSidebar />
+                                    </ResizablePanel>
+
+                                    <ResizableHandle withHandle />
+
+                                    <ResizablePanel defaultSize={84} minSize={50}>
+                                        <SidebarInset>
+                                            <header className="flex h-12 items-center gap-2 px-4 bg-zinc-800 border-b border-zinc-700">
+                                                <SidebarTrigger className="text-zinc-300 cursor-pointer hover:bg-zinc-700 hover:text-zinc-100 rounded" />
+                                            </header>
+                                            <main className="flex-1 overflow-auto">
+                                                {children}
+                                            </main>
+                                        </SidebarInset>
                                         <Toaster />
-                                    </div>
-                                </div>
+                                    </ResizablePanel>
+                                </ResizablePanelGroup>
                             </ToastProvider>
                         </SidebarProvider>
                     </DocumentsProvider>

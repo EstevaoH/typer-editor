@@ -4,7 +4,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from "./ui/sidebar";
-import { ChevronRight, Folder, MoreHorizontal, Pencil, Trash2, FileText, Plus, Download } from "lucide-react";
+import { ChevronRight, Folder, MoreHorizontal, Pencil, Trash2, FileText, Plus, Download, FolderInput } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -37,12 +37,14 @@ interface FolderItemProps {
     // Folder actions
     renameFolder: (id: string, name: string) => void;
     deleteFolder: (id: string) => void;
+    createFolder: (name: string, parentId?: string) => void;
     createDocument: (title?: string, folderId?: string) => void;
     downloadFolder: (id: string) => void;
 
     // Document moving
     folders: FolderType[];
     moveDocumentToFolder: (docId: string, folderId: string | null) => void;
+    allDocuments: Document[];
 }
 
 export function FolderItem({
@@ -57,9 +59,11 @@ export function FolderItem({
     renameFolder,
     deleteFolder,
     createDocument,
+    createFolder,
     downloadFolder,
     folders,
-    moveDocumentToFolder
+    moveDocumentToFolder,
+    allDocuments,
 }: FolderItemProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -143,6 +147,15 @@ export function FolderItem({
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={(e) => {
                                             e.stopPropagation();
+                                            createFolder("Nova Pasta", folder.id);
+                                            setIsOpen(true);
+                                        }}>
+                                            <FolderInput className="mr-2 h-4 w-4" />
+                                            Nova Pasta
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={(e) => {
+                                            e.stopPropagation();
                                             setIsEditing(true);
                                             setIsOpen(true);
                                         }}>
@@ -176,6 +189,14 @@ export function FolderItem({
                         <ContextMenuItem onClick={() => downloadFolder(folder.id)}>
                             <Download className="mr-2 h-4 w-4" />
                             Baixar Pasta
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={() => {
+                            createFolder("Nova Pasta", folder.id);
+                            setIsOpen(true);
+                        }}>
+                            <FolderInput className="mr-2 h-4 w-4" />
+                            Nova Pasta
                         </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem onClick={() => {
@@ -217,6 +238,29 @@ export function FolderItem({
                                 />
                             ))
                         )}
+
+                        {/* Subfolders */}
+                        {folders.filter(f => f.parentId === folder.id).map(subfolder => (
+                            <FolderItem
+                                key={subfolder.id}
+                                folder={subfolder}
+                                documents={allDocuments.filter(d => d.folderId === subfolder.id)}
+                                currentDocument={currentDocument}
+                                setCurrentDocumentId={setCurrentDocumentId}
+                                deleteDocument={deleteDocument}
+                                toggleFavorite={toggleFavorite}
+                                onDeleteClick={onDeleteClick}
+                                onShareClick={onShareClick}
+                                renameFolder={renameFolder}
+                                deleteFolder={deleteFolder}
+                                createDocument={createDocument}
+                                createFolder={createFolder}
+                                folders={folders}
+                                moveDocumentToFolder={moveDocumentToFolder}
+                                downloadFolder={downloadFolder}
+                                allDocuments={allDocuments}
+                            />
+                        ))}
                     </SidebarMenuSub>
                 </CollapsibleContent>
             </SidebarMenuItem>

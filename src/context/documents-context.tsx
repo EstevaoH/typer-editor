@@ -22,7 +22,7 @@ import type {
   MAX_DOCUMENTS,
 } from "./documents/types";
 
-export type { Document, Folder, Version, DownloadFormat };
+export type { Document, Folder, Version, DownloadFormat, BreadcrumbItem } from "./documents/types";
 
 const DocumentsContext = createContext<DocumentsContextType | undefined>(
   undefined
@@ -219,23 +219,37 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   );
 
   // Folder operations
-  const createFolder = useCallback((name: string) => {
+  const createFolder = useCallback((name: string, parentId?: string) => {
     const newFolder: Folder = {
       id: crypto.randomUUID(),
       name,
       createdAt: new Date().toISOString(),
+      parentId: parentId || null,
     };
     setFolders((prev) => [...prev, newFolder]);
   }, []);
 
   const deleteFolder = useCallback((folderId: string) => {
-    setFolders((prev) => prev.filter((f) => f.id !== folderId));
-    // Move documents from this folder to root
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.folderId === folderId ? { ...doc, folderId: null } : doc
-      )
-    );
+    // Recursive function to get all subfolder IDs
+    const getSubfolderIds = (id: string, allFolders: Folder[]): string[] => {
+      const children = allFolders.filter(f => f.parentId === id);
+      return [id, ...children.flatMap(child => getSubfolderIds(child.id, allFolders))];
+    };
+
+    setFolders((currentFolders) => {
+      const foldersToDelete = getSubfolderIds(folderId, currentFolders);
+
+      // Move documents from all deleted folders to root
+      setDocuments((prevDocs) =>
+        prevDocs.map((doc) =>
+          doc.folderId && foldersToDelete.includes(doc.folderId)
+            ? { ...doc, folderId: null }
+            : doc
+        )
+      );
+
+      return currentFolders.filter((f) => !foldersToDelete.includes(f.id));
+    });
   }, []);
 
   const renameFolder = useCallback((folderId: string, name: string) => {
@@ -261,7 +275,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       const folderDocs = documents.filter((doc) => doc.folderId === folderId);
 
       const { downloadFolder } = await import("./documents/utils/folderExport");
-      const result = await downloadFolder(folder, folderDocs);
+      const result = await downloadFolder(folderId, folders, documents);
 
       if (result.success) {
         toast.showToast(`✅ Pasta ${folder.name} exportada com sucesso`);
@@ -270,6 +284,44 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       }
     },
     [folders, documents, toast]
+  );
+
+  // Get breadcrumbs for a document
+  const getBreadcrumbs = useCallback(
+    (documentId?: string | null) => {
+      const breadcrumbs: Array<{ id: string; name: string; type: 'folder' | 'document' | 'root' }> = [];
+
+      // Always start with root
+      breadcrumbs.push({ id: 'root', name: 'Home', type: 'root' });
+
+      if (!documentId) return breadcrumbs;
+
+      const doc = documents.find((d) => d.id === documentId);
+      if (!doc) return breadcrumbs;
+
+      // Build folder path
+      if (doc.folderId) {
+        const buildFolderPath = (folderId: string): void => {
+          const folder = folders.find((f) => f.id === folderId);
+          if (!folder) return;
+
+          // Recursively add parent folders first
+          if (folder.parentId) {
+            buildFolderPath(folder.parentId);
+          }
+
+          breadcrumbs.push({ id: folder.id, name: folder.name, type: 'folder' });
+        };
+
+        buildFolderPath(doc.folderId);
+      }
+
+      // Add current document
+      breadcrumbs.push({ id: doc.id, name: doc.title, type: 'document' });
+
+      return breadcrumbs;
+    },
+    [documents, folders]
   );
 
   // Context value
@@ -298,11 +350,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     deleteVersion: versionOps.deleteVersion,
     undoDelete: versionOps.undoDelete,
     folders,
-    createFolder,
+    createFolder: (name: string, parentId?: string) => createFolder(name, parentId),
     deleteFolder,
     renameFolder,
     moveDocumentToFolder,
     downloadFolder: handleDownloadFolder,
+    getBreadcrumbs,
   };
 
   return (

@@ -16,6 +16,13 @@ import { Separator } from "./ui/separator";
 import { useToast } from "@/context/toast-context";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "./ui/empty";
 
 interface NavDocumentsProps {
   searchQuery: string;
@@ -162,7 +169,7 @@ export function NavDocuments({
           )}
 
           {/* Folders */}
-          {folders.map(folder => (
+          {folders.filter(f => !f.parentId).map(folder => (
             <FolderItem
               key={folder.id}
               folder={folder}
@@ -176,9 +183,11 @@ export function NavDocuments({
               renameFolder={renameFolder}
               deleteFolder={deleteFolder}
               createDocument={createDocument}
+              createFolder={createFolder}
               folders={folders}
               moveDocumentToFolder={moveDocumentToFolder}
               downloadFolder={downloadFolder}
+              allDocuments={regularDocuments}
             />
           ))}
 
@@ -201,11 +210,56 @@ export function NavDocuments({
             ))}
 
           {filteredDocuments.length === 0 && folders.length === 0 && (
-            <SidebarGroupLabel className="px-3 py-2 text-sm text-zinc-400">
-              {searchQuery.trim()
-                ? "Nenhum documento encontrado"
-                : "Nenhum documento criado"}
-            </SidebarGroupLabel>
+            <div className="px-4 py-8">
+              <Empty className="border-0">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    {searchQuery.trim() ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                        <path d="M9 11h4" />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    )}
+                  </EmptyMedia>
+                  <EmptyTitle>
+                    {searchQuery.trim()
+                      ? "Nenhum resultado encontrado"
+                      : "Nenhum documento criado"}
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery.trim()
+                      ? "Tente buscar com outros termos ou crie um novo documento."
+                      : "Comece criando seu primeiro documento ou pasta."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            </div>
           )}
         </SidebarMenu>
       </SidebarGroupContent>

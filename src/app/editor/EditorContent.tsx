@@ -22,6 +22,7 @@ import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 
 import { StatisticsDialog } from '@/components/statistics-dialog';
+import { DocumentBreadcrumb } from '@/components/document-breadcrumb';
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -381,6 +382,7 @@ export function Editor() {
                                 {title.length}/120
                             </div>
                         </div>
+                        <DocumentBreadcrumb />
 
                         <div
                             ref={editorRef}

@@ -11,40 +11,52 @@ const sanitizeFilename = (name: string): string => {
 };
 
 export const downloadFolder = async (
-  folder: Folder,
-  documents: Document[]
+  rootFolderId: string,
+  allFolders: Folder[],
+  allDocuments: Document[]
 ): Promise<DownloadFolderResult> => {
   try {
     const zip = new JSZip();
+    const rootFolder = allFolders.find(f => f.id === rootFolderId);
     
-    // Sort documents to ensure deterministic order (optional but nice)
-    const folderDocs = documents.sort((a, b) => 
-      (a.title || "Untitled").localeCompare(b.title || "Untitled")
-    );
+    if (!rootFolder) {
+        throw new Error("Folder not found");
+    }
 
-    if (folderDocs.length === 0) {
-      // Create an empty folder entry if no documents
-      zip.folder(sanitizeFilename(folder.name));
-    } else {
-      folderDocs.forEach((doc) => {
-        const docTitle = doc.title || "Untitled";
-        const safeTitle = sanitizeFilename(docTitle);
-        // Default to .md for now as it supports rich text content better in raw format
-        // Ideally we might want to convert HTML to Markdown here, but for now raw content or simple text
-        // Let's assume the content is HTML and save as .html for better fidelity, or .txt if plain
-        // Given the editor uses Tiptap (HTML), .html is safest for preserving structure.
-        // However, user might expect .txt or .md. Let's stick to .html for full fidelity or .md if we had a converter.
-        // For simplicity and compatibility with the storage format, let's use .html
-        // But requested feature implies "documents", users often expect text.
-        // Let's check what downloadDocument does. It supports txt, md, html.
-        // We'll default to HTML for full content preservation in this batch export.
+    // Function to recursively add folders and files to zip
+    const addToZip = (
+        currentFolderId: string, 
+        currentZip: JSZip
+    ) => {
+        // Add documents in current folder
+        const folderDocs = allDocuments.filter(doc => doc.folderId === currentFolderId)
+            .sort((a, b) => (a.title || "Untitled").localeCompare(b.title || "Untitled"));
+
+        folderDocs.forEach(doc => {
+            const docTitle = doc.title || "Untitled";
+            const safeTitle = sanitizeFilename(docTitle);
+            currentZip.file(`${safeTitle}.html`, doc.content || "");
+        });
+
+        // Find subfolders
+        const subfolders = allFolders.filter(f => f.parentId === currentFolderId);
         
-        // Actually, let's allow saving as Markdown if possible, but without a converter involved in this file,
-        // let's stick to a safe default. Let's try to be smart:
-        // formatting: <html>...</html> -> .html
-        
-        zip.file(`${safeTitle}.html`, doc.content || "");
-      });
+        subfolders.forEach(subfolder => {
+            const safeFolderName = sanitizeFilename(subfolder.name);
+            const subFolderZip = currentZip.folder(safeFolderName);
+            if (subFolderZip) {
+                addToZip(subfolder.id, subFolderZip);
+            }
+        });
+    };
+
+    // Start recursion. We already created the zip, which represents the root of the archive.
+    // The previous implementation created a folder INSIDE the zip matching the folder name.
+    // Let's keep that behavior: The zip content should be inside a folder named after the root folder.
+    const rootZipFolder = zip.folder(sanitizeFilename(rootFolder.name));
+    
+    if (rootZipFolder) {
+        addToZip(rootFolderId, rootZipFolder);
     }
 
     const content = await zip.generateAsync({ type: "blob" });
@@ -53,7 +65,7 @@ export const downloadFolder = async (
     const url = window.URL.createObjectURL(content);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${sanitizeFilename(folder.name)}.zip`;
+    link.download = `${sanitizeFilename(rootFolder.name)}.zip`;
     document.body.appendChild(link);
     link.click();
     

@@ -4,6 +4,7 @@ export interface Folder {
   id: string;
   name: string;
   createdAt: string;
+  parentId?: string | null;
 }
 
 export interface Document {
@@ -28,6 +29,12 @@ export interface Version {
 }
 
 export type DownloadFormat = "txt" | "md" | "docx" | "pdf";
+
+export interface BreadcrumbItem {
+  id: string;
+  name: string;
+  type: 'folder' | 'document' | 'root';
+}
 
 export interface DocumentsContextType {
   MAX_DOCUMENTS: number;
@@ -60,9 +67,10 @@ export interface DocumentsContextType {
   undoDelete: () => string | null;
   
   // Folder methods
-  createFolder: (name: string) => void;
+  createFolder: (name: string, parentId?: string) => void;
   deleteFolder: (id: string) => void;
   renameFolder: (id: string, name: string) => void;
   moveDocumentToFolder: (docId: string, folderId: string | null) => void;
   downloadFolder: (folderId: string) => Promise<void>;
+  getBreadcrumbs: (documentId?: string | null) => BreadcrumbItem[];
 }
