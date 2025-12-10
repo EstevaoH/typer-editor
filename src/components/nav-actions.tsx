@@ -21,6 +21,7 @@ export function NavActions({ isOpenKeyBoardShortcuts, isOpenShareModal }: NavAct
                             <SidebarMenuButton
                                 className="hover:bg-zinc-700 cursor-pointer"
                                 onClick={() => isOpenKeyBoardShortcuts()}
+                                tooltip="Atalhos"
                             >
                                 <Keyboard className="w-4 h-4 text-zinc-300" />
                                 <span className="text-zinc-100">Atalhos</span>

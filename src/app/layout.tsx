@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Roboto_Slab, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { DocumentsProvider } from "@/context/documents-context";
@@ -31,10 +31,22 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#18181b",
+};
+
 export const metadata: Metadata = {
-  title: "TyperEditor - Editor de Texto Online",
-  description:
-    "Crie, edite e compartilhe documentos diretamente no seu navegador",
+  title: "Typer Editor",
+  description: "Editor de texto minimalista e poderoso com foco em privacidade.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Typer Editor",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({

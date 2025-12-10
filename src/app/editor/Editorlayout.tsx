@@ -1,6 +1,6 @@
 "use client"
 import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { DocumentsProvider } from "@/context/documents-context"
 import { ToastProvider } from "@/context/toast-context"
@@ -30,9 +30,6 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                             <ToastProvider>
                                 <AppSidebar />
                                 <SidebarInset>
-                                    <header className="flex h-12 items-center gap-2 px-4 bg-zinc-800 border-b border-zinc-700">
-                                        <SidebarTrigger className="text-zinc-300 cursor-pointer hover:bg-zinc-700 hover:text-zinc-100 rounded" />
-                                    </header>
                                     <main className="flex-1 overflow-auto">
                                         {children}
                                     </main>

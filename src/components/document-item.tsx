@@ -49,6 +49,7 @@ export function DocumentItem({
                             currentDocument?.id === doc.id && "bg-zinc-700/80"
                         )}
                         onClick={() => setCurrentDocumentId(doc.id)}
+                        tooltip={doc.title || 'Sem título'}
                     >
                         <FileText className={cn(
                             "w-4 h-4 flex-shrink-0 text-zinc-300",

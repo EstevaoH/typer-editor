@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -117,14 +118,22 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
       >
         <SidebarContent className="h-full flex flex-col bg-zinc-800 dark border-none">
           <SidebarGroup>
-            <SidebarGroupLabel className="text-zinc-400">
-              Navegação
-            </SidebarGroupLabel>
+            <div className="flex items-center justify-between px-2 py-2">
+              {state !== "collapsed" && (
+                <SidebarGroupLabel className="text-zinc-400">
+                  Navegação
+                </SidebarGroupLabel>
+              )}
+              <SidebarTrigger className="text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 rounded transition-colors" />
+            </div>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <Link href={"/"}>
-                    <SidebarMenuButton className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200">
+                    <SidebarMenuButton
+                      tooltip="Início"
+                      className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                    >
                       <Home className="w-4 h-4 text-zinc-300" />
                       <span className="text-zinc-100">Início</span>
                     </SidebarMenuButton>
@@ -135,7 +144,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                     <div className="flex flex-col items-center py-4 border-b border-zinc-700 ">
                       <SidebarMenuButton
                         className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
-                        title="Buscar"
+                        tooltip="Buscar"
                         onClick={() => toggleSidebar()}
                       >
                         <Search className="w-5 h-5" />

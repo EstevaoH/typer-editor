@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getDocumentShareHTML, getDocumentShareText } from '@/components/email-templates/document-share-template';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface ShareRequest {
     to_email: string;
     document_title: string;
@@ -13,6 +11,7 @@ interface ShareRequest {
 }
 
 export async function POST(request: NextRequest) {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     try {
         const { to_email, document_title, document_content, document_url, from_name }: ShareRequest = await request.json();
 

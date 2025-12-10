@@ -81,21 +81,21 @@ export function NavDocuments({
   return (
     <SidebarGroup className="flex-1 overflow-hidden">
       {state === "collapsed" && (
-        <div className="flex flex-col items-center">
-          <button
-            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
-            title="Novo documento"
+        <div className="flex flex-col items-center gap-2">
+          <SidebarMenuButton
+            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
+            tooltip="Novo documento"
             onClick={() => createDocument()}
           >
             <Plus className="w-5 h-5" />
-          </button>
-          <button
-            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer mt-2"
-            title="Nova pasta"
+          </SidebarMenuButton>
+          <SidebarMenuButton
+            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
+            tooltip="Nova pasta"
             onClick={() => createFolder("Nova Pasta")}
           >
             <FolderInput className="w-5 h-5" />
-          </button>
+          </SidebarMenuButton>
         </div>
       )}
       <div className="flex items-center justify-between">

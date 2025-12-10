@@ -14,6 +14,7 @@ export function ShareButton({ isOpenShareModal }: ShareButtonProps) {
       className="hover:bg-zinc-700 cursor-pointer"
       onClick={() => isOpenShareModal()}
       disabled={!currentDocument}
+      tooltip="Compartilhar"
     >
       <Share className="w-4 h-4 text-zinc-300" />
       <span className="text-zinc-100">Compartilhar</span>

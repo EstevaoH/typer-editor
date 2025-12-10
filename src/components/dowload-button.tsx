@@ -20,6 +20,7 @@ export function DownloadButton() {
                 <SidebarMenuButton
                     className="hover:bg-zinc-700 cursor-pointer"
                     disabled={!currentDocument}
+                    tooltip="Baixar"
                 >
                     <Download className="w-4 h-4 text-zinc-300" />
                     <span className="text-zinc-100">Baixar</span>
