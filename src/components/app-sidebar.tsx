@@ -24,7 +24,8 @@ import { Document, useDocuments } from "@/context/documents-context";
 import { KeyboardShortcuts } from "./key-board-shortcuts";
 import { ShareModal } from "./share-modal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { FontSelector } from "./font-selector";
+import { CommandMenu } from "./command-menu";
+import { Kbd } from "@/components/ui/kbd";
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>;
@@ -51,6 +52,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
 
   const handleDeleteClick = (doc: Document) => {
     setDocumentToDelete(doc);
@@ -159,10 +161,16 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                         </div>
                         <Input
                           placeholder="Buscar documentos..."
-                          className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-8"
+                          className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-8 pr-16"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                        {!searchQuery && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                            <Kbd className="bg-zinc-800 text-zinc-400 border-zinc-600">Ctrl</Kbd>
+                            <Kbd className="bg-zinc-800 text-zinc-400 border-zinc-600">K</Kbd>
+                          </div>
+                        )}
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
@@ -244,6 +252,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
           onShareSuccess={handleShareSuccess}
         />
       )}
+      <CommandMenu open={isCommandOpen} onOpenChange={setIsCommandOpen} />
     </>
   );
 }
