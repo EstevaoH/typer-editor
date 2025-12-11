@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { X, Keyboard, Bold, Indent, Italic, Link, List, ListChecks, ListOrdered, Outdent, Redo, Save, Search, Star, Underline, Undo, Command, FileText, Share2, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Kbd } from "@/components/ui/kbd"
 
 interface KeyboardShortcutsProps {
   isOpen: boolean
@@ -105,21 +106,21 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
   const renderKey = (key: string) => {
     if (key === 'Ctrl' || key === 'Cmd') {
       return (
-        <kbd className="px-2 py-1.5 text-xs font-medium bg-zinc-100 dark:bg-zinc-700 rounded-md flex items-center gap-1 min-w-[2.2rem] justify-center">
+        <Kbd size="md" className="min-w-[2.2rem] justify-center">
           {navigator.platform.includes('Mac') ? <Command className="w-3 h-3" /> : 'Ctrl'}
-        </kbd>
+        </Kbd>
       );
     }
 
     return (
-      <kbd className="px-2 py-1.5 text-xs font-medium bg-zinc-100 dark:bg-zinc-700 rounded-md min-w-[2.2rem] text-center">
+      <Kbd size="md" className="min-w-[2.2rem] justify-center">
         {key}
-      </kbd>
+      </Kbd>
     );
   };
 
   return (
- <AnimatePresence>
+    <AnimatePresence>
       {isOpen && (
         <>
           <motion.div
@@ -206,11 +207,11 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
 
               <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center flex items-center justify-center gap-1">
-                  <kbd className="px-2 py-1 text-xs bg-zinc-200 dark:bg-zinc-700 rounded">Esc</kbd>
-                  para fechar • 
-                  <kbd className="px-2 py-1 text-xs bg-zinc-200 dark:bg-zinc-700 rounded ml-1 flex items-center gap-1">
+                  <Kbd size="sm">Esc</Kbd>
+                  para fechar •
+                  <Kbd size="sm" className="ml-1 items-center gap-1">
                     {navigator.platform.includes('Mac') ? <Command className="w-3 h-3" /> : 'Ctrl'} + /
-                  </kbd>
+                  </Kbd>
                   para abrir
                 </p>
               </div>

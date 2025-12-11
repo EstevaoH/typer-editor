@@ -20,6 +20,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
+import { Kbd } from "@/components/ui/kbd"
 import { useDocuments } from "@/context/documents-context"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
@@ -43,8 +44,8 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
       }
     }
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
+    window.addEventListener("keydown", down)
+    return () => window.removeEventListener("keydown", down)
   }, [onOpenChange])
 
   const runCommand = React.useCallback((command: () => unknown) => {
@@ -64,7 +65,10 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           >
             <Plus className="mr-2 h-4 w-4" />
             <span>Novo Documento</span>
-            <CommandShortcut>⌘N</CommandShortcut>
+            <CommandShortcut className="flex items-center gap-1">
+              <Kbd>⌘</Kbd>
+              <Kbd>N</Kbd>
+            </CommandShortcut>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => createFolder("Nova Pasta"))}
