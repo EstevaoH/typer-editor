@@ -78,6 +78,10 @@ export function FolderItem({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === " ") {
+            e.stopPropagation();
+        }
+
         if (e.key === "Enter") {
             handleRename();
         } else if (e.key === "Escape") {

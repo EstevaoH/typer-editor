@@ -17,7 +17,7 @@ import { SearchSelector } from '@/components/search-selector';
 import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/toast-context';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+
 import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 
@@ -98,28 +98,19 @@ export function Editor() {
         }
     }, [currentDocument, toggleFavorite, toast]);
 
+    const handleDeleteDocument = useCallback(() => {
+        if (currentDocument) {
+            deleteDocument(currentDocument.id);
+            setShowDeleteConfirm(false);
+        }
+    }, [currentDocument, deleteDocument]);
+
     useEffect(() => {
         const savedPreference = localStorage.getItem('skipDeleteConfirmation');
         if (savedPreference === 'true') {
             setSkipDeleteConfirmation(true);
         }
     }, []);
-
-    useEffect(() => {
-        const handleKeyDownFavorite = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                if (currentDocument) {
-                    handleToggleFavorite(currentDocument.id);
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDownFavorite, true);
-        return () => window.removeEventListener('keydown', handleKeyDownFavorite, true);
-    }, [currentDocument, handleToggleFavorite, toast]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -131,88 +122,11 @@ export function Editor() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useKeyboardShortcuts({
-        onToggleShortcuts: () => setShowShortcuts(prev => !prev),
-        onToggleSearch: () => setShowSearch(prev => !prev),
-        onCreateDocument: () => {
-            createDocument();
-            toast.showToast('📄 Novo documento criado');
-        },
-        onDelete: () => {
-            if (currentDocument) {
-                if (skipDeleteConfirmation) {
-                    deleteDocument(currentDocument.id);
-                } else {
-                    setShowDeleteConfirm(true);
-                }
-            }
-        }
-    });
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '8') {
-                e.preventDefault();
-                e.stopPropagation();
-                editor?.commands.toggleBulletList();
-                return;
-            }
 
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '7') {
-                e.preventDefault();
-                e.stopPropagation();
-                editor?.commands.toggleOrderedList();
-                return;
-            }
 
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '9') {
-                e.preventDefault();
-                e.stopPropagation();
-                editor?.commands.toggleTaskList();
-                return;
-            }
 
-            if (e.key === 'Tab' && !e.shiftKey && editor?.isActive('listItem')) {
-                e.preventDefault();
-                e.stopPropagation();
-                editor.commands.sinkListItem('listItem');
-                return;
-            }
 
-            if (e.key === 'Tab' && e.shiftKey && editor?.isActive('listItem')) {
-                e.preventDefault();
-                e.stopPropagation();
-                editor.commands.liftListItem('listItem');
-                return;
-            }
-
-            if (e.key === 'Escape') {
-                if (showSearch) {
-                    setShowSearch(false);
-                    e.preventDefault();
-                    e.stopPropagation();
-                } else if (showShortcuts) {
-                    setShowShortcuts(false);
-                    e.preventDefault();
-                    e.stopPropagation();
-                } else if (showDeleteConfirm) {
-                    setShowDeleteConfirm(false);
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown, { capture: true });
-        return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-    }, [showSearch, showShortcuts, createDocument, editor, currentDocument, showDeleteConfirm, skipDeleteConfirmation, deleteDocument]);
-
-    const handleDeleteDocument = () => {
-        if (currentDocument) {
-            deleteDocument(currentDocument.id);
-            setShowDeleteConfirm(false);
-        }
-    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -234,7 +148,11 @@ export function Editor() {
     useEffect(() => {
         if (editor) {
             if (currentDocument) {
-                editor.commands.setContent(currentDocument.content || '', false);
+                // Only update content if it's different to avoid cursor jumps
+                const currentContent = editor.getHTML();
+                if (currentContent !== currentDocument.content) {
+                    editor.commands.setContent(currentDocument.content || '', false);
+                }
             } else {
                 editor.commands.setContent('', false);
             }
@@ -317,46 +235,9 @@ export function Editor() {
                                     }
                                 }}
                                 onKeyDown={(e) => {
-                                    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        createDocument();
-                                        return;
-                                    }
-
-                                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setShowSearch(prev => !prev);
-                                        return;
-                                    }
-
-                                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (currentDocument) {
-                                            setShowDeleteConfirm(true);
-                                        }
-                                        return;
-                                    }
-
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
                                         e.currentTarget.blur();
-                                        return;
-                                    }
-
-                                    if (e.key === 'Tab' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        editor?.commands.focus();
-                                        editor?.commands.focus('start');
-                                        return;
-                                    }
-
-                                    if (e.key === 'Tab' && e.shiftKey) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
                                         return;
                                     }
 
@@ -364,8 +245,6 @@ export function Editor() {
                                         e.preventDefault();
                                         if (showSearch) {
                                             setShowSearch(false);
-                                        } else if (showShortcuts) {
-                                            setShowShortcuts(false);
                                         } else if (showDeleteConfirm) {
                                             setShowDeleteConfirm(false);
                                         }
@@ -392,21 +271,6 @@ export function Editor() {
                                 }`}
                             onClick={() => editor?.commands.focus()}
                             onKeyDown={(e) => {
-                                if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    createDocument();
-                                    return;
-                                }
-                                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Delete') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (currentDocument) {
-                                        setShowDeleteConfirm(true);
-                                    }
-                                    return;
-                                }
-
                                 if (e.key === 'Tab') {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -419,26 +283,6 @@ export function Editor() {
                                         }
                                     } else {
                                         editor?.commands.insertContent('\t');
-                                    }
-                                    return;
-                                }
-
-                                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowSearch(prev => !prev);
-                                    return;
-                                }
-
-                                if (e.key === 'Escape') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (showSearch) {
-                                        setShowSearch(false);
-                                    } else if (showShortcuts) {
-                                        setShowShortcuts(false);
-                                    } else if (showDeleteConfirm) {
-                                        setShowDeleteConfirm(false);
                                     }
                                     return;
                                 }

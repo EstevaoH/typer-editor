@@ -7,19 +7,7 @@ export function VideoSelector({ editor }: { editor: Editor | null }) {
 
     const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'V') {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                setIsOpen(prev => !prev);
-            }
-        };
 
-        window.addEventListener('keydown', handleKeyDown, { capture: true });
-        return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-    }, []);
     if (!editor) return null
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>

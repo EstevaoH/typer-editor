@@ -50,20 +50,9 @@ export function ReferenceDialog({ editor }: { editor: any }) {
         }
     })
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
-                e.preventDefault()
-                e.stopPropagation()
-                setIsOpenDialog(true)
-            }
-        }
-        document.addEventListener('keydown', handleKeyDown, { capture: true })
 
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown, { capture: true })
-        }
-    }, [])
+
+
 
     const onSubmit = (data: z.infer<typeof referenceSchema>) => {
         const { html } = formatABNTReference(data)
@@ -85,7 +74,7 @@ export function ReferenceDialog({ editor }: { editor: any }) {
                         ? 'bg-zinc-600 text-white'
                         : 'text-zinc-300 hover:bg-zinc-700'
                         }`}
-                    title="Criar referência (Ctrl+Shift+R)"
+                    title="Criar referência"
                     onClick={() => setIsOpenDialog(true)}
                 >
                     <BookMarkedIcon className="w-4 h-4" />

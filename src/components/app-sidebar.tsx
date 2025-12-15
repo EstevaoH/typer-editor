@@ -21,11 +21,9 @@ import { Separator } from "./ui/separator";
 import Link from "next/link";
 import { ShowDeleteConfirm } from "./show-delete-confirm";
 import { Document, useDocuments } from "@/context/documents-context";
-import { KeyboardShortcuts } from "./key-board-shortcuts";
 import { ShareModal } from "./share-modal";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { CommandMenu } from "./command-menu";
-import { Kbd } from "@/components/ui/kbd";
+
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   documents?: Array<{ id: string; title: string; content: string }>;
@@ -50,7 +48,6 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
-  const [showShortcuts, setShowShortcuts] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
 
@@ -69,9 +66,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
     }
   };
 
-  const handleKeyboardShortcuts = () => {
-    setShowShortcuts(true);
-  };
+
 
   const handleShare = () => {
     setShowShareModal(true);
@@ -94,18 +89,15 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
     }
   };
 
-  const handleToggleShortcuts = () => {
-    setShowShortcuts((prev) => !prev);
-  };
+
 
   const handleOpenShare = () => {
     setShowShareModal(true);
   };
 
-  useKeyboardShortcuts({
-    onToggleShortcuts: handleToggleShortcuts,
-    onShare: handleOpenShare,
-  });
+
+
+
 
   return (
     <>
@@ -165,12 +157,6 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        {!searchQuery && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                            <Kbd className="bg-zinc-800 text-zinc-400 border-zinc-600">Ctrl</Kbd>
-                            <Kbd className="bg-zinc-800 text-zinc-400 border-zinc-600">K</Kbd>
-                          </div>
-                        )}
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
@@ -196,7 +182,6 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
           />
 
           <NavActions
-            isOpenKeyBoardShortcuts={handleKeyboardShortcuts}
             isOpenShareModal={handleShare}
           />
           <Separator orientation="horizontal" className="bg-zinc-700" />
@@ -228,12 +213,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      {showShortcuts && (
-        <KeyboardShortcuts
-          isOpen={showShortcuts}
-          onClose={() => setShowShortcuts(false)}
-        />
-      )}
+
       {showDeleteConfirm && (
         <ShowDeleteConfirm
           currentDocument={documentToDelete}

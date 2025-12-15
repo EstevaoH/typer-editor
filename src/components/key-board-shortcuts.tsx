@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react'
 import { X, Keyboard, Bold, Indent, Italic, Link, List, ListChecks, ListOrdered, Outdent, Redo, Save, Search, Star, Underline, Undo, Command, FileText, Share2, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Kbd } from "@/components/ui/kbd"
+
 
 interface KeyboardShortcutsProps {
   isOpen: boolean
@@ -85,38 +85,17 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
     }
   ]
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-        e.preventDefault();
-        e.stopPropagation();
-      }
 
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, onClose]);
 
   const renderKey = (key: string) => {
     if (key === 'Ctrl' || key === 'Cmd') {
       return (
-        <Kbd size="md" className="min-w-[2.2rem] justify-center">
+        <Kbd>
           {navigator.platform.includes('Mac') ? <Command className="w-3 h-3" /> : 'Ctrl'}
         </Kbd>
       );
     }
-
-    return (
-      <Kbd size="md" className="min-w-[2.2rem] justify-center">
-        {key}
-      </Kbd>
-    );
+    return <Kbd>{key}</Kbd>;
   };
 
   return (
@@ -207,12 +186,8 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
 
               <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center flex items-center justify-center gap-1">
-                  <Kbd size="sm">Esc</Kbd>
-                  para fechar •
-                  <Kbd size="sm" className="ml-1 items-center gap-1">
-                    {navigator.platform.includes('Mac') ? <Command className="w-3 h-3" /> : 'Ctrl'} + /
-                  </Kbd>
-                  para abrir
+                  <span>Esc</span>
+                  para fechar
                 </p>
               </div>
             </div>

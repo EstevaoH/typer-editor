@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { useHotkeys } from 'react-hotkeys-hook';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchSelectorProps {
@@ -39,17 +39,7 @@ export function SearchSelector({ editor, onClose, isOpen }: SearchSelectorProps)
         }
     }, [isOpen]);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
 
-        window.addEventListener('keydown', handleKeyDown, true);
-        return () => window.removeEventListener('keydown', handleKeyDown, true);
-    }, []);
 
     return (
         <AnimatePresence>
