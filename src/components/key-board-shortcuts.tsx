@@ -86,18 +86,6 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
   ]
 
 
-
-  const renderKey = (key: string) => {
-    if (key === 'Ctrl' || key === 'Cmd') {
-      return (
-        <Kbd>
-          {navigator.platform.includes('Mac') ? <Command className="w-3 h-3" /> : 'Ctrl'}
-        </Kbd>
-      );
-    }
-    return <Kbd>{key}</Kbd>;
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -169,10 +157,10 @@ export function KeyboardShortcuts({ isOpen, onClose }: KeyboardShortcutsProps) {
                             <div className="flex items-center gap-1">
                               {shortcut.keys.map((key, keyIndex) => (
                                 <React.Fragment key={keyIndex}>
-                                  {renderKey(key)}
+                                  {/* {renderKey(key)}
                                   {keyIndex < shortcut.keys.length - 1 && (
                                     <span className="text-zinc-400 dark:text-zinc-500 mx-1 text-xs">+</span>
-                                  )}
+                                  )} */}
                                 </React.Fragment>
                               ))}
                             </div>
