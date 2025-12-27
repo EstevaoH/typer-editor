@@ -74,7 +74,7 @@ export const DocumentItem = memo(function DocumentItem({
                             </span>
                             {doc.tags && doc.tags.length > 0 && (
                                 <div className="flex gap-1 flex-wrap">
-                                    {doc.tags.slice(0, 2).map((tag) => (
+                                    {doc.tags.slice(0, 2).map((tag: any) => (
                                         <Badge
                                             key={tag}
                                             variant="secondary"
