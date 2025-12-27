@@ -37,17 +37,28 @@ export interface BreadcrumbItem {
   type: 'folder' | 'document' | 'root';
 }
 
+export interface Template extends Document {
+  isTemplate: true;
+  description?: string;
+  category?: string;
+  createdAt: string;
+}
+
 export interface DocumentsContextType {
   MAX_DOCUMENTS: number;
   documents: Document[]; // Documents filtered by selected tag
   allDocuments: Document[]; // All documents (unfiltered) for tag counting
   folders: Folder[];
+  templates: Template[]; // Templates list
   currentDocument: Document | null;
   isLoading: boolean;
   createDocument: (title?: string, folderId?: string) => void;
+  createDocumentFromTemplate: (templateId: string) => void;
   updateDocument: (updates: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
   saveDocument: (title: string) => void;
+  saveAsTemplate: (documentId: string, templateName: string, description?: string) => void;
+  deleteTemplate: (templateId: string) => void;
   setCurrentDocumentId: (id: string | null) => void;
   downloadDocument: (id: string, format?: DownloadFormat) => void;
   toggleFavorite: (id: string) => void;
@@ -67,7 +78,7 @@ export interface DocumentsContextType {
   restoreVersion: (versionId: string) => void;
   deleteVersion: (versionId: string) => void;
   undoDelete: () => string | null;
-  
+
   // Folder methods
   createFolder: (name: string, parentId?: string) => void;
   deleteFolder: (id: string) => void;
@@ -75,7 +86,7 @@ export interface DocumentsContextType {
   moveDocumentToFolder: (docId: string, folderId: string | null) => void;
   downloadFolder: (folderId: string) => Promise<void>;
   getBreadcrumbs: (documentId?: string | null) => BreadcrumbItem[];
-  
+
   // Tag methods
   addTag: (documentId: string, tag: string) => void;
   removeTag: (documentId: string, tag: string) => void;

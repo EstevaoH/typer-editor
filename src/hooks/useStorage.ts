@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { db, databaseUtils } from '@/lib/database';
-import { validateAndParseArray, DocumentsArraySchema, FoldersArraySchema, VersionsArraySchema } from '@/lib/schemas';
-import type { Document, Folder, Version } from '@/context/documents/types';
+import { validateAndParseArray, DocumentsArraySchema, FoldersArraySchema, VersionsArraySchema, TemplatesArraySchema } from '@/lib/schemas';
+import type { Document, Folder, Version, Template } from '@/context/documents/types';
 
 /**
  * Hook para gerenciar armazenamento com IndexedDB (com fallback para localStorage)
@@ -16,16 +16,16 @@ export function useStorage() {
     const init = async () => {
       if (databaseUtils.isAvailable() && !migrationAttempted.current) {
         migrationAttempted.current = true;
-        
+
         try {
           // Tentar migrar dados do localStorage
           const migrated = await databaseUtils.migrateFromLocalStorage();
-          
+
           if (migrated) {
             setStorageType('indexeddb');
             console.log('✅ Migração para IndexedDB concluída');
           }
-          
+
           setIsReady(true);
         } catch (error) {
           console.warn('⚠️ Erro ao inicializar IndexedDB, usando localStorage:', error);
@@ -54,7 +54,7 @@ export function useStorage() {
         return loadFromLocalStorage<Document>('savedDocuments', DocumentsArraySchema);
       }
     }
-    
+
     return loadFromLocalStorage<Document>('savedDocuments', DocumentsArraySchema);
   }, [storageType]);
 
@@ -74,7 +74,7 @@ export function useStorage() {
         // Fallback para localStorage
       }
     }
-    
+
     saveToLocalStorage('savedDocuments', docs);
   }, [storageType]);
 
@@ -91,7 +91,7 @@ export function useStorage() {
         return loadFromLocalStorage<Folder>('savedFolders', FoldersArraySchema);
       }
     }
-    
+
     return loadFromLocalStorage<Folder>('savedFolders', FoldersArraySchema);
   }, [storageType]);
 
@@ -110,7 +110,7 @@ export function useStorage() {
         console.error('Erro ao salvar pastas no IndexedDB:', error);
       }
     }
-    
+
     saveToLocalStorage('savedFolders', folders);
   }, [storageType]);
 
@@ -127,7 +127,7 @@ export function useStorage() {
         return loadFromLocalStorage<Version>('documentVersions', VersionsArraySchema);
       }
     }
-    
+
     return loadFromLocalStorage<Version>('documentVersions', VersionsArraySchema);
   }, [storageType]);
 
@@ -146,8 +146,44 @@ export function useStorage() {
         console.error('Erro ao salvar versões no IndexedDB:', error);
       }
     }
-    
+
     saveToLocalStorage('documentVersions', versions);
+  }, [storageType]);
+
+  /**
+   * Carrega templates do storage
+   */
+  const loadTemplates = useCallback(async (): Promise<Template[]> => {
+    if (storageType === 'indexeddb' && databaseUtils.isAvailable()) {
+      try {
+        const templates = await db.templates.toArray();
+        return validateAndParseArray<Template>(templates, TemplatesArraySchema, []);
+      } catch (error) {
+        console.error('Erro ao carregar templates do IndexedDB:', error);
+        return loadFromLocalStorage<Template>('savedTemplates', TemplatesArraySchema);
+      }
+    }
+
+    return loadFromLocalStorage<Template>('savedTemplates', TemplatesArraySchema);
+  }, [storageType]);
+
+  /**
+   * Salva templates no storage
+   */
+  const saveTemplates = useCallback(async (templates: Template[]): Promise<void> => {
+    if (storageType === 'indexeddb' && databaseUtils.isAvailable()) {
+      try {
+        await db.templates.clear();
+        if (templates.length > 0) {
+          await db.templates.bulkPut(templates);
+        }
+        return;
+      } catch (error) {
+        console.error('Erro ao salvar templates no IndexedDB:', error);
+      }
+    }
+
+    saveToLocalStorage('savedTemplates', templates);
   }, [storageType]);
 
   return {
@@ -159,6 +195,8 @@ export function useStorage() {
     saveFolders,
     loadVersions,
     saveVersions,
+    loadTemplates,
+    saveTemplates,
   };
 }
 
@@ -189,4 +227,3 @@ function saveToLocalStorage<T>(key: string, data: T[]): void {
     console.error(`Erro ao salvar ${key} no localStorage:`, error);
   }
 }
-

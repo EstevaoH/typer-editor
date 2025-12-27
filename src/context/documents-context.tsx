@@ -26,6 +26,7 @@ import type {
   Document,
   Folder,
   Version,
+  Template,
   DownloadFormat,
   DocumentsContextType,
   MAX_DOCUMENTS,
@@ -46,46 +47,82 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false);
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const { checkLimit } = useDocumentLimit(documents, 10);
   const toast = useToast();
   const storage = useStorage();
-  
+
   // Debounce para salvamento automático (500ms)
   const debouncedDocuments = useDebounce(documents, 500);
   const debouncedFolders = useDebounce(folders, 500);
   const debouncedVersions = useDebounce(versions, 500);
+  const debouncedTemplates = useDebounce(templates, 500);
 
   // Load from storage (IndexedDB or localStorage)
   useEffect(() => {
     const loadData = async () => {
       if (!storage.isReady) return;
-      
+
       try {
         // Tentar carregar do IndexedDB primeiro, fallback para localStorage
         const loadedDocs = await storage.loadDocuments();
         const loadedFolders = await storage.loadFolders();
         const loadedVersions = await storage.loadVersions();
-        
+
         if (loadedDocs.length > 0 || loadedFolders.length > 0 || loadedVersions.length > 0) {
           setDocuments(loadedDocs);
           setFolders(loadedFolders);
           setVersions(loadedVersions);
-          
+
           if (loadedDocs.length > 0 && !currentDocId) {
             setCurrentDocId(loadedDocs[0].id);
           }
         }
-        
+
+        const loadedTemplates = await storage.loadTemplates();
+        if (loadedTemplates.length > 0) {
+          setTemplates(loadedTemplates);
+        } else {
+          // Seed default template for testing
+          const testTemplate: Template = {
+            id: crypto.randomUUID(),
+            title: "Template de Teste 📋",
+            content: `
+          <h1>Template de Teste</h1>
+          <p>Este é um template gerado automaticamente para fins de teste.</p>
+          <h2>Seções:</h2>
+          <ul>
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+          </ul>
+          `,
+            isTemplate: true,
+            description: "Template criado automaticamente para testes.",
+            category: "Testes",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isFavorite: false,
+            isPrivate: true,
+            sharedWith: [],
+            tags: ["teste"],
+            folderId: null
+          };
+
+          setTemplates([testTemplate]);
+          await storage.saveTemplates([testTemplate]);
+        }
+
         const hasVisited = localStorage.getItem("hasVisited");
 
         if (loadedDocs.length === 0 && !hasVisited) {
-      // First access: Create welcome document
-      const welcomeDoc: Document = {
-        id: crypto.randomUUID(),
-        title: "Bem-vindo ao Typer Editor! 👋",
-        content: `
+          // First access: Create welcome document
+          const welcomeDoc: Document = {
+            id: crypto.randomUUID(),
+            title: "Bem-vindo ao Typer Editor! 👋",
+            content: `
           <h1>Bem-vindo ao Typer Editor! 🚀</h1>
           <p>Este é o seu novo editor de texto minimalista e poderoso. Aqui estão algumas dicas para começar:</p>
           
@@ -112,17 +149,17 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
           <p>Sinta-se à vontade para editar ou excluir este documento e começar a escrever suas próprias ideias!</p>
         `,
-        updatedAt: new Date().toISOString(),
-        isFavorite: false,
-        isPrivate: true,
-        sharedWith: [],
-        tags: [],
-      };
+            updatedAt: new Date().toISOString(),
+            isFavorite: false,
+            isPrivate: true,
+            sharedWith: [],
+            tags: [],
+          };
 
           setDocuments([welcomeDoc]);
           setCurrentDocId(welcomeDoc.id);
           localStorage.setItem("hasVisited", "true");
-          
+
           // Salvar documento de boas-vindas
           await storage.saveDocuments([welcomeDoc]);
         }
@@ -133,7 +170,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-    
+
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage.isReady]);
@@ -183,7 +220,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
           toast.showToast("⚠️ Erro ao salvar documentos.");
         }
       });
-      
+
       if (debouncedDocuments.length > 0 && !currentDocId) {
         setCurrentDocId(debouncedDocuments[0].id);
       }
@@ -219,6 +256,15 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       });
     }
   }, [debouncedVersions, isLoading, storage.isReady, toast]);
+
+  useEffect(() => {
+    if (!isLoading && storage.isReady) {
+      storage.saveTemplates(debouncedTemplates).catch((error) => {
+        console.error("Erro ao salvar templates:", error);
+        toast.showToast("⚠️ Erro ao salvar templates.");
+      });
+    }
+  }, [debouncedTemplates, isLoading, storage.isReady, toast]);
 
   // Current document
   const currentDocument =
@@ -471,6 +517,58 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     ? documents.filter((doc) => doc.tags?.includes(selectedTag))
     : documents;
 
+  // Template methods
+  const saveAsTemplate = useCallback((documentId: string, templateName: string, description?: string) => {
+    const doc = documents.find(d => d.id === documentId);
+    if (!doc) return;
+
+    const newTemplate: Template = {
+      ...doc,
+      id: crypto.randomUUID(),
+      title: templateName,
+      isTemplate: true,
+      description,
+      createdAt: new Date().toISOString(), // Templates don't track updatedAt same way? Or should. Template Interface extends Document which has updatedAt.
+      updatedAt: new Date().toISOString(),
+      folderId: null, // Templates don't likely belong to user folders
+      isFavorite: false,
+    };
+
+    setTemplates(prev => [...prev, newTemplate]);
+    toast.showToast("✅ Template salvo com sucesso!");
+  }, [documents, toast]);
+
+  const deleteTemplate = useCallback((templateId: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== templateId));
+    toast.showToast("🗑️ Template excluído.");
+  }, [toast]);
+
+  const createDocumentFromTemplate = useCallback((templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    if (!checkLimit()) return;
+
+    const { isTemplate, description, category, createdAt, ...docProps } = template;
+
+    const newDoc: Document = {
+      ...docProps,
+      id: crypto.randomUUID(),
+      title: `${template.title} (Cópia)`,
+      updatedAt: new Date().toISOString(),
+      folderId: null,
+      isShared: false,
+      sharedWith: [],
+      isFavorite: false,
+      isPrivate: true,
+      tags: template.tags || [],
+    };
+
+    setDocuments(prev => [newDoc, ...prev]);
+    setCurrentDocId(newDoc.id);
+    toast.showToast("✅ Novo documento criado a partir do template!");
+  }, [templates, checkLimit, toast]);
+
   // Context value
   const value: DocumentsContextType = {
     MAX_DOCUMENTS: 10,
@@ -509,6 +607,10 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     getAllTags,
     filterByTag,
     selectedTag,
+    templates,
+    saveAsTemplate,
+    deleteTemplate,
+    createDocumentFromTemplate,
   };
 
   return (

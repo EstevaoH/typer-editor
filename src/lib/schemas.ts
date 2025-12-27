@@ -54,6 +54,21 @@ export const FoldersArraySchema = z.array(FolderSchema);
 export const VersionsArraySchema = z.array(VersionSchema);
 
 /**
+ * Schema para validação de Template
+ */
+export const TemplateSchema = DocumentSchema.extend({
+  isTemplate: z.literal(true),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  createdAt: z.string().datetime(),
+});
+
+/**
+ * Schema para array de Templates
+ */
+export const TemplatesArraySchema = z.array(TemplateSchema);
+
+/**
  * Função auxiliar para validar e parsear dados do localStorage
  */
 export function validateAndParse<T>(
@@ -77,7 +92,7 @@ export function validateAndParse<T>(
  */
 export function validateAndParseArray<T>(
   data: unknown,
-  schema: z.ZodSchema<T[]>,
+  schema: z.ZodType<T[], any, any>,
   fallback: T[] = []
 ): T[] {
   try {

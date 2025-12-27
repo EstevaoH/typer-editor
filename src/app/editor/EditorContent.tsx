@@ -22,6 +22,7 @@ import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { TagSelector } from "@/components/tag-selector";
+import { SaveAsTemplateDialog } from "@/components/templates/save-as-template-dialog";
 
 // Lazy load componentes pesados para code splitting
 const StatisticsDialog = lazy(() => import('@/components/statistics-dialog').then(module => ({ default: module.StatisticsDialog })));
@@ -55,6 +56,7 @@ export function Editor() {
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [showFloatingButton, setShowFloatingButton] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showSaveTemplate, setShowSaveTemplate] = useState(false);
     const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isStatsOpen, setIsStatsOpen] = useState(false);
@@ -273,12 +275,12 @@ export function Editor() {
                         <Suspense fallback={<div className="h-8" />}>
                             <DocumentBreadcrumb />
                         </Suspense>
-                        
+
                         {/* Tag Selector */}
                         {currentDocument && (
                             <div className="mb-4">
-                                <TagSelector 
-                                    documentId={currentDocument.id} 
+                                <TagSelector
+                                    documentId={currentDocument.id}
                                     tags={currentDocument.tags || []}
                                 />
                             </div>
@@ -333,6 +335,17 @@ export function Editor() {
                                             {editor.storage.characterCount.characters()} caracteres
                                         </button>
                                     )}
+
+                                    {currentDocument && (
+                                        <button
+                                            onClick={() => setShowSaveTemplate(true)}
+                                            className="flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded transition-colors cursor-pointer"
+                                            title="Salvar como Template"
+                                        >
+                                            <FilePenLine className="w-4 h-4" />
+                                            Salvar como Template
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -354,6 +367,14 @@ export function Editor() {
                     editor={editor}
                 />
             </Suspense>
+            {currentDocument && (
+                <SaveAsTemplateDialog
+                    open={showSaveTemplate}
+                    onOpenChange={setShowSaveTemplate}
+                    documentId={currentDocument.id}
+                    initialTitle={currentDocument.title}
+                />
+            )}
         </>
     );
 }

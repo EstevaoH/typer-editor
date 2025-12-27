@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Document, Folder, Version } from '@/context/documents/types';
+import type { Document, Folder, Version, Template } from '@/context/documents/types';
 
 /**
  * Interface para o banco de dados IndexedDB usando Dexie
@@ -8,15 +8,17 @@ class TyperEditorDatabase extends Dexie {
   documents!: Table<Document, string>;
   folders!: Table<Folder, string>;
   versions!: Table<Version, string>;
+  templates!: Table<Template, string>;
   metadata!: Table<{ key: string; value: unknown }, string>;
 
   constructor() {
     super('TyperEditorDB');
-    
+
     this.version(1).stores({
       documents: 'id, title, updatedAt, folderId, isFavorite',
       folders: 'id, name, createdAt, parentId',
       versions: 'id, documentId, createdAt',
+      templates: 'id, title, category',
       metadata: 'key',
     });
   }
@@ -82,9 +84,22 @@ export const databaseUtils = {
         }
       }
 
+      // Migrar templates (se houver no futuro)
+      const savedTemplates = localStorage.getItem('savedTemplates');
+      if (savedTemplates) {
+        try {
+          const templates = JSON.parse(savedTemplates);
+          if (Array.isArray(templates) && templates.length > 0) {
+            await db.templates.bulkPut(templates);
+          }
+        } catch (error) {
+          console.error('Erro ao migrar templates:', error);
+        }
+      }
+
       // Marcar migração como completa
       await db.metadata.put({ key: 'migration_complete', value: true });
-      
+
       return true;
     } catch (error) {
       console.error('Erro na migração do localStorage para IndexedDB:', error);

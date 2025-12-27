@@ -1,5 +1,5 @@
 "use client";
-import { Search, Home, X, Coffee } from "lucide-react";
+import { Search, Home, X, Coffee, FileText } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,7 @@ import { Document, useDocuments } from "@/context/documents-context";
 import { ShareModal } from "./share-modal";
 import { CommandMenu } from "./command-menu";
 import { TagFilter } from "./tag-filter";
+import { TemplatesDialog } from "./templates/templates-dialog";
 
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -50,7 +51,9 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const handleDeleteClick = (doc: Document) => {
     setDocumentToDelete(doc);
@@ -132,7 +135,18 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
                       <Home className="w-4 h-4 text-zinc-300" />
                       <span className="text-zinc-100">Início</span>
                     </SidebarMenuButton>
+
                   </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Templates"
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                    onClick={() => setShowTemplates(true)}
+                  >
+                    <FileText className="w-4 h-4 text-zinc-300" />
+                    <span className="text-zinc-100">Templates</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   {state === "collapsed" && (
@@ -173,14 +187,14 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          
+
           {/* Tag Filter */}
           {state !== "collapsed" && (
             <SidebarGroup>
               <TagFilter className="px-2 py-2" />
             </SidebarGroup>
           )}
-          
+
           <NavDocuments
             onDeleteClick={handleDeleteClick}
             onShareClick={handleShare}
@@ -221,7 +235,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
             )}
           </SidebarGroup>
         </SidebarContent>
-      </Sidebar>
+      </Sidebar >
 
       {showDeleteConfirm && (
         <ShowDeleteConfirm
@@ -229,19 +243,23 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
           handleDeleteDocument={handleConfirmDelete}
           setShowDeleteConfirm={setShowDeleteConfirm}
         />
-      )}
-      {showShareModal && currentDocument && (
-        <ShareModal
-          isOpen={showShareModal}
-          onClose={handleCloseShareModal}
-          documentContent={currentDocument?.content || ""}
-          documentTitle={currentDocument?.title || "Documento sem título"}
-          isPrivate={currentDocument?.isPrivate !== false}
-          onPrivacyChange={handlePrivacyChange}
-          onShareSuccess={handleShareSuccess}
-        />
-      )}
+      )
+      }
+      {
+        showShareModal && currentDocument && (
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={handleCloseShareModal}
+            documentContent={currentDocument?.content || ""}
+            documentTitle={currentDocument?.title || "Documento sem título"}
+            isPrivate={currentDocument?.isPrivate !== false}
+            onPrivacyChange={handlePrivacyChange}
+            onShareSuccess={handleShareSuccess}
+          />
+        )
+      }
       <CommandMenu open={isCommandOpen} onOpenChange={setIsCommandOpen} />
+      <TemplatesDialog open={showTemplates} onOpenChange={setShowTemplates} />
     </>
   );
 }
