@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { useDocumentLimit } from "@/hooks/useDocumentLimit";
 import { downloadDocument } from "./documents/utils/documentExport";
@@ -45,6 +46,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [hasHandledFirstInput, setHasHandledFirstInput] = useState(false);
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const { checkLimit } = useDocumentLimit(documents, 10);
   const toast = useToast();
@@ -114,6 +116,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         isFavorite: false,
         isPrivate: true,
         sharedWith: [],
+        tags: [],
       };
 
           setDocuments([welcomeDoc]);
@@ -404,10 +407,75 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     [documents, folders]
   );
 
+  // Tag methods
+  const addTag = useCallback(
+    (documentId: string, tag: string) => {
+      const normalizedTag = tag.trim().toLowerCase();
+      if (!normalizedTag) return;
+
+      setDocuments((prev) =>
+        prev.map((doc) => {
+          if (doc.id === documentId) {
+            const existingTags = doc.tags || [];
+            if (!existingTags.includes(normalizedTag)) {
+              return {
+                ...doc,
+                tags: [...existingTags, normalizedTag],
+                updatedAt: new Date().toISOString(),
+              };
+            }
+          }
+          return doc;
+        })
+      );
+    },
+    []
+  );
+
+  const removeTag = useCallback(
+    (documentId: string, tag: string) => {
+      setDocuments((prev) =>
+        prev.map((doc) => {
+          if (doc.id === documentId) {
+            const existingTags = doc.tags || [];
+            return {
+              ...doc,
+              tags: existingTags.filter((t) => t !== tag),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return doc;
+        })
+      );
+    },
+    []
+  );
+
+  const getAllTags = useCallback(() => {
+    const allTags = new Set<string>();
+    // Use the original documents array (before filtering)
+    documents.forEach((doc) => {
+      if (doc.tags && doc.tags.length > 0) {
+        doc.tags.forEach((tag) => allTags.add(tag));
+      }
+    });
+    return Array.from(allTags).sort();
+  }, [documents]);
+
+  const filterByTag = useCallback((tag: string | null) => {
+    setSelectedTag(tag);
+  }, []);
+
+  // Filter documents by selected tag (but keep original for operations)
+  const displayDocuments = selectedTag
+    ? documents.filter((doc) => doc.tags?.includes(selectedTag))
+    : documents;
+
   // Context value
   const value: DocumentsContextType = {
     MAX_DOCUMENTS: 10,
-    documents,
+    documents: displayDocuments,
+    allDocuments: documents, // All documents for tag counting
     currentDocument,
     isLoading,
     createDocument: documentOps.createDocument,
@@ -436,6 +504,11 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     moveDocumentToFolder,
     downloadFolder: handleDownloadFolder,
     getBreadcrumbs,
+    addTag,
+    removeTag,
+    getAllTags,
+    filterByTag,
+    selectedTag,
   };
 
   return (

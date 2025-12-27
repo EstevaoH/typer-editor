@@ -35,6 +35,7 @@ export const DocumentSchema = z.object({
   sharedWith: z.array(z.string().email()).default([]),
   isTutorial: z.boolean().optional(),
   folderId: z.union([z.string().uuid(), z.null()]).optional(),
+  tags: z.array(z.string().min(1).max(30)).optional().default([]),
 });
 
 /**

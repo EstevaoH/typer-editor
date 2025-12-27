@@ -23,6 +23,7 @@ import { ShowDeleteConfirm } from "./show-delete-confirm";
 import { Document, useDocuments } from "@/context/documents-context";
 import { ShareModal } from "./share-modal";
 import { CommandMenu } from "./command-menu";
+import { TagFilter } from "./tag-filter";
 
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -112,7 +113,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
       >
         <SidebarContent className="h-full flex flex-col bg-zinc-800 dark border-none">
           <SidebarGroup>
-            <div className="flex items-center justify-between px-2 py-2">
+            <div className="flex items-center justify-between px-[0.5px] py-1">
               {state !== "collapsed" && (
                 <SidebarGroupLabel className="text-zinc-400">
                   Navegação
@@ -172,6 +173,14 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          
+          {/* Tag Filter */}
+          {state !== "collapsed" && (
+            <SidebarGroup>
+              <TagFilter className="px-2 py-2" />
+            </SidebarGroup>
+          )}
+          
           <NavDocuments
             onDeleteClick={handleDeleteClick}
             onShareClick={handleShare}

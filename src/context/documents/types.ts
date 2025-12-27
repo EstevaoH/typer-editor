@@ -18,6 +18,7 @@ export interface Document {
   sharedWith: string[];
   isTutorial?: boolean;
   folderId?: string | null;
+  tags?: string[];
 }
 
 export interface Version {
@@ -38,7 +39,8 @@ export interface BreadcrumbItem {
 
 export interface DocumentsContextType {
   MAX_DOCUMENTS: number;
-  documents: Document[];
+  documents: Document[]; // Documents filtered by selected tag
+  allDocuments: Document[]; // All documents (unfiltered) for tag counting
   folders: Folder[];
   currentDocument: Document | null;
   isLoading: boolean;
@@ -73,4 +75,11 @@ export interface DocumentsContextType {
   moveDocumentToFolder: (docId: string, folderId: string | null) => void;
   downloadFolder: (folderId: string) => Promise<void>;
   getBreadcrumbs: (documentId?: string | null) => BreadcrumbItem[];
+  
+  // Tag methods
+  addTag: (documentId: string, tag: string) => void;
+  removeTag: (documentId: string, tag: string) => void;
+  getAllTags: () => string[];
+  filterByTag: (tag: string | null) => void;
+  selectedTag: string | null;
 }

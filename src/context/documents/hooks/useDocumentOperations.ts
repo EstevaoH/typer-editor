@@ -29,6 +29,7 @@ export const useDocumentOperations = (
         sharedWith: [],
         updatedAt: new Date().toISOString(),
         folderId: folderId || null,
+        tags: [],
       };
 
       setDocuments((prev) => [newDoc, ...prev]);

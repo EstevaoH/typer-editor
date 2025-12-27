@@ -15,16 +15,23 @@ import { Editor } from '@tiptap/react';
 import { ThemeToggle } from './theme-toggle';
 import { VersionHistoryDialog } from './version-history-dialog';
 import { FontSelector } from './font-selector';
+import { SidebarTrigger, useSidebar } from './ui/sidebar';
 
 interface ToolBarProps {
     editor: Editor | null;
 }
 
 export function ToolBar({ editor }: ToolBarProps) {
-
+    const { isMobile } = useSidebar()
     if (!editor) return null;
     return (
         <div className="flex h-12 items-center justify-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700 sticky top-0 z-50">
+            {isMobile && (
+                <div className=" flex items-center gap-2 sticky top-0 z-10 bg-zinc-800 backdrop-blur">
+                    <SidebarTrigger />
+                    {/* <span className="text-sm text-muted-foreground font-medium">Menu</span> */}
+                </div>
+            )}
             <div
                 className="flex h-12 w-full items-center gap-2 p-2 overflow-x-auto scrollbar-hide md:justify-center"
             >

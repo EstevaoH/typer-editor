@@ -1,4 +1,4 @@
-import { Eye, EyeOff, FileText, Star, StarOff, Trash2, Share, Users, LockKeyhole, LockKeyholeOpen, FolderInput, FolderOpen } from "lucide-react";
+import { Eye, EyeOff, FileText, Star, StarOff, Trash2, Share, Users, LockKeyhole, LockKeyholeOpen, FolderInput, FolderOpen, Tag } from "lucide-react";
 import { SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/context/toast-context";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Folder } from "@/context/documents/types";
 import { memo } from "react";
+import { Badge } from "./ui/badge";
 
 type DocumentItemProps = {
     doc: any;
@@ -64,12 +65,36 @@ export const DocumentItem = memo(function DocumentItem({
                             currentDocument?.id === doc.id && "text-blue-400"
                         )} />
 
-                        <span className={cn(
-                            "text-zinc-100 truncate flex-1",
-                            currentDocument?.id === doc.id && "text-blue-400 font-medium"
-                        )}>
-                            {doc.title || 'Sem título'}
-                        </span>
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                            <span className={cn(
+                                "text-zinc-100 truncate",
+                                currentDocument?.id === doc.id && "text-blue-400 font-medium"
+                            )}>
+                                {doc.title || 'Sem título'}
+                            </span>
+                            {doc.tags && doc.tags.length > 0 && (
+                                <div className="flex gap-1 flex-wrap">
+                                    {doc.tags.slice(0, 2).map((tag) => (
+                                        <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="text-[10px] px-1 py-0 h-4 bg-blue-500/20 text-blue-300 border-blue-500/30"
+                                        >
+                                            <Tag className="w-2.5 h-2.5 mr-0.5" />
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                    {doc.tags.length > 2 && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="text-[10px] px-1 py-0 h-4 bg-blue-500/20 text-blue-300 border-blue-500/30"
+                                        >
+                                            +{doc.tags.length - 2}
+                                        </Badge>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         {doc.isShared && (
                             <div

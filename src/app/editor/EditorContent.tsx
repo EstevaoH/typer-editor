@@ -20,6 +20,8 @@ import { useToast } from '@/context/toast-context';
 
 import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { TagSelector } from "@/components/tag-selector";
 
 // Lazy load componentes pesados para code splitting
 const StatisticsDialog = lazy(() => import('@/components/statistics-dialog').then(module => ({ default: module.StatisticsDialog })));
@@ -34,6 +36,7 @@ lowlight.register('ts', ts)
 export function Editor() {
     const { fontFamily } = useSettings();
     const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument, } = useDocuments()
+    const { isMobile } = useSidebar()
 
     const getFontClass = () => {
         switch (fontFamily) {
@@ -270,6 +273,16 @@ export function Editor() {
                         <Suspense fallback={<div className="h-8" />}>
                             <DocumentBreadcrumb />
                         </Suspense>
+                        
+                        {/* Tag Selector */}
+                        {currentDocument && (
+                            <div className="mb-4">
+                                <TagSelector 
+                                    documentId={currentDocument.id} 
+                                    tags={currentDocument.tags || []}
+                                />
+                            </div>
+                        )}
 
                         <div
                             ref={editorRef}
