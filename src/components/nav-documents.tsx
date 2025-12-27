@@ -1,4 +1,5 @@
-import { FolderInput, Plus } from "lucide-react";
+import { FolderInput, Plus, FileX } from "lucide-react";
+import { Button } from "./ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -82,20 +83,32 @@ export function NavDocuments({
     <SidebarGroup className="flex-1 overflow-hidden">
       {state === "collapsed" && (
         <div className="flex flex-col items-center gap-2">
-          <SidebarMenuButton
-            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
-            tooltip="Novo documento"
-            onClick={() => createDocument()}
-          >
-            <Plus className="w-5 h-5" />
-          </SidebarMenuButton>
-          <SidebarMenuButton
-            className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
-            tooltip="Nova pasta"
-            onClick={() => createFolder("Nova Pasta")}
-          >
-            <FolderInput className="w-5 h-5" />
-          </SidebarMenuButton>
+          {documents.length === 0 && folders.length === 0 ? (
+            <SidebarMenuButton
+              className="p-2 rounded-md hover:bg-zinc-700 text-muted-foreground cursor-pointer justify-center"
+              tooltip="Criar primeiro documento"
+              onClick={() => createDocument()}
+            >
+              <FileX className="w-5 h-5" />
+            </SidebarMenuButton>
+          ) : (
+            <>
+              <SidebarMenuButton
+                className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
+                tooltip="Novo documento"
+                onClick={() => createDocument()}
+              >
+                <Plus className="w-5 h-5" />
+              </SidebarMenuButton>
+              <SidebarMenuButton
+                className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer justify-center"
+                tooltip="Nova pasta"
+                onClick={() => createFolder("Nova Pasta")}
+              >
+                <FolderInput className="w-5 h-5" />
+              </SidebarMenuButton>
+            </>
+          )}
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -210,10 +223,10 @@ export function NavDocuments({
             ))}
 
           {filteredDocuments.length === 0 && folders.length === 0 && (
-            <div className="px-4 py-8">
-              <Empty className="border-0">
+            <div className="px-4 py-2 flex flex-col items-center justify-center h-full min-h-[200px] animate-in fade-in zoom-in-95 duration-500">
+              <Empty className="border-0 p-0">
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
+                  <EmptyMedia variant="icon" className="mb-2 bg-muted/50 p-2 rounded-full size-16">
                     {searchQuery.trim() ? (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -225,39 +238,48 @@ export function NavDocuments({
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="size-8 text-muted-foreground"
                       >
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.3-4.3" />
                         <path d="M9 11h4" />
                       </svg>
                     ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
+                      <FileX className="size-8 text-muted-foreground" />
                     )}
                   </EmptyMedia>
-                  <EmptyTitle>
-                    {searchQuery.trim()
-                      ? "Nenhum resultado encontrado"
-                      : "Nenhum documento criado"}
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    {searchQuery.trim()
-                      ? "Tente buscar com outros termos ou crie um novo documento."
-                      : "Comece criando seu primeiro documento ou pasta."}
-                  </EmptyDescription>
+                  {searchQuery.trim() && (
+                    <>
+                      <EmptyTitle className="text-zinc-300">
+                        Nenhum resultado
+                      </EmptyTitle>
+                      <EmptyDescription className="text-zinc-500 max-w-[200px] mx-auto">
+                        Não encontramos nada com esse nome. Tente outro termo.
+                      </EmptyDescription>
+                    </>
+                  )}
                 </EmptyHeader>
+                {!searchQuery.trim() && (
+                  <div className="mt-3 flex flex-col gap-2 w-full max-w-[200px]">
+                    <Button
+                      onClick={() => createDocument()}
+                      className="w-full gap-2 bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                      size="sm"
+                    >
+                      <Plus className="size-4" />
+                      Criar Documento
+                    </Button>
+                    <Button
+                      onClick={() => createFolder("Nova Pasta")}
+                      variant="ghost"
+                      className="w-full gap-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                      size="sm"
+                    >
+                      <FolderInput className="size-4" />
+                      Criar Pasta
+                    </Button>
+                  </div>
+                )}
               </Empty>
             </div>
           )}
