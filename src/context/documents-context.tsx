@@ -13,6 +13,14 @@ import { useDocumentOperations } from "./documents/hooks/useDocumentOperations";
 import { useVersionHistory } from "./documents/hooks/useVersionHistory";
 import { useDocumentSharing } from "./documents/hooks/useDocumentSharing";
 import { useToast } from "./toast-context";
+import {
+  validateAndParseArray,
+  DocumentsArraySchema,
+  FoldersArraySchema,
+  VersionsArraySchema,
+} from "@/lib/schemas";
+import { useStorage } from "@/hooks/useStorage";
+import { useDebounce } from "@/hooks/useDebounce";
 import type {
   Document,
   Folder,
@@ -40,29 +48,37 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const { checkLimit } = useDocumentLimit(documents, 10);
   const toast = useToast();
+  const storage = useStorage();
+  
+  // Debounce para salvamento automático (500ms)
+  const debouncedDocuments = useDebounce(documents, 500);
+  const debouncedFolders = useDebounce(folders, 500);
+  const debouncedVersions = useDebounce(versions, 500);
 
-  // Load from localStorage
+  // Load from storage (IndexedDB or localStorage)
   useEffect(() => {
-    const savedDocs = localStorage.getItem("savedDocuments");
-    const hasVisited = localStorage.getItem("hasVisited");
+    const loadData = async () => {
+      if (!storage.isReady) return;
+      
+      try {
+        // Tentar carregar do IndexedDB primeiro, fallback para localStorage
+        const loadedDocs = await storage.loadDocuments();
+        const loadedFolders = await storage.loadFolders();
+        const loadedVersions = await storage.loadVersions();
+        
+        if (loadedDocs.length > 0 || loadedFolders.length > 0 || loadedVersions.length > 0) {
+          setDocuments(loadedDocs);
+          setFolders(loadedFolders);
+          setVersions(loadedVersions);
+          
+          if (loadedDocs.length > 0 && !currentDocId) {
+            setCurrentDocId(loadedDocs[0].id);
+          }
+        }
+        
+        const hasVisited = localStorage.getItem("hasVisited");
 
-    if (savedDocs) {
-      const parsedDocs = JSON.parse(savedDocs);
-      setDocuments(parsedDocs);
-    }
-
-    // Load folders
-    const savedFolders = localStorage.getItem("savedFolders");
-    if (savedFolders) {
-      setFolders(JSON.parse(savedFolders));
-    }
-
-    if (savedDocs) {
-      const parsedDocs = JSON.parse(savedDocs);
-      if (parsedDocs.length > 0 && !currentDocId) {
-        setCurrentDocId(parsedDocs[0].id);
-      }
-    } else if (!hasVisited) {
+        if (loadedDocs.length === 0 && !hasVisited) {
       // First access: Create welcome document
       const welcomeDoc: Document = {
         id: crypto.randomUUID(),
@@ -100,53 +116,106 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         sharedWith: [],
       };
 
-      setDocuments([welcomeDoc]);
-      setCurrentDocId(welcomeDoc.id);
-      localStorage.setItem("hasVisited", "true");
-    }
-    setIsLoading(false);
+          setDocuments([welcomeDoc]);
+          setCurrentDocId(welcomeDoc.id);
+          localStorage.setItem("hasVisited", "true");
+          
+          // Salvar documento de boas-vindas
+          await storage.saveDocuments([welcomeDoc]);
+        }
+      } catch (error) {
+        console.error("Erro crítico ao inicializar documentos:", error);
+        toast.showToast("❌ Erro ao inicializar a aplicação. Por favor, recarregue a página.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [storage.isReady]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("skipDeleteConfirm");
-    if (stored) {
-      setSkipDeleteConfirm(JSON.parse(stored));
+    try {
+      const stored = localStorage.getItem("skipDeleteConfirm");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (typeof parsed === 'boolean') {
+          setSkipDeleteConfirm(parsed);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar preferência de confirmação:", error);
+      // Usa valor padrão (false) em caso de erro
     }
   }, []);
 
   useEffect(() => {
-    const savedVersions = localStorage.getItem("documentVersions");
-    if (savedVersions) {
-      setVersions(JSON.parse(savedVersions));
+    try {
+      const savedVersions = localStorage.getItem("documentVersions");
+      if (savedVersions) {
+        const parsedVersions = JSON.parse(savedVersions);
+        const validatedVersions = validateAndParseArray<Version>(
+          parsedVersions,
+          VersionsArraySchema,
+          []
+        );
+        setVersions(validatedVersions);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar versões do localStorage:", error);
+      toast.showToast("⚠️ Erro ao carregar histórico de versões.");
+      setVersions([]);
     }
-  }, []);
+  }, [toast]);
 
-  // Save to localStorage
+  // Save to storage with debounce (IndexedDB or localStorage)
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("documentVersions", JSON.stringify(versions));
-    }
-  }, [versions, isLoading]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("savedDocuments", JSON.stringify(documents));
-      if (documents.length > 0 && !currentDocId) {
-        setCurrentDocId(documents[0].id);
+    if (!isLoading && storage.isReady) {
+      storage.saveDocuments(debouncedDocuments).catch((error) => {
+        console.error("Erro ao salvar documentos:", error);
+        if (error.message?.includes('insuficiente')) {
+          toast.showToast("❌ Espaço de armazenamento insuficiente. Considere exportar e excluir documentos antigos.");
+        } else {
+          toast.showToast("⚠️ Erro ao salvar documentos.");
+        }
+      });
+      
+      if (debouncedDocuments.length > 0 && !currentDocId) {
+        setCurrentDocId(debouncedDocuments[0].id);
       }
 
-      if (currentDocId && !documents.find((doc) => doc.id === currentDocId)) {
-        setCurrentDocId(documents.length > 0 ? documents[0].id : null);
+      if (currentDocId && !debouncedDocuments.find((doc) => doc.id === currentDocId)) {
+        setCurrentDocId(debouncedDocuments.length > 0 ? debouncedDocuments[0].id : null);
       }
     }
-  }, [documents, isLoading, currentDocId]);
+  }, [debouncedDocuments, isLoading, storage.isReady, currentDocId, toast]);
 
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("savedFolders", JSON.stringify(folders));
+    if (!isLoading && storage.isReady) {
+      storage.saveFolders(debouncedFolders).catch((error) => {
+        console.error("Erro ao salvar pastas:", error);
+        if (error.message?.includes('insuficiente')) {
+          toast.showToast("❌ Espaço de armazenamento insuficiente.");
+        } else {
+          toast.showToast("⚠️ Erro ao salvar pastas.");
+        }
+      });
     }
-  }, [folders, isLoading]);
+  }, [debouncedFolders, isLoading, storage.isReady, toast]);
+
+  useEffect(() => {
+    if (!isLoading && storage.isReady) {
+      storage.saveVersions(debouncedVersions).catch((error) => {
+        console.error("Erro ao salvar versões:", error);
+        if (error.message?.includes('insuficiente')) {
+          toast.showToast("❌ Espaço de armazenamento insuficiente.");
+        } else {
+          toast.showToast("⚠️ Erro ao salvar histórico de versões.");
+        }
+      });
+    }
+  }, [debouncedVersions, isLoading, storage.isReady, toast]);
 
   // Current document
   const currentDocument =
@@ -183,12 +252,17 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const handleDownloadDocument = useCallback(
     async (id: string, format?: DownloadFormat) => {
-      const result = await downloadDocument(documents, id, format);
+      try {
+        const result = await downloadDocument(documents, id, format);
 
-      if (result.success) {
-        toast.showToast(`✅ Documento exportado como ${format?.toUpperCase() || 'TXT'}`);
-      } else {
-        toast.showToast(`❌ ${result.error || 'Erro ao exportar documento'}`);
+        if (result.success) {
+          toast.showToast(`✅ Documento exportado como ${format?.toUpperCase() || 'TXT'}`);
+        } else {
+          toast.showToast(`❌ ${result.error || 'Erro ao exportar documento'}`);
+        }
+      } catch (error) {
+        console.error("Erro ao exportar documento:", error);
+        toast.showToast("❌ Erro inesperado ao exportar documento. Tente novamente.");
       }
     },
     [documents, toast]
@@ -269,18 +343,24 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const handleDownloadFolder = useCallback(
     async (folderId: string) => {
-      const folder = folders.find((f) => f.id === folderId);
-      if (!folder) return;
+      try {
+        const folder = folders.find((f) => f.id === folderId);
+        if (!folder) {
+          toast.showToast("❌ Pasta não encontrada.");
+          return;
+        }
 
-      const folderDocs = documents.filter((doc) => doc.folderId === folderId);
+        const { downloadFolder } = await import("./documents/utils/folderExport");
+        const result = await downloadFolder(folderId, folders, documents);
 
-      const { downloadFolder } = await import("./documents/utils/folderExport");
-      const result = await downloadFolder(folderId, folders, documents);
-
-      if (result.success) {
-        toast.showToast(`✅ Pasta ${folder.name} exportada com sucesso`);
-      } else {
-        toast.showToast(`❌ Erro ao exportar pasta: ${result.error}`);
+        if (result.success) {
+          toast.showToast(`✅ Pasta ${folder.name} exportada com sucesso`);
+        } else {
+          toast.showToast(`❌ Erro ao exportar pasta: ${result.error}`);
+        }
+      } catch (error) {
+        console.error("Erro ao exportar pasta:", error);
+        toast.showToast("❌ Erro inesperado ao exportar pasta. Tente novamente.");
       }
     },
     [folders, documents, toast]

@@ -13,6 +13,7 @@ import {
     ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Folder } from "@/context/documents/types";
+import { memo } from "react";
 
 type DocumentItemProps = {
     doc: any;
@@ -26,7 +27,11 @@ type DocumentItemProps = {
     moveDocumentToFolder?: (docId: string, folderId: string | null) => void;
 }
 
-export function DocumentItem({
+/**
+ * Componente de item de documento na sidebar
+ * Otimizado com React.memo para evitar re-renderizações desnecessárias
+ */
+export const DocumentItem = memo(function DocumentItem({
     doc,
     currentDocument,
     setCurrentDocumentId,
@@ -50,6 +55,9 @@ export function DocumentItem({
                         )}
                         onClick={() => setCurrentDocumentId(doc.id)}
                         tooltip={doc.title || 'Sem título'}
+                        aria-label={`${doc.title || 'Sem título'}${doc.isFavorite ? ', favoritado' : ''}${doc.isShared ? ', compartilhado' : ''}`}
+                        aria-current={currentDocument?.id === doc.id ? 'page' : undefined}
+                        role="menuitem"
                     >
                         <FileText className={cn(
                             "w-4 h-4 flex-shrink-0 text-zinc-300",
@@ -77,18 +85,28 @@ export function DocumentItem({
                         )}
                         <div
                             role="button"
+                            tabIndex={0}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 toggleFavorite(doc.id);
                                 toast.showToast(doc.isFavorite ? '⭐ Desfavoritado' : '🌟 Favoritado')
                             }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleFavorite(doc.id);
+                                    toast.showToast(doc.isFavorite ? '⭐ Desfavoritado' : '🌟 Favoritado')
+                                }
+                            }}
                             className={cn(
                                 "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
-                                "text-yellow-400 hover:text-yellow-300",
+                                "text-yellow-400 hover:text-yellow-300 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 rounded",
                                 currentDocument?.id === doc.id && "opacity-100"
                             )}
                             title={doc.isFavorite ? "Desfavoritar" : "Favoritar"}
+                            aria-label={doc.isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                         >
                             {doc.isFavorite ? (
                                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -99,17 +117,26 @@ export function DocumentItem({
 
                         <div
                             role="button"
+                            tabIndex={0}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 onDeleteClick(doc);
                             }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onDeleteClick(doc);
+                                }
+                            }}
                             className={cn(
                                 "ml-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity",
-                                "text-red-400 hover:text-red-300",
+                                "text-red-400 hover:text-red-300 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 rounded",
                                 currentDocument?.id === doc.id && "opacity-100"
                             )}
                             title="Excluir documento"
+                            aria-label="Excluir documento"
                         >
                             <Trash2 className="w-4 h-4" />
                         </div>
@@ -184,4 +211,14 @@ export function DocumentItem({
             </ContextMenu>
         </SidebarMenuItem>
     )
-}
+}, (prevProps, nextProps) => {
+    // Comparação customizada para evitar re-renders desnecessários
+    return (
+        prevProps.doc.id === nextProps.doc.id &&
+        prevProps.doc.title === nextProps.doc.title &&
+        prevProps.doc.isFavorite === nextProps.doc.isFavorite &&
+        prevProps.doc.isShared === nextProps.doc.isShared &&
+        prevProps.currentDocument?.id === nextProps.currentDocument?.id &&
+        prevProps.folders?.length === nextProps.folders?.length
+    );
+});

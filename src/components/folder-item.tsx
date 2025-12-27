@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Document, Folder as FolderType } from "@/context/documents/types";
 import { DocumentItem } from "./document-item";
 import {
@@ -47,7 +47,11 @@ interface FolderItemProps {
     allDocuments: Document[];
 }
 
-export function FolderItem({
+/**
+ * Componente de item de pasta na sidebar
+ * Suporta pastas aninhadas e otimizado com React.memo
+ */
+export const FolderItem = memo(function FolderItem({
     folder,
     documents,
     currentDocument,
@@ -282,4 +286,13 @@ export function FolderItem({
             </SidebarMenuItem>
         </Collapsible>
     )
-}
+}, (prevProps, nextProps) => {
+    // Comparação customizada para evitar re-renders
+    return (
+        prevProps.folder.id === nextProps.folder.id &&
+        prevProps.folder.name === nextProps.folder.name &&
+        prevProps.documents.length === nextProps.documents.length &&
+        prevProps.currentDocument?.id === nextProps.currentDocument?.id &&
+        prevProps.folders.length === nextProps.folders.length
+    );
+});

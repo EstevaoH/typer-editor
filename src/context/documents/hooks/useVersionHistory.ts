@@ -38,41 +38,61 @@ export const useVersionHistory = (
 
   const createVersion = useCallback(
     (documentId: string) => {
-      const doc = documents.find((d) => d.id === documentId);
-      if (!doc) return;
+      try {
+        const doc = documents.find((d) => d.id === documentId);
+        if (!doc) {
+          console.warn(`Documento com ID ${documentId} não encontrado para criar versão`);
+          return;
+        }
 
-      const newVersion: Version = {
-        id: uuidv4(),
-        documentId,
-        content: doc.content,
-        title: doc.title,
-        createdAt: new Date().toISOString(),
-      };
+        const newVersion: Version = {
+          id: uuidv4(),
+          documentId,
+          content: doc.content,
+          title: doc.title,
+          createdAt: new Date().toISOString(),
+        };
 
-      setVersions((prev) => [newVersion, ...prev]);
+        setVersions((prev) => [newVersion, ...prev]);
+      } catch (error) {
+        console.error("Erro ao criar versão:", error);
+      }
     },
     [documents, setVersions]
   );
 
   const restoreVersion = useCallback(
     (versionId: string) => {
-      const version = versions.find((v) => v.id === versionId);
-      if (!version) return;
+      try {
+        const version = versions.find((v) => v.id === versionId);
+        if (!version) {
+          console.warn(`Versão com ID ${versionId} não encontrada`);
+          return;
+        }
 
-      setDocuments((prev) =>
-        prev.map((doc) =>
-          doc.id === version.documentId
-            ? {
-                ...doc,
-                content: version.content,
-                title: version.title,
-                updatedAt: new Date().toISOString(),
-              }
-            : doc
-        )
-      );
+        const documentExists = documents.some((d) => d.id === version.documentId);
+        if (!documentExists) {
+          console.warn(`Documento ${version.documentId} não encontrado para restaurar versão`);
+          return;
+        }
+
+        setDocuments((prev) =>
+          prev.map((doc) =>
+            doc.id === version.documentId
+              ? {
+                  ...doc,
+                  content: version.content,
+                  title: version.title,
+                  updatedAt: new Date().toISOString(),
+                }
+              : doc
+          )
+        );
+      } catch (error) {
+        console.error("Erro ao restaurar versão:", error);
+      }
     },
-    [versions, setDocuments]
+    [versions, setDocuments, documents]
   );
 
   const deleteVersion = useCallback(
@@ -105,34 +125,39 @@ export const useVersionHistory = (
   );
 
   const undoDelete = useCallback(() => {
-    // Use the ref to get the latest deleted document
-    const deletedDoc = deletedDocumentRef.current;
-    
-    if (!deletedDoc) {
-      console.log('No deleted document to restore (checked ref)');
+    try {
+      // Use the ref to get the latest deleted document
+      const deletedDoc = deletedDocumentRef.current;
+      
+      if (!deletedDoc) {
+        console.log('No deleted document to restore (checked ref)');
+        return null;
+      }
+
+      console.log('Restoring document:', deletedDoc.doc.title);
+
+      // Clear the timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
+      // Restore document and versions
+      setDocuments((prev) => [deletedDoc.doc, ...prev]);
+      setVersions((prev) => [...deletedDoc.versions, ...prev]);
+
+      const restoredId = deletedDoc.doc.id;
+
+      // Clear deleted document
+      setDeletedDocumentState(null);
+      deletedDocumentRef.current = null;
+
+      console.log('Document restored with ID:', restoredId);
+      return restoredId;
+    } catch (error) {
+      console.error("Erro ao desfazer exclusão:", error);
       return null;
     }
-
-    console.log('Restoring document:', deletedDoc.doc.title);
-
-    // Clear the timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
-    // Restore document and versions
-    setDocuments((prev) => [deletedDoc.doc, ...prev]);
-    setVersions((prev) => [...deletedDoc.versions, ...prev]);
-
-    const restoredId = deletedDoc.doc.id;
-
-    // Clear deleted document
-    setDeletedDocumentState(null);
-    deletedDocumentRef.current = null;
-
-    console.log('Document restored with ID:', restoredId);
-    return restoredId;
   }, [setDocuments, setVersions]);
 
   return {

@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { DocumentsProvider } from "@/context/documents-context"
 import { ToastProvider } from "@/context/toast-context"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { AnimatePresence, motion } from "framer-motion"
 import { Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
@@ -25,19 +26,27 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                     transition={{ duration: 0.6 }}
                     className="flex h-screen w-full"
                 >
-                    <DocumentsProvider>
-                        <SidebarProvider>
-                            <ToastProvider>
-                                <AppSidebar />
-                                <SidebarInset>
-                                    <main className="flex-1 overflow-auto">
-                                        {children}
-                                    </main>
-                                </SidebarInset>
-                                <Toaster />
-                            </ToastProvider>
-                        </SidebarProvider>
-                    </DocumentsProvider>
+                    <ErrorBoundary>
+                        <DocumentsProvider>
+                            <ErrorBoundary>
+                                <SidebarProvider>
+                                    <ToastProvider>
+                                        <ErrorBoundary>
+                                            <AppSidebar />
+                                        </ErrorBoundary>
+                                        <SidebarInset>
+                                            <main className="flex-1 overflow-auto">
+                                                <ErrorBoundary>
+                                                    {children}
+                                                </ErrorBoundary>
+                                            </main>
+                                        </SidebarInset>
+                                        <Toaster />
+                                    </ToastProvider>
+                                </SidebarProvider>
+                            </ErrorBoundary>
+                        </DocumentsProvider>
+                    </ErrorBoundary>
                 </motion.div>
             ) : (
                 <div className="flex h-screen w-full items-center justify-center bg-background">

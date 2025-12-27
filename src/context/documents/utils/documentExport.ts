@@ -12,9 +12,17 @@ import {
   htmlToPlainText,
 } from "@/utils/htmlToPlainText";
 import { parseHtmlToStructure, convertParsedToDocx } from "@/utils/htmlParser";
+import { sanitizeHTML } from "@/lib/sanitize";
 import type { Document, DownloadFormat } from "../types";
 
-// Sanitize filename to remove invalid characters
+/**
+ * Sanitiza o nome do arquivo removendo caracteres inválidos para sistemas de arquivos
+ * @param filename - Nome do arquivo a ser sanitizado
+ * @returns Nome do arquivo sanitizado e seguro para uso
+ * 
+ * @example
+ * sanitizeFilename("Meu Documento<>:|\"?.txt") // "Meu_Documento_.txt"
+ */
 export const sanitizeFilename = (filename: string): string => {
   // Remove invalid characters for Windows/Mac/Linux
   let sanitized = filename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
@@ -29,9 +37,19 @@ export const sanitizeFilename = (filename: string): string => {
   return sanitized || 'documento';
 };
 
+/**
+ * Converte conteúdo HTML em formato DOCX
+ * @param content - Conteúdo HTML a ser convertido
+ * @param title - Título do documento
+ * @returns Promise que resolve com um Blob do arquivo DOCX
+ * 
+ * @throws {Error} Se houver erro na conversão
+ */
 export const convertToDocx = async (content: string, title: string) => {
+  // Sanitize content before processing
+  const sanitizedContent = sanitizeHTML(content);
   // Parse HTML to structured elements
-  const elements = parseHtmlToStructure(content);
+  const elements = parseHtmlToStructure(sanitizedContent);
   
   // Convert to DOCX paragraphs
   const docxParagraphs = convertParsedToDocx(elements);
@@ -57,9 +75,17 @@ export const convertToDocx = async (content: string, title: string) => {
   return await Packer.toBlob(doc);
 };
 
+/**
+ * Converte conteúdo HTML em formato PDF
+ * @param content - Conteúdo HTML a ser convertido
+ * @param title - Título do documento
+ * @returns Blob do arquivo PDF
+ */
 export const convertToPdf = (content: string, title: string): Blob => {
   const doc = new jsPDF();
-  const elements = parseHtmlToStructure(content);
+  // Sanitize content before processing
+  const sanitizedContent = sanitizeHTML(content);
+  const elements = parseHtmlToStructure(sanitizedContent);
   const margin = 20;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -198,6 +224,19 @@ export const fallbackDownload = (blob: Blob, filename: string) => {
     });
 };
 
+/**
+ * Faz download de um documento no formato especificado
+ * @param documents - Array de documentos onde procurar o documento
+ * @param id - ID do documento a ser exportado
+ * @param format - Formato de exportação (txt, md, docx, pdf). Padrão: txt
+ * @returns Promise que resolve com objeto contendo sucesso e possível erro
+ * 
+ * @example
+ * const result = await downloadDocument(documents, 'doc-123', 'pdf');
+ * if (result.success) {
+ *   console.log('Download concluído');
+ * }
+ */
 export const downloadDocument = async (
   documents: Document[],
   id: string,
@@ -218,6 +257,7 @@ export const downloadDocument = async (
     try {
       switch (format) {
         case "docx":
+          // Content is already sanitized in convertToDocx
           blob = await convertToDocx(document.content, document.title);
           filename = `${sanitizedTitle}.docx`;
           mimeType =
@@ -225,20 +265,23 @@ export const downloadDocument = async (
           break;
 
         case "pdf":
+          // Content is already sanitized in convertToPdf
           blob = convertToPdf(document.content, document.title);
           filename = `${sanitizedTitle}.pdf`;
           mimeType = "application/pdf";
           break;
 
         case "md":
-          const mdContent = htmlToFormattedText(document.content, "md");
+          const sanitizedMdContent = sanitizeHTML(document.content);
+          const mdContent = htmlToFormattedText(sanitizedMdContent, "md");
           blob = new Blob([mdContent], { type: "text/markdown" });
           filename = `${sanitizedTitle}.md`;
           mimeType = "text/markdown";
           break;
 
         default:
-          const txtContent = htmlToFormattedText(document.content, "txt");
+          const sanitizedTxtContent = sanitizeHTML(document.content);
+          const txtContent = htmlToFormattedText(sanitizedTxtContent, "txt");
           blob = new Blob([txtContent], { type: "text/plain" });
           filename = `${sanitizedTitle}.txt`;
           mimeType = "text/plain";

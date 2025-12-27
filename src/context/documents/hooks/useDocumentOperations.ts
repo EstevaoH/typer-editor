@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { sanitizeHTML } from "@/lib/sanitize";
 import type { Document, Version } from "../types";
 
 export const useDocumentOperations = (
@@ -41,10 +42,20 @@ export const useDocumentOperations = (
     (updates: Partial<Document>) => {
       if (!currentDocId) return;
 
+      // Sanitize HTML content if present
+      const sanitizedUpdates: Partial<Document> = { ...updates };
+      if (updates.content !== undefined) {
+        sanitizedUpdates.content = sanitizeHTML(updates.content);
+      }
+      if (updates.title !== undefined) {
+        // Sanitize title (though it should mostly be plain text)
+        sanitizedUpdates.title = sanitizeHTML(updates.title);
+      }
+
       setDocuments((prev) =>
         prev.map((doc) =>
           doc.id === currentDocId
-            ? { ...doc, ...updates, updatedAt: new Date().toISOString() }
+            ? { ...doc, ...sanitizedUpdates, updatedAt: new Date().toISOString() }
             : doc
         )
       );

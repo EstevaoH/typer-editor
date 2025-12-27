@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { sanitizeHTML } from "@/lib/sanitize";
 import { Document, Folder } from "../types";
 
 export interface DownloadFolderResult {
@@ -35,7 +36,9 @@ export const downloadFolder = async (
         folderDocs.forEach(doc => {
             const docTitle = doc.title || "Untitled";
             const safeTitle = sanitizeFilename(docTitle);
-            currentZip.file(`${safeTitle}.html`, doc.content || "");
+            // Sanitize content before adding to zip
+            const sanitizedContent = sanitizeHTML(doc.content || "");
+            currentZip.file(`${safeTitle}.html`, sanitizedContent);
         });
 
         // Find subfolders

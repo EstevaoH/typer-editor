@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import "highlight.js/styles/atom-one-dark.css";
 import { ToolBar } from '@/components/toolbar';
@@ -21,8 +21,9 @@ import { useToast } from '@/context/toast-context';
 import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 
-import { StatisticsDialog } from '@/components/statistics-dialog';
-import { DocumentBreadcrumb } from '@/components/document-breadcrumb';
+// Lazy load componentes pesados para code splitting
+const StatisticsDialog = lazy(() => import('@/components/statistics-dialog').then(module => ({ default: module.StatisticsDialog })));
+const DocumentBreadcrumb = lazy(() => import('@/components/document-breadcrumb').then(module => ({ default: module.DocumentBreadcrumb })));
 
 const lowlight = createLowlight(all)
 lowlight.register('html', html)
@@ -60,14 +61,19 @@ export function Editor() {
         extensions: editorExtensions,
         content: currentDocument?.content || '',
         onUpdate: ({ editor }) => {
-            const content = editor.getHTML();
+            try {
+                const content = editor.getHTML();
 
-            if (!currentDocument && !hasHandledFirstInput && content.trim() !== '') {
-                handleFirstInput();
-                setHasHandledFirstInput(true);
+                if (!currentDocument && !hasHandledFirstInput && content.trim() !== '') {
+                    handleFirstInput();
+                    setHasHandledFirstInput(true);
+                }
+
+                updateDocument({ content });
+            } catch (error) {
+                console.error("Erro ao atualizar documento:", error);
+                toast.showToast("⚠️ Erro ao salvar alterações. Tente novamente.");
             }
-
-            updateDocument({ content });
         },
         editorProps: {
             attributes: {
@@ -261,7 +267,9 @@ export function Editor() {
                                 {title.length}/120
                             </div>
                         </div>
-                        <DocumentBreadcrumb />
+                        <Suspense fallback={<div className="h-8" />}>
+                            <DocumentBreadcrumb />
+                        </Suspense>
 
                         <div
                             ref={editorRef}
@@ -326,11 +334,13 @@ export function Editor() {
                     </div>
                 </div>
             </div>
-            <StatisticsDialog
-                open={isStatsOpen}
-                onOpenChange={setIsStatsOpen}
-                editor={editor}
-            />
+            <Suspense fallback={null}>
+                <StatisticsDialog
+                    open={isStatsOpen}
+                    onOpenChange={setIsStatsOpen}
+                    editor={editor}
+                />
+            </Suspense>
         </>
     );
 }
