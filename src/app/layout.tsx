@@ -39,6 +39,16 @@ export const metadata: Metadata = {
   title: "Typer Editor",
   description: "Editor de texto minimalista e poderoso com foco em privacidade.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icon.png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

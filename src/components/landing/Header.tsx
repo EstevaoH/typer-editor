@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Edit, ArrowRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -11,9 +12,13 @@ export function Header({ onOpenContact }: HeaderProps) {
     <header className="container mx-auto px-4 py-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Edit className="h-5 w-5 text-white" />
-          </div>
+          <Image
+            src="/icon.png"
+            alt="TyperEditor Logo"
+            width={32}
+            height={32}
+            className="w-8 h-8 rounded-lg"
+          />
           <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             TyperEditor
           </span>

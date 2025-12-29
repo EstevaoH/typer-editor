@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Edit } from "lucide-react";
+import Image from "next/image";
 
 interface FooterProps {
   onOpenContact: () => void;
@@ -11,9 +11,13 @@ export function Footer({ onOpenContact }: FooterProps) {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-4 mb-8 md:mb-0">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Edit className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/icon.png"
+              alt="TyperEditor Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="text-2xl font-bold">TyperEditor</span>
           </div>
 
