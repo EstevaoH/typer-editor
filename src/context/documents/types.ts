@@ -55,8 +55,9 @@ export interface DocumentsContextType {
   createDocument: (title?: string, folderId?: string) => void;
   createDocumentFromTemplate: (templateId: string) => void;
   updateDocument: (updates: Partial<Document>) => void;
-  deleteDocument: (id: string) => void;
+  deleteDocument: (id: string, deleteFromCloud?: boolean) => Promise<void>;
   saveDocument: (title: string) => void;
+  saveDocumentLocally: () => Promise<void>;
   saveAsTemplate: (documentId: string, templateName: string, description?: string) => void;
   deleteTemplate: (templateId: string) => void;
   setCurrentDocumentId: (id: string | null) => void;
@@ -93,4 +94,15 @@ export interface DocumentsContextType {
   getAllTags: () => string[];
   filterByTag: (tag: string | null) => void;
   selectedTag: string | null;
+
+  // Sync methods
+  syncDocuments: () => Promise<void>;
+  syncSelectedDocuments: (selectedIds: string[]) => Promise<void>;
+  checkCloudDocuments: () => Promise<{
+    newDocuments: Document[];
+    updatedDocuments: Document[];
+  }>;
+  downloadFromCloud: (documents: Document[]) => Promise<void>;
+  syncStatus: "idle" | "syncing" | "synced" | "error";
+  lastSyncTime: Date | null;
 }

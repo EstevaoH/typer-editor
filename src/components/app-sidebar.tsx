@@ -1,5 +1,5 @@
 "use client";
-import { Search, Home, X, Coffee, FileText } from "lucide-react";
+import { Search, Home, X, Coffee, FileText, Settings as SettingsIcon, LogIn } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,9 @@ import { ShareModal } from "./share-modal";
 import { CommandMenu } from "./command-menu";
 import { TagFilter } from "./tag-filter";
 import { TemplatesDialog } from "./templates/templates-dialog";
+import { NavUser } from "./nav-user";
+import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 
 interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -37,7 +40,7 @@ interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   };
 }
 
-export function AppSidebar({ className, ...props }: AppSidebarProps) {
+export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const {
     deleteDocument,
@@ -47,6 +50,7 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
     updateDocumentPrivacy,
     updateDocumentSharing,
   } = useDocuments();
+  const { data: session } = useSession();
   const { state, toggleSidebar } = useSidebar();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
@@ -85,9 +89,9 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
     setShowShareModal(false);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async (deleteFromCloud: boolean) => {
     if (documentToDelete) {
-      deleteDocument(documentToDelete.id);
+      await deleteDocument(documentToDelete.id, deleteFromCloud);
       setDocumentToDelete(null);
       setShowDeleteConfirm(false);
     }
@@ -207,7 +211,60 @@ export function AppSidebar({ className, ...props }: AppSidebarProps) {
           <NavActions
             isOpenShareModal={handleShare}
           />
+
+          {/* Usuário + Configurações */}
           <Separator orientation="horizontal" className="bg-zinc-700" />
+          {!session?.user && (
+            <SidebarGroup className="mt-auto">
+              <SidebarMenuItem>
+                <Link href="/login">
+                  <SidebarMenuButton
+                    tooltip="Entrar"
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                  >
+                    <LogIn className="w-4 h-4 text-zinc-300" />
+                    <span className="text-zinc-100">Entrar</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarGroup>
+          )}
+          {session?.user && state !== "collapsed" && (
+            <SidebarGroup>
+              <SidebarMenuItem>
+                <div className="flex flex-col gap-1">
+                  <Link href="/settings">
+                    <NavUser
+                      name={session.user.name || "Usuário"}
+                      email={session.user.email || "m@example.com"}
+                      image={user?.image || ""}
+                    />
+                  </Link>
+                </div>
+              </SidebarMenuItem>
+            </SidebarGroup>
+          )}
+          {session?.user && state === "collapsed" && (
+            <SidebarGroup className="mt-auto">
+              <SidebarMenuItem>
+                <Link href="/settings">
+                  <SidebarMenuButton
+                    tooltip={`${session.user.name || session.user.email || "Usuário"} - Configurações`}
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 p-2 flex items-center justify-center"
+                  >
+                    <Avatar className="w-10 h-10 border-2 border-zinc-600">
+                      <AvatarImage src={session.user.image || ""} />
+                      <AvatarFallback className="bg-zinc-600 text-zinc-100 text-sm font-medium">
+                        {(session.user.name || session.user.email || "U")?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarGroup>
+          )}
+
+          {/* Apoie o projeto */}
           <SidebarGroup>
             {state != "collapsed" ? (
               <SidebarMenuItem>

@@ -1,4 +1,4 @@
-import { Eye, EyeOff, FileText, Star, StarOff, Trash2, Share, Users, LockKeyhole, LockKeyholeOpen, FolderInput, FolderOpen, Tag } from "lucide-react";
+import { Eye, EyeOff, FileText, Star, StarOff, Trash2, Share, Users, LockKeyhole, LockKeyholeOpen, FolderInput, FolderOpen, Tag, HardDrive, Cloud, CloudOff, AlertCircle } from "lucide-react";
 import { SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/context/toast-context";
@@ -15,12 +15,14 @@ import {
 import { Folder } from "@/context/documents/types";
 import { memo } from "react";
 import { Badge } from "./ui/badge";
+import { useSession } from "next-auth/react";
+import { useDocumentStatus } from "@/hooks/useDocumentStatus";
 
 type DocumentItemProps = {
     doc: any;
     currentDocument: any;
     setCurrentDocumentId: (id: string) => void;
-    deleteDocument: (id: string) => void;
+    deleteDocument: (id: string, deleteFromCloud?: boolean) => Promise<void>;
     toggleFavorite: (id: string) => void;
     onDeleteClick: (doc: any) => void;
     onShareClick: (doc: any) => void;
@@ -44,6 +46,8 @@ export const DocumentItem = memo(function DocumentItem({
     moveDocumentToFolder
 }: DocumentItemProps) {
     const toast = useToast()
+    const { data: session } = useSession();
+    const documentStatus = useDocumentStatus(doc);
 
     return (
         <SidebarMenuItem>
@@ -66,12 +70,40 @@ export const DocumentItem = memo(function DocumentItem({
                         )} />
 
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
-                            <span className={cn(
-                                "text-zinc-100 truncate",
-                                currentDocument?.id === doc.id && "text-blue-400 font-medium"
-                            )}>
-                                {doc.title || 'Sem título'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className={cn(
+                                    "text-zinc-100 truncate",
+                                    currentDocument?.id === doc.id && "text-blue-400 font-medium"
+                                )}>
+                                    {doc.title || 'Sem título'}
+                                </span>
+                                {/* Indicadores de status */}
+                                <div className="flex items-center gap-1">
+                                    {documentStatus.isSavedLocally && (
+                                        <div title="Salvo localmente">
+                                            <HardDrive className="w-3 h-3 text-green-400" />
+                                        </div>
+                                    )}
+                                    {session?.user && (
+                                        <>
+                                            {documentStatus.isSavedInCloud ? (
+                                                <div title="Sincronizado na nuvem">
+                                                    <Cloud className="w-3 h-3 text-blue-400" />
+                                                </div>
+                                            ) : (
+                                                <div title="Não sincronizado na nuvem">
+                                                    <CloudOff className="w-3 h-3 text-zinc-500" />
+                                                </div>
+                                            )}
+                                            {documentStatus.hasUnsavedChanges && (
+                                                <div title="Há mudanças locais não sincronizadas">
+                                                    <AlertCircle className="w-3 h-3 text-yellow-400" />
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                             {doc.tags && doc.tags.length > 0 && (
                                 <div className="flex gap-1 flex-wrap">
                                     {/* {doc.tags.slice(0, 2).map((tag: any) => (

@@ -1,19 +1,22 @@
 import { useToast } from "@/context/toast-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { AlertTriangle, FileText, Clock } from "lucide-react";
+import { AlertTriangle, FileText, Clock, Cloud, HardDrive } from "lucide-react";
 import { useDocuments } from "@/context/documents-context";
+import { useSession } from "next-auth/react";
 
 interface DeleteConfirmProps {
     currentDocument: any;
-    handleDeleteDocument: () => void;
+    handleDeleteDocument: (deleteFromCloud: boolean) => Promise<void> | void;
     setShowDeleteConfirm: (show: boolean) => void;
 }
 
 export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setShowDeleteConfirm }: DeleteConfirmProps) {
     const [rememberChoice, setRememberChoice] = useState(false);
+    const [deleteFromCloud, setDeleteFromCloud] = useState(false);
     const toast = useToast();
     const { versions, undoDelete } = useDocuments();
+    const { data: session } = useSession();
 
     // Count versions for this document
     const versionCount = versions.filter(v => v.documentId === currentDocument?.id).length;
@@ -22,14 +25,14 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
         setShowDeleteConfirm(false);
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (rememberChoice) {
             localStorage.setItem('skipDeleteConfirmation', 'true');
         } else {
             localStorage.removeItem('skipDeleteConfirmation');
         }
 
-        handleDeleteDocument();
+        await handleDeleteDocument(deleteFromCloud);
         setShowDeleteConfirm(false);
         
         // Show custom toast with undo button
@@ -171,6 +174,38 @@ export function ShowDeleteConfirm({ currentDocument, handleDeleteDocument, setSh
                             ? `O documento e suas ${versionCount} ${versionCount === 1 ? 'versão' : 'versões'} serão excluídos.`
                             : 'O documento será excluído.'}
                     </p>
+
+                    {session?.user && (
+                        <div className="mb-4 p-3 bg-muted/50 rounded-lg space-y-2">
+                            <p className="text-sm font-medium text-foreground mb-2">Onde deseja excluir?</p>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="deleteLocation"
+                                    checked={!deleteFromCloud}
+                                    onChange={() => setDeleteFromCloud(false)}
+                                    className="w-4 h-4 border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-0 cursor-pointer"
+                                />
+                                <HardDrive className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                                    Apenas localmente
+                                </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="deleteLocation"
+                                    checked={deleteFromCloud}
+                                    onChange={() => setDeleteFromCloud(true)}
+                                    className="w-4 h-4 border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-0 cursor-pointer"
+                                />
+                                <Cloud className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                                    Localmente e na nuvem
+                                </span>
+                            </label>
+                        </div>
+                    )}
 
                     <label className="flex items-center gap-2 mb-6 cursor-pointer group">
                         <input

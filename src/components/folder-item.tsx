@@ -29,7 +29,7 @@ interface FolderItemProps {
     documents: Document[];
     currentDocument: Document | null;
     setCurrentDocumentId: (id: string) => void;
-    deleteDocument: (id: string) => void;
+    deleteDocument: (id: string, deleteFromCloud?: boolean) => Promise<void>;
     toggleFavorite: (id: string) => void;
     onDeleteClick: (doc: any) => void;
     onShareClick: (doc: any) => void;

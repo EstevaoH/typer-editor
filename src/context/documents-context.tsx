@@ -22,6 +22,8 @@ import {
 } from "@/lib/schemas";
 import { useStorage } from "@/hooks/useStorage";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSession } from "next-auth/react";
+import { useDocumentSync } from "@/hooks/useDocumentSync";
 import type {
   Document,
   Folder,
@@ -49,10 +51,20 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [versions, setVersions] = useState<Version[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  // const { data: session } = useSession();
 
   const { checkLimit } = useDocumentLimit(documents, 10);
   const toast = useToast();
   const storage = useStorage();
+  const { data: session } = useSession();
+  const documentSync = useDocumentSync({
+    onSyncComplete: () => {
+      // Sincronização concluída com sucesso
+    },
+    onSyncError: (error) => {
+      console.error("Erro na sincronização:", error);
+    },
+  });
 
   // Debounce para salvamento automático (500ms)
   const debouncedDocuments = useDebounce(documents, 500);
@@ -174,6 +186,54 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage.isReady]);
+
+  // Sincronização automática ao carregar página (apenas buscar do servidor)
+  const hasLoadedFromServer = useRef(false);
+  useEffect(() => {
+    const loadFromServer = async () => {
+      if (!session?.user || !storage.isReady || isLoading || hasLoadedFromServer.current) return;
+
+      try {
+        // Aguarda um pouco para garantir que os dados locais foram carregados primeiro
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        // Busca documentos do servidor e mescla com os locais
+        const currentDocs = documents.length > 0 ? documents : await storage.loadDocuments();
+        const mergedDocs = await (documentSync as any).syncFromServer(currentDocs);
+        
+        // Atualiza apenas se houver diferenças ou se não há documentos locais
+        const hasChanges = 
+          mergedDocs.length !== currentDocs.length || 
+          mergedDocs.some((doc: Document) => {
+            const localDoc = currentDocs.find((d: Document) => d.id === doc.id);
+            return !localDoc || localDoc.updatedAt !== doc.updatedAt;
+          });
+
+        if (hasChanges || currentDocs.length === 0) {
+          setDocuments(mergedDocs);
+          
+          // Salva os documentos mesclados no storage local
+          await storage.saveDocuments(mergedDocs);
+        }
+
+        hasLoadedFromServer.current = true;
+      } catch (error) {
+        console.error("Erro ao carregar documentos do servidor:", error);
+        // Não mostra erro ao usuário, apenas loga - os documentos locais continuam funcionando
+        hasLoadedFromServer.current = true; // Marca como tentado para não ficar tentando
+      }
+    };
+
+    loadFromServer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user, storage.isReady, isLoading]);
+
+  // Reset flag quando usuário faz logout/login
+  useEffect(() => {
+    if (!session?.user) {
+      hasLoadedFromServer.current = false;
+    }
+  }, [session?.user]);
 
   useEffect(() => {
     try {
@@ -324,8 +384,32 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     [documentOps, currentDocument]
   );
 
+  // Salvar documento atual apenas localmente (sem sincronizar com a nuvem)
+  const handleSaveDocumentLocally = useCallback(async () => {
+    if (!currentDocument) {
+      toast.showToast("❌ Nenhum documento selecionado para salvar.");
+      return;
+    }
+
+    try {
+      // Atualizar o documento atual no estado (garantir que está atualizado)
+      const updatedDoc = documents.find((d) => d.id === currentDocument.id);
+      if (!updatedDoc) {
+        toast.showToast("❌ Documento não encontrado.");
+        return;
+      }
+
+      // Salvar imediatamente no storage local
+      await storage.saveDocuments(documents);
+      toast.showToast("✅ Documento salvo localmente com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar documento localmente:", error);
+      toast.showToast("❌ Erro ao salvar documento localmente.");
+    }
+  }, [currentDocument, documents, storage, toast]);
+
   const handleDeleteDocument = useCallback(
-    (id: string) => {
+    async (id: string, deleteFromCloud: boolean = false) => {
       const docToDelete = documents.find((doc) => doc.id === id);
       if (!docToDelete) return;
 
@@ -335,10 +419,39 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       // Store for undo
       versionOps.storeDeletedDocument(docToDelete, docVersions);
 
-      // Delete document (and versions)
+      // Delete document locally first (immediate feedback)
       documentOps.deleteDocument(id);
+
+      // If user wants to delete from cloud and is logged in
+      if (deleteFromCloud && session?.user) {
+        try {
+          const response = await fetch("/api/documents", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ documentIds: [id] }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("Erro ao deletar documento na nuvem:", errorData);
+            toast.showToast(
+              "⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem."
+            );
+          } else {
+            toast.showToast("✅ Documento deletado localmente e na nuvem.");
+          }
+        } catch (error) {
+          console.error("Erro ao deletar documento na nuvem:", error);
+          toast.showToast(
+            "⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem."
+          );
+        }
+      } else if (!deleteFromCloud) {
+        toast.showToast("✅ Documento deletado localmente.");
+      }
     },
-    [documents, versions, documentOps, versionOps]
+    [documents, versions, documentOps, versionOps, session, toast]
   );
 
   // Folder operations
@@ -569,6 +682,78 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     toast.showToast("✅ Novo documento criado a partir do template!");
   }, [templates, checkLimit, toast]);
 
+  // Sync handler
+  const handleSyncDocuments = useCallback(async () => {
+    await documentSync.syncManual(documents, setDocuments);
+    // Após sincronizar, os documentos são atualizados automaticamente
+  }, [documentSync, documents, setDocuments]);
+
+  // Sync selected documents handler
+  const handleSyncSelectedDocuments = useCallback(
+    async (selectedIds: string[]) => {
+      await (documentSync as any).syncSelected(documents, selectedIds, setDocuments);
+    },
+    [documentSync, documents, setDocuments]
+  );
+
+  // Check cloud documents handler
+  const handleCheckCloudDocuments = useCallback(async () => {
+    return await (documentSync as any).checkCloudDocuments(documents);
+  }, [documentSync, documents]);
+
+  // Download from cloud handler
+  const handleDownloadFromCloud = useCallback(
+    async (documentsToDownload: Document[]) => {
+      // Identificar pastas necessárias dos documentos baixados
+      const requiredFolderIds = new Set<string>();
+      documentsToDownload.forEach((doc) => {
+        if (doc.folderId) {
+          requiredFolderIds.add(doc.folderId);
+        }
+      });
+
+      // Criar pastas que não existem localmente
+      const existingFolderIds = new Set(folders.map((f) => f.id));
+      const foldersToCreate: Folder[] = [];
+
+      requiredFolderIds.forEach((folderId, index) => {
+        if (!existingFolderIds.has(folderId)) {
+          // Criar pasta com nome padrão (o usuário pode renomear depois)
+          // Usar um nome simples e sequencial
+          const folderName = foldersToCreate.length === 0 
+            ? "Nova Pasta" 
+            : `Nova Pasta ${foldersToCreate.length + 1}`;
+
+          foldersToCreate.push({
+            id: folderId,
+            name: folderName,
+            createdAt: new Date().toISOString(),
+            parentId: null,
+          });
+        }
+      });
+
+      // Adicionar pastas criadas ao estado
+      if (foldersToCreate.length > 0) {
+        setFolders((prev) => [...prev, ...foldersToCreate]);
+        // Salvar pastas no storage
+        await storage.saveFolders([...folders, ...foldersToCreate]);
+      }
+
+      // Agora baixar os documentos
+      await (documentSync as any).downloadFromCloud(
+        documentsToDownload,
+        documents,
+        async (updatedDocs: Document[]) => {
+          setDocuments(updatedDocs);
+          // Salvar no storage local após download
+          await storage.saveDocuments(updatedDocs);
+        }
+      );
+    },
+    [documentSync, documents, folders, storage]
+  );
+
   // Context value
   const value: DocumentsContextType = {
     MAX_DOCUMENTS: 10,
@@ -580,6 +765,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     updateDocument: documentOps.updateDocument,
     deleteDocument: handleDeleteDocument,
     saveDocument: handleSaveDocument,
+    saveDocumentLocally: handleSaveDocumentLocally,
     setCurrentDocumentId: setCurrentDocId,
     downloadDocument: handleDownloadDocument,
     toggleFavorite: documentOps.toggleFavorite,
@@ -611,6 +797,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     saveAsTemplate,
     deleteTemplate,
     createDocumentFromTemplate,
+    syncDocuments: handleSyncDocuments,
+    syncSelectedDocuments: handleSyncSelectedDocuments,
+    checkCloudDocuments: handleCheckCloudDocuments,
+    downloadFromCloud: handleDownloadFromCloud,
+    syncStatus: documentSync.syncStatus,
+    lastSyncTime: documentSync.lastSyncTime,
   };
 
   return (

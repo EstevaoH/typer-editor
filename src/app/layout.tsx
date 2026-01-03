@@ -5,6 +5,7 @@ import { DocumentsProvider } from "@/context/documents-context";
 import { ToastProvider } from "@/context/toast-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SettingsProvider } from "@/context/settings-context";
+import { AuthSessionProvider } from "@/components/auth-session-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,18 +70,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${robotoSlab.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <ToastProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <SettingsProvider>
-              <DocumentsProvider>{children}</DocumentsProvider>
-            </SettingsProvider>
-          </ThemeProvider>
-        </ToastProvider>
+        <AuthSessionProvider>
+          <ToastProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <SettingsProvider>
+                <DocumentsProvider>{children}</DocumentsProvider>
+              </SettingsProvider>
+            </ThemeProvider>
+          </ToastProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );

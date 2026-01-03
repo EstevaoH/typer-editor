@@ -28,7 +28,7 @@ import {
 interface NavDocumentsProps {
   searchQuery: string;
   onDeleteClick: (doc: any) => void;
-  deleteDocument: (id: string) => void;
+  deleteDocument: (id: string, deleteFromCloud?: boolean) => Promise<void>;
   toggleFavorite: (id: string) => void;
   setCurrentDocumentId: (id: string) => void;
   onShareClick: (doc: any) => void;
@@ -44,6 +44,7 @@ export function NavDocuments({
 }: NavDocumentsProps) {
   const {
     documents,
+    allDocuments,
     currentDocument,
     createDocument,
     MAX_DOCUMENTS,
@@ -83,7 +84,7 @@ export function NavDocuments({
     <SidebarGroup className="flex-1 overflow-hidden">
       {state === "collapsed" && (
         <div className="flex flex-col items-center gap-2">
-          {documents.length === 0 && folders.length === 0 ? (
+          {allDocuments.length === 0 && folders.length === 0 ? (
             <SidebarMenuButton
               className="p-2 rounded-md hover:bg-zinc-700 text-muted-foreground cursor-pointer justify-center"
               tooltip="Criar primeiro documento"
@@ -111,59 +112,65 @@ export function NavDocuments({
           )}
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <SidebarGroupLabel className="text-zinc-400 flex items-center gap-2">
-          Documentos
-          <Badge>
-            {documents.length} / {MAX_DOCUMENTS}
-          </Badge>
-        </SidebarGroupLabel>
+      {state !== "collapsed" && (
+        <div className="flex items-center justify-between">
+          <SidebarGroupLabel className="text-zinc-400 flex items-center gap-2">
+            Documentos
+            <Badge>
+              {allDocuments.length} / {MAX_DOCUMENTS}
+            </Badge>
+          </SidebarGroupLabel>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              createFolder("Nova Pasta");
-              toast.showToast("📁 Nova pasta criada");
-            }}
-            className="p-1 rounded transition-colors hover:bg-zinc-700 cursor-pointer text-zinc-400 hover:text-zinc-200"
-            title="Nova pasta"
-          >
-            <FolderInput className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                createFolder("Nova Pasta");
+                toast.showToast("📁 Nova pasta criada");
+              }}
+              className="p-1 rounded transition-colors hover:bg-zinc-700 cursor-pointer text-zinc-400 hover:text-zinc-200"
+              title="Nova pasta"
+            >
+              <FolderInput className="w-4 h-4" />
+            </button>
 
-          <button
-            disabled={documents.length >= MAX_DOCUMENTS}
-            onClick={() => {
-              createDocument();
-              toast.showToast("📄 Novo documento criado");
-            }}
-            className={cn(
-              "p-1 rounded transition-colors",
-              documents.length >= MAX_DOCUMENTS
-                ? "opacity-40 cursor-not-allowed"
-                : "hover:bg-zinc-700 cursor-pointer"
-            )}
-            title="Novo documento"
-          >
-            <Plus className="w-4 h-4 text-zinc-300" />
-          </button>
+            <button
+              disabled={allDocuments.length >= MAX_DOCUMENTS}
+              onClick={() => {
+                createDocument();
+                toast.showToast("📄 Novo documento criado");
+              }}
+              className={cn(
+                "p-1 rounded transition-colors",
+                allDocuments.length >= MAX_DOCUMENTS
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-zinc-700 cursor-pointer"
+              )}
+              title="Novo documento"
+            >
+              <Plus className="w-4 h-4 text-zinc-300" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <SidebarGroupContent className="overflow-y-auto">
         <SidebarMenu>
           {favoriteDocuments.length > 0 && (
             <>
-              <SidebarGroupLabel className="text-zinc-400 text-xs mt-4">
-                Favoritos
-              </SidebarGroupLabel>
+              {state !== "collapsed" && (
+                <SidebarGroupLabel className="text-zinc-400 text-xs mt-4">
+                  Favoritos
+                </SidebarGroupLabel>
+              )}
               {favoriteDocuments.map((doc) => (
                 <DocumentItem
                   key={doc.id}
                   doc={doc}
                   currentDocument={currentDocument}
                   setCurrentDocumentId={setCurrentDocumentId}
-                  deleteDocument={deleteDocument}
+                  deleteDocument={async (id: string, deleteFromCloud?: boolean) => {
+                    await deleteDocument(id, deleteFromCloud);
+                  }}
                   toggleFavorite={toggleFavorite}
                   onDeleteClick={onDeleteClick}
                   onShareClick={onShareClick}
@@ -171,11 +178,13 @@ export function NavDocuments({
                   moveDocumentToFolder={moveDocumentToFolder}
                 />
               ))}
-              <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
+              {state !== "collapsed" && (
+                <Separator orientation="horizontal" className="bg-zinc-700 my-4" />
+              )}
             </>
           )}
 
-          {(folders.length > 0 || regularDocuments.length > 0) && (
+          {state !== "collapsed" && (folders.length > 0 || regularDocuments.length > 0) && (
             <SidebarGroupLabel className="text-zinc-400 text-xs mb-2">
               Todos os Documentos
             </SidebarGroupLabel>
@@ -189,7 +198,9 @@ export function NavDocuments({
               documents={regularDocuments.filter(d => d.folderId === folder.id)}
               currentDocument={currentDocument}
               setCurrentDocumentId={setCurrentDocumentId}
-              deleteDocument={deleteDocument}
+              deleteDocument={async (id: string, deleteFromCloud?: boolean) => {
+                await deleteDocument(id, deleteFromCloud);
+              }}
               toggleFavorite={toggleFavorite}
               onDeleteClick={onDeleteClick}
               onShareClick={onShareClick}
@@ -213,7 +224,9 @@ export function NavDocuments({
                 doc={doc}
                 currentDocument={currentDocument}
                 setCurrentDocumentId={setCurrentDocumentId}
-                deleteDocument={deleteDocument}
+                deleteDocument={async (id: string, deleteFromCloud?: boolean) => {
+                  await deleteDocument(id, deleteFromCloud);
+                }}
                 toggleFavorite={toggleFavorite}
                 onDeleteClick={onDeleteClick}
                 onShareClick={onShareClick}
@@ -222,7 +235,7 @@ export function NavDocuments({
               />
             ))}
 
-          {filteredDocuments.length === 0 && folders.length === 0 && (
+          {filteredDocuments.length === 0 && folders.length === 0 && state !== "collapsed" && (
             <div className="px-4 py-2 flex flex-col items-center justify-center h-full min-h-[200px] animate-in fade-in zoom-in-95 duration-500">
               <Empty className="border-0 p-0">
                 <EmptyHeader>
@@ -260,7 +273,7 @@ export function NavDocuments({
                   )}
                 </EmptyHeader>
                 {!searchQuery.trim() && (
-                  <div className="mt-3 flex flex-col gap-2 w-full max-w-[200px]">
+                  <div className="mt-3 flex flex-col gap-2 w-full max-w-[145px]">
                     <Button
                       onClick={() => createDocument()}
                       className="w-full gap-2 bg-zinc-100 text-zinc-900 hover:bg-zinc-200"

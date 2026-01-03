@@ -12,17 +12,20 @@ import { MenuFloating } from '@/components/menu-floating';
 import { MenuBubble } from '@/components/menu-bubble';
 import { useDocuments } from '@/context/documents-context';
 import { editorExtensions } from '@/lib/editor-config';
-import { ChevronsLeftRightEllipsis, FilePenLine, Loader2 } from 'lucide-react';
+import { ChevronsLeftRightEllipsis, FilePenLine, Loader2, Save, HardDrive, Cloud, CloudOff, CheckCircle2, AlertCircle, LogIn } from 'lucide-react';
 import { SearchSelector } from '@/components/search-selector';
 import { ShowDeleteConfirm } from '@/components/show-delete-confirm';
 import { AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/toast-context';
+import { useSession } from 'next-auth/react';
 
 import { useSettings } from "@/context/settings-context";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { TagSelector } from "@/components/tag-selector";
 import { SaveAsTemplateDialog } from "@/components/templates/save-as-template-dialog";
+import { useDocumentStatus } from "@/hooks/useDocumentStatus";
+import Link from "next/link";
 
 // Lazy load componentes pesados para code splitting
 const StatisticsDialog = lazy(() => import('@/components/statistics-dialog').then(module => ({ default: module.StatisticsDialog })));
@@ -36,8 +39,10 @@ lowlight.register('ts', ts)
 
 export function Editor() {
     const { fontFamily } = useSettings();
-    const { currentDocument, updateDocument, saveDocument, toggleFavorite, handleFirstInput, createDocument, deleteDocument, } = useDocuments()
+    const { currentDocument, updateDocument, saveDocument, saveDocumentLocally, toggleFavorite, handleFirstInput, createDocument, deleteDocument, syncDocuments } = useDocuments()
     const { isMobile } = useSidebar()
+    const { data: session } = useSession();
+    const documentStatus = useDocumentStatus(currentDocument);
 
     const getFontClass = () => {
         switch (fontFamily) {
@@ -109,9 +114,9 @@ export function Editor() {
         }
     }, [currentDocument, toggleFavorite, toast]);
 
-    const handleDeleteDocument = useCallback(() => {
+    const handleDeleteDocument = useCallback(async (deleteFromCloud: boolean) => {
         if (currentDocument) {
-            deleteDocument(currentDocument.id);
+            await deleteDocument(currentDocument.id, deleteFromCloud);
             setShowDeleteConfirm(false);
         }
     }, [currentDocument, deleteDocument]);
@@ -122,6 +127,17 @@ export function Editor() {
             setSkipDeleteConfirmation(true);
         }
     }, []);
+
+    // Atualizar status quando o documento mudar ou após salvar
+    useEffect(() => {
+        if (currentDocument) {
+            // Aguardar um pouco para garantir que o salvamento foi concluído
+            const timer = setTimeout(() => {
+                documentStatus.refreshCloudStatus();
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [currentDocument?.updatedAt, documentStatus]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -337,21 +353,93 @@ export function Editor() {
                                     )}
 
                                     {currentDocument && (
-                                        <button
-                                            onClick={() => setShowSaveTemplate(true)}
-                                            className="flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded transition-colors cursor-pointer"
-                                            title="Salvar como Template"
-                                        >
-                                            <FilePenLine className="w-4 h-4" />
-                                            Salvar como Template
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={async () => {
+                                                    await saveDocumentLocally();
+                                                    // Atualizar status após salvar
+                                                    setTimeout(() => {
+                                                        documentStatus.refreshCloudStatus();
+                                                    }, 500);
+                                                }}
+                                                className="flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded transition-colors cursor-pointer"
+                                                title="Salvar localmente (sem sincronizar com a nuvem)"
+                                            >
+                                                <Save className="w-4 h-4" />
+                                                Salvar Localmente
+                                            </button>
+                                            <button
+                                                onClick={() => setShowSaveTemplate(true)}
+                                                className="flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded transition-colors cursor-pointer"
+                                                title="Salvar como Template"
+                                            >
+                                                <FilePenLine className="w-4 h-4" />
+                                                Salvar como Template
+                                            </button>
+                                        </>
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${editor?.isFocused ? 'animate-pulse bg-yellow-400' : 'bg-green-400'
-                                        }`} />
-                                    <span>{editor?.isFocused ? 'Editando...' : 'Salvo'}</span>
+                                <div className="flex items-center gap-3">
+                                    {/* Status Local */}
+                                    <div className="flex items-center gap-1.5" title="Status de salvamento local">
+                                        {documentStatus.isSavedLocally ? (
+                                            <div className="flex items-center gap-1 text-green-400">
+                                                <HardDrive className="w-3.5 h-3.5" />
+                                                <span className="text-xs hidden sm:inline">Local</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-yellow-400">
+                                                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                                                <span className="text-xs hidden sm:inline">Salvando...</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Status Nuvem */}
+                                    {session?.user ? (
+                                        <>
+                                            <div className="flex items-center gap-1.5" title={documentStatus.isSavedInCloud ? `Sincronizado na nuvem${documentStatus.cloudLastUpdated ? ` em ${documentStatus.cloudLastUpdated.toLocaleString('pt-BR')}` : ''}` : "Não sincronizado na nuvem"}>
+                                                {documentStatus.isSavedInCloud ? (
+                                                    <div className="flex items-center gap-1 text-blue-400">
+                                                        <Cloud className="w-3.5 h-3.5" />
+                                                        <span className="text-xs hidden sm:inline">Nuvem</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 text-zinc-500">
+                                                        <CloudOff className="w-3.5 h-3.5" />
+                                                        <span className="text-xs hidden sm:inline">Não sincronizado</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Indicador de mudanças não sincronizadas */}
+                                            {documentStatus.hasUnsavedChanges && (
+                                                <div className="flex items-center gap-1.5" title="Há mudanças locais não sincronizadas com a nuvem">
+                                                    <div className="flex items-center gap-1 text-yellow-400">
+                                                        <AlertCircle className="w-3.5 h-3.5" />
+                                                        <span className="text-xs hidden sm:inline">Não sincronizado</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Link
+                                            href="/login"
+                                            className="flex items-center gap-1.5 text-sky-400 hover:text-sky-300 transition-colors px-2 py-1 rounded hover:bg-zinc-800"
+                                            title="Faça login para sincronizar seus documentos na nuvem"
+                                        >
+                                            <LogIn className="w-3.5 h-3.5" />
+                                            <span className="text-xs hidden sm:inline">Fazer Login</span>
+                                        </Link>
+                                    )}
+
+                                    {/* Status de edição */}
+                                    <div className="flex items-center gap-1.5">
+                                        <div className={`w-2 h-2 rounded-full ${editor?.isFocused ? 'animate-pulse bg-yellow-400' : 'bg-green-400'
+                                            }`} />
+                                        <span className="text-xs">{editor?.isFocused ? 'Editando...' : 'Salvo'}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
