@@ -3,11 +3,20 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { RegisterForm } from "./register-form";
 
-export default async function RegisterPage() {
-  const session = await getServerSession(authOptions);
+export const dynamic = "force-dynamic";
 
-  if (session) {
-    redirect("/editor");
+export default async function RegisterPage() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (session) {
+      redirect("/editor");
+    }
+  } catch (error) {
+    if ((error as any)?.digest?.includes("NEXT_REDIRECT")) {
+      throw error;
+    }
+    console.warn("Erro ao verificar sessão no registro:", error);
   }
 
   return (
