@@ -7,7 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/context/toast-context";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface UserResponse {
   id: string;
@@ -34,6 +43,9 @@ export default function SettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -144,6 +156,30 @@ export default function SettingsPage() {
       toast.showToast("❌ Erro inesperado ao alterar senha.");
     } finally {
       setSavingPassword(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeletingAccount(true);
+    try {
+      const response = await fetch("/api/user", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        toast.showToast(`❌ ${data.error || "Erro ao excluir conta"}`);
+        setIsDeletingAccount(false);
+        return;
+      }
+
+      toast.showToast("✅ Conta excluída com sucesso!");
+      setDeleteDialogOpen(false);
+      signOut({ callbackUrl: "/" });
+    } catch (error) {
+      console.error(error);
+      toast.showToast("❌ Erro inesperado ao excluir conta.");
+      setIsDeletingAccount(false);
     }
   }
 
@@ -290,6 +326,51 @@ export default function SettingsPage() {
                 {savingPassword ? "Alterando..." : "Alterar senha"}
               </Button>
             </form>
+          </section>
+
+          <section className="rounded-2xl border border-red-900/30 bg-red-950/10 p-6 shadow-lg shadow-black/40">
+            <h2 className="text-lg font-medium mb-4 text-red-500 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Zona de Perigo
+            </h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-zinc-200">Excluir conta</p>
+                <p className="text-sm text-zinc-400">
+                  Esta ação é irreversível. Todos os seus documentos serão apagados.
+                </p>
+              </div>
+
+              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">Excluir conta</Button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+                  <DialogHeader>
+                    <DialogTitle>Você tem certeza absoluta?</DialogTitle>
+                    <DialogDescription className="text-zinc-400">
+                      Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá seus dados de nossos servidores.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDeleteDialogOpen(false)}
+                      disabled={isDeletingAccount}
+                      className="text-black dark:text-white"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      disabled={isDeletingAccount}
+                    >
+                      {isDeletingAccount ? "Excluindo..." : "Excluir conta"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </section>
         </div>
       </div>

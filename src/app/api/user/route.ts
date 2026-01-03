@@ -129,4 +129,51 @@ export async function PATCH(request: Request) {
   }
 }
 
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || !(session.user as any).id) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const userId = (session.user as any).id as string;
+  const client = getTursoClient();
+
+  try {
+    // Excluir documentos do usuário
+    await client.execute({
+      sql: "DELETE FROM documents WHERE user_id = ?",
+      args: [userId],
+    });
+
+    // Tentar excluir pastas (se a tabela existir e tiver user_id)
+    // Para evitar erros se a tabela não existir ou não tiver a coluna, poderíamos verificar antes,
+    // mas assumindo que a feature de pastas foi implementada recentemente:
+    try {
+      await client.execute({
+        sql: "DELETE FROM folders WHERE user_id = ?",
+        args: [userId],
+      });
+    } catch (e) {
+      // Ignorar erro se tabela folders não existir ou falhar, focando no principal
+      console.warn("Erro ao tentar excluir pastas ou tabela inexistente:", e);
+    }
+
+    // Excluir o usuário
+    await client.execute({
+      sql: "DELETE FROM users WHERE id = ?",
+      args: [userId],
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao excluir conta:", error);
+    return NextResponse.json(
+      { error: "Erro ao excluir conta" },
+      { status: 500 }
+    );
+  }
+}
+
+
 
