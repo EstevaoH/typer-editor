@@ -24,7 +24,7 @@ const DOMPURIFY_CONFIG = {
   RETURN_TRUSTED_TYPE: false,
   SANITIZE_DOM: true,
   WHOLE_DOCUMENT: false,
-} as const satisfies Partial<DOMPurify.Config>;
+} as const satisfies Partial<typeof DOMPurify.sanitize>;
 
 /**
  * Sanitiza conteúdo HTML para prevenir ataques XSS
@@ -41,7 +41,7 @@ const DOMPURIFY_CONFIG = {
  * @remarks
  * No servidor (SSR), retorna o HTML sem sanitização. A sanitização ocorre no cliente.
  */
-export function sanitizeHTML(html: string, config?: Partial<DOMPurify.Config>): string {
+export function sanitizeHTML(html: string, config?: Partial<typeof DOMPurify.sanitize>): string {
   if (typeof window === 'undefined') {
     // SSR: retorna HTML sem sanitização (será sanitizado no cliente)
     // Em produção, considere usar uma biblioteca SSR-compatible
@@ -92,8 +92,8 @@ export function containsDangerousContent(html: string): boolean {
   }
 
   try {
-    const sanitized = DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
-    return sanitized !== html;
+    const sanitized = DOMPurify.sanitize(html, DOMPURIFY_CONFIG as any);
+    return sanitized !== html as any;
   } catch {
     return true;
   }
