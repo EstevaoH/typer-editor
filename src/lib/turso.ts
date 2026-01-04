@@ -47,6 +47,35 @@ export function getTursoClient(): Client {
  *   tags TEXT, -- JSON serializado com array de strings
  *   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
  * );
+ *
+ * CREATE TABLE IF NOT EXISTS templates (
+ *   id TEXT PRIMARY KEY,
+ *   user_id TEXT NOT NULL,
+ *   title TEXT NOT NULL,
+ *   content TEXT NOT NULL,
+ *   description TEXT,
+ *   category TEXT,
+ *   tags TEXT, -- JSON serializado com array de strings
+ *   created_at TEXT NOT NULL,
+ *   updated_at TEXT NOT NULL,
+ *   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+ * );
+ *
+ * CREATE INDEX IF NOT EXISTS idx_templates_user_id ON templates(user_id);
+ * CREATE INDEX IF NOT EXISTS idx_templates_category ON templates(category);
+ *
+ * CREATE TABLE IF NOT EXISTS template_models (
+ *   id TEXT PRIMARY KEY,
+ *   title TEXT NOT NULL,
+ *   content TEXT NOT NULL,
+ *   description TEXT,
+ *   category TEXT,
+ *   tags TEXT, -- JSON serializado com array de strings
+ *   created_at TEXT NOT NULL,
+ *   updated_at TEXT NOT NULL
+ * );
+ *
+ * CREATE INDEX IF NOT EXISTS idx_template_models_category ON template_models(category);
  */
 
 

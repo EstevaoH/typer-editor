@@ -79,11 +79,13 @@ export const DocumentItem = memo(function DocumentItem({
                                 </span>
                                 {/* Indicadores de status */}
                                 <div className="flex items-center gap-1">
-                                    {documentStatus.isSavedLocally && (
+                                    {/* Status Local - Apenas para usuários NÃO autenticados */}
+                                    {!session?.user && documentStatus.isSavedLocally && (
                                         <div title="Salvo localmente">
                                             <HardDrive className="w-3 h-3 text-green-400" />
                                         </div>
                                     )}
+                                    {/* Status Nuvem - Apenas para usuários autenticados */}
                                     {session?.user && (
                                         <>
                                             {documentStatus.isSavedInCloud ? (

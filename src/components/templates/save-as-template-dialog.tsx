@@ -33,10 +33,10 @@ export function SaveAsTemplateDialog({
     const [title, setTitle] = useState(initialTitle)
     const [description, setDescription] = useState("")
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!title.trim()) return
 
-        saveAsTemplate(documentId, title, description)
+        await saveAsTemplate(documentId, title, description)
         onOpenChange(false)
         setTitle(initialTitle)
         setDescription("")

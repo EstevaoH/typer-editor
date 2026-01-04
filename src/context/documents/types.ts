@@ -49,7 +49,8 @@ export interface DocumentsContextType {
   documents: Document[]; // Documents filtered by selected tag
   allDocuments: Document[]; // All documents (unfiltered) for tag counting
   folders: Folder[];
-  templates: Template[]; // Templates list
+  templates: Template[]; // Templates do usuário
+  systemTemplates: Template[]; // Templates padrão do sistema
   currentDocument: Document | null;
   isLoading: boolean;
   createDocument: (title?: string, folderId?: string) => void;
@@ -58,7 +59,7 @@ export interface DocumentsContextType {
   deleteDocument: (id: string, deleteFromCloud?: boolean) => Promise<void>;
   saveDocument: (title: string) => void;
   saveDocumentLocally: () => Promise<void>;
-  saveAsTemplate: (documentId: string, templateName: string, description?: string) => void;
+  saveAsTemplate: (documentId: string, templateName: string, description?: string) => Promise<void>;
   deleteTemplate: (templateId: string) => void;
   setCurrentDocumentId: (id: string | null) => void;
   downloadDocument: (id: string, format?: DownloadFormat) => void;

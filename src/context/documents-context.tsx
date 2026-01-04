@@ -50,8 +50,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [systemTemplates, setSystemTemplates] = useState<Template[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  // const { data: session } = useSession();
 
   const { checkLimit } = useDocumentLimit(documents, 10);
   const toast = useToast();
@@ -59,7 +59,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const documentSync = useDocumentSync({
     onSyncComplete: () => {
-      // Sincronização concluída com sucesso
+      // RF-05: Sincronização automática concluída
     },
     onSyncError: (error) => {
       console.error("Erro na sincronização:", error);
@@ -187,51 +187,72 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage.isReady]);
 
-  // Sincronização automática ao carregar página (apenas buscar do servidor)
+  // RF-05, RF-06: Sincronização automática e pós-login
   const hasLoadedFromServer = useRef(false);
+  const hasSyncedLocalDocs = useRef(false);
+  
   useEffect(() => {
-    const loadFromServer = async () => {
+    const loadFromServerAndSync = async () => {
+      // RF-01: Apenas quando usuário estiver autenticado
       if (!session?.user || !storage.isReady || isLoading || hasLoadedFromServer.current) return;
 
       try {
         // Aguarda um pouco para garantir que os dados locais foram carregados primeiro
         await new Promise((resolve) => setTimeout(resolve, 800));
 
-        // Busca documentos do servidor e mescla com os locais
+        // RF-01: Busca apenas documentos do usuário do servidor
         const currentDocs = documents.length > 0 ? documents : await storage.loadDocuments();
         const mergedDocs = await (documentSync as any).syncFromServer(currentDocs);
         
-        // Atualiza apenas se houver diferenças ou se não há documentos locais
-        const hasChanges = 
-          mergedDocs.length !== currentDocs.length || 
-          mergedDocs.some((doc: Document) => {
-            const localDoc = currentDocs.find((d: Document) => d.id === doc.id);
-            return !localDoc || localDoc.updatedAt !== doc.updatedAt;
-          });
+        // RF-01: Atualiza com documentos mesclados (apenas do usuário)
+        setDocuments(mergedDocs);
+        // Não salva localmente quando usuário está autenticado - apenas na nuvem
 
-        if (hasChanges || currentDocs.length === 0) {
-          setDocuments(mergedDocs);
+        // RF-04, RF-06: Sincronizar documentos locais criados sem autenticação no primeiro login
+        if (!hasSyncedLocalDocs.current) {
+          // Identifica documentos locais que não estão no servidor (criados sem autenticação)
+          const localOnlyDocs = currentDocs.filter(
+            (localDoc: Document) => !mergedDocs.some((mergedDoc: Document) => mergedDoc.id === localDoc.id)
+          );
+
+          if (localOnlyDocs.length > 0) {
+            try {
+              // RF-04: Transferir documentos locais para nuvem e vincular ao usuário
+              await (documentSync as any).syncToServer(localOnlyDocs);
+              toast.showToast(`✅ ${localOnlyDocs.length} documento(s) local(is) sincronizado(s) com a nuvem!`);
+              
+              // Recarrega documentos do servidor após sincronização
+              const updatedDocs = await (documentSync as any).syncFromServer(mergedDocs);
+              setDocuments(updatedDocs);
+              // Não salva localmente quando usuário está autenticado - apenas na nuvem
+            } catch (syncError) {
+              console.error("Erro ao sincronizar documentos locais:", syncError);
+              toast.showToast("⚠️ Alguns documentos locais não puderam ser sincronizados.");
+            }
+          }
           
-          // Salva os documentos mesclados no storage local
-          await storage.saveDocuments(mergedDocs);
+          hasSyncedLocalDocs.current = true;
         }
 
         hasLoadedFromServer.current = true;
       } catch (error) {
         console.error("Erro ao carregar documentos do servidor:", error);
-        // Não mostra erro ao usuário, apenas loga - os documentos locais continuam funcionando
-        hasLoadedFromServer.current = true; // Marca como tentado para não ficar tentando
+        hasLoadedFromServer.current = true;
       }
     };
 
-    loadFromServer();
+    loadFromServerAndSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user, storage.isReady, isLoading]);
 
-  // Reset flag quando usuário faz logout/login
+  // Reset flags quando usuário faz logout/login
   useEffect(() => {
     if (!session?.user) {
       hasLoadedFromServer.current = false;
+      hasSyncedLocalDocs.current = false;
+    } else {
+      // RF-06: Reset para permitir nova sincronização no login
+      hasSyncedLocalDocs.current = false;
     }
   }, [session?.user]);
 
@@ -270,8 +291,10 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   // Save to storage with debounce (IndexedDB or localStorage)
+  // Apenas salva localmente se usuário NÃO estiver autenticado
   useEffect(() => {
-    if (!isLoading && storage.isReady) {
+    if (!isLoading && storage.isReady && !session?.user) {
+      // RF-03: Apenas salva localmente quando usuário não está autenticado
       storage.saveDocuments(debouncedDocuments).catch((error) => {
         console.error("Erro ao salvar documentos:", error);
         if (error.message?.includes('insuficiente')) {
@@ -280,16 +303,17 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
           toast.showToast("⚠️ Erro ao salvar documentos.");
         }
       });
-
-      if (debouncedDocuments.length > 0 && !currentDocId) {
-        setCurrentDocId(debouncedDocuments[0].id);
-      }
-
-      if (currentDocId && !debouncedDocuments.find((doc) => doc.id === currentDocId)) {
-        setCurrentDocId(debouncedDocuments.length > 0 ? debouncedDocuments[0].id : null);
-      }
     }
-  }, [debouncedDocuments, isLoading, storage.isReady, currentDocId, toast]);
+
+    // Gerenciamento de currentDocId (independente de autenticação)
+    if (debouncedDocuments.length > 0 && !currentDocId) {
+      setCurrentDocId(debouncedDocuments[0].id);
+    }
+
+    if (currentDocId && !debouncedDocuments.find((doc) => doc.id === currentDocId)) {
+      setCurrentDocId(debouncedDocuments.length > 0 ? debouncedDocuments[0].id : null);
+    }
+  }, [debouncedDocuments, isLoading, storage.isReady, currentDocId, toast, session?.user]);
 
   useEffect(() => {
     if (!isLoading && storage.isReady) {
@@ -317,14 +341,84 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     }
   }, [debouncedVersions, isLoading, storage.isReady, toast]);
 
+  // Carregar templates padrão do sistema (não requer autenticação)
   useEffect(() => {
-    if (!isLoading && storage.isReady) {
+    const loadSystemTemplates = async () => {
+      if (!storage.isReady || isLoading) return;
+
+      try {
+        const response = await fetch("/api/template-models", {
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSystemTemplates(data.templates || []);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar templates padrão do sistema:", error);
+      }
+    };
+
+    loadSystemTemplates();
+  }, [storage.isReady, isLoading]);
+
+  // Carregar templates da nuvem quando usuário estiver autenticado
+  const hasLoadedTemplatesFromServer = useRef(false);
+  
+  useEffect(() => {
+    const loadTemplatesFromServer = async () => {
+      if (!session?.user || !storage.isReady || isLoading || hasLoadedTemplatesFromServer.current) return;
+
+      try {
+        const response = await fetch("/api/templates", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const cloudTemplates = data.templates || [];
+          
+          // Mesclar templates locais com templates da nuvem
+          const localTemplates = await storage.loadTemplates();
+          const mergedTemplates = [...cloudTemplates];
+          
+          // Adicionar templates locais que não estão na nuvem
+          for (const localTemplate of localTemplates) {
+            if (!mergedTemplates.some(t => t.id === localTemplate.id)) {
+              mergedTemplates.push(localTemplate);
+            }
+          }
+          
+          setTemplates(mergedTemplates);
+          hasLoadedTemplatesFromServer.current = true;
+        }
+      } catch (error) {
+        console.error("Erro ao carregar templates do servidor:", error);
+        hasLoadedTemplatesFromServer.current = true;
+      }
+    };
+
+    loadTemplatesFromServer();
+  }, [session?.user, storage.isReady, isLoading]);
+
+  // Reset flag quando usuário faz logout/login
+  useEffect(() => {
+    if (!session?.user) {
+      hasLoadedTemplatesFromServer.current = false;
+    }
+  }, [session?.user]);
+
+  // Salvar templates localmente apenas se usuário NÃO estiver autenticado
+  useEffect(() => {
+    if (!isLoading && storage.isReady && !session?.user) {
       storage.saveTemplates(debouncedTemplates).catch((error) => {
         console.error("Erro ao salvar templates:", error);
         toast.showToast("⚠️ Erro ao salvar templates.");
       });
     }
-  }, [debouncedTemplates, isLoading, storage.isReady, toast]);
+  }, [debouncedTemplates, isLoading, storage.isReady, toast, session?.user]);
 
   // Current document
   const currentDocument =
@@ -351,13 +445,101 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const sharingOps = useDocumentSharing(setDocuments);
 
+  // RF-02: Função para salvar documento na nuvem quando autenticado
+  const saveDocumentToCloud = useCallback(
+    async (doc: Document) => {
+      if (!session?.user || !documentSync.syncToServer) {
+        return;
+      }
+
+      try {
+        await (documentSync as any).syncToServer([doc]);
+      } catch (error) {
+        console.error("Erro ao salvar documento na nuvem:", error);
+      }
+    },
+    [session?.user, documentSync]
+  );
+
+  // RF-05: Debounce para sincronização automática após atualizações
+  const cloudSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveDocumentToCloudDebounced = useCallback(
+    (doc: Document) => {
+      if (cloudSaveTimeoutRef.current) {
+        clearTimeout(cloudSaveTimeoutRef.current);
+      }
+      cloudSaveTimeoutRef.current = setTimeout(() => {
+        saveDocumentToCloud(doc);
+      }, 2000); // 2 segundos de debounce
+    },
+    [saveDocumentToCloud]
+  );
+
+  // RF-02: Criar documento com salvamento automático na nuvem se autenticado
+  // RF-03: Criar documento apenas localmente se não autenticado
+  const handleCreateDocument = useCallback(
+    async (title?: string, folderId?: string) => {
+      if (!checkLimit()) {
+        return;
+      }
+
+      const newDoc: Document = {
+        id: crypto.randomUUID(),
+        title: title || "Novo documento",
+        content: "",
+        isPrivate: false,
+        isShared: false,
+        isFavorite: false,
+        sharedWith: [],
+        updatedAt: new Date().toISOString(),
+        folderId: folderId || null,
+        tags: [],
+      };
+
+      // RF-07: Sempre salva localmente primeiro (persistência local)
+      setDocuments((prev) => [newDoc, ...prev]);
+      setCurrentDocId(newDoc.id);
+      setHasHandledFirstInput(true);
+      
+      // RF-02: Se autenticado, salva na nuvem automaticamente
+      if (session?.user) {
+        await saveDocumentToCloud(newDoc);
+      }
+      // RF-03: Se não autenticado, permanece apenas local (será sincronizado no login)
+    },
+    [session?.user, saveDocumentToCloud, checkLimit]
+  );
+
+  // RF-02: Atualizar documento com sincronização automática se autenticado
+  // RF-03: Atualizar apenas localmente se não autenticado
+  const handleUpdateDocument = useCallback(
+    (updates: Partial<Document>) => {
+      if (!currentDocId) return;
+      
+      // RF-07: Sempre atualiza localmente primeiro
+      documentOps.updateDocument(updates);
+      
+      // RF-02, RF-05: Se autenticado, sincroniza automaticamente com debounce
+      if (session?.user && currentDocument) {
+        const updatedDoc = { 
+          ...currentDocument, 
+          ...updates, 
+          updatedAt: new Date().toISOString() 
+        };
+        saveDocumentToCloudDebounced(updatedDoc);
+      }
+      // RF-03: Se não autenticado, permanece apenas local
+    },
+    [documentOps, session?.user, currentDocument, saveDocumentToCloudDebounced]
+  );
+
   // Additional handlers
   const handleFirstInput = useCallback(() => {
     if (documents.length === 0 && !hasHandledFirstInput && checkLimit()) {
-      documentOps.createDocument("Documento sem título");
+      handleCreateDocument("Documento sem título");
       setHasHandledFirstInput(true);
     }
-  }, [documents.length, hasHandledFirstInput, checkLimit, documentOps]);
+  }, [documents.length, hasHandledFirstInput, checkLimit, handleCreateDocument]);
 
   const handleDownloadDocument = useCallback(
     async (id: string, format?: DownloadFormat) => {
@@ -399,7 +581,13 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Salvar imediatamente no storage local
+      // Se usuário está autenticado, não permite salvar localmente
+      if (session?.user) {
+        toast.showToast("ℹ️ Documentos de usuários autenticados são salvos apenas na nuvem.");
+        return;
+      }
+
+      // Salvar imediatamente no storage local (apenas se não autenticado)
       await storage.saveDocuments(documents);
       toast.showToast("✅ Documento salvo localmente com sucesso!");
     } catch (error) {
@@ -422,8 +610,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       // Delete document locally first (immediate feedback)
       documentOps.deleteDocument(id);
 
-      // If user wants to delete from cloud and is logged in
-      if (deleteFromCloud && session?.user) {
+      // RF-02: Se autenticado, deleta também da nuvem
+      if (session?.user) {
         try {
           const response = await fetch("/api/documents", {
             method: "DELETE",
@@ -433,21 +621,17 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
           });
 
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("Erro ao deletar documento na nuvem:", errorData);
-            toast.showToast(
-              "⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem."
-            );
+            console.error("Erro ao deletar documento na nuvem");
+            toast.showToast("⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem.");
           } else {
             toast.showToast("✅ Documento deletado localmente e na nuvem.");
           }
         } catch (error) {
           console.error("Erro ao deletar documento na nuvem:", error);
-          toast.showToast(
-            "⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem."
-          );
+          toast.showToast("⚠️ Documento deletado localmente, mas houve erro ao deletar na nuvem.");
         }
-      } else if (!deleteFromCloud) {
+      } else {
+        // RF-03: Se não autenticado, deleta apenas localmente
         toast.showToast("✅ Documento deletado localmente.");
       }
     },
@@ -496,11 +680,23 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   const moveDocumentToFolder = useCallback(
     (docId: string, folderId: string | null) => {
+      let updatedDoc: Document | null = null;
       setDocuments((prev) =>
-        prev.map((doc) => (doc.id === docId ? { ...doc, folderId } : doc))
+        prev.map((doc) => {
+          if (doc.id === docId) {
+            updatedDoc = { ...doc, folderId, updatedAt: new Date().toISOString() };
+            return updatedDoc;
+          }
+          return doc;
+        })
       );
+
+      // RF-02, RF-05: Se autenticado, sincroniza automaticamente
+      if (session?.user && updatedDoc) {
+        saveDocumentToCloudDebounced(updatedDoc);
+      }
     },
-    []
+    [session?.user, saveDocumentToCloudDebounced]
   );
 
   const handleDownloadFolder = useCallback(
@@ -572,42 +768,56 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       const normalizedTag = tag.trim().toLowerCase();
       if (!normalizedTag) return;
 
+      let updatedDoc: Document | null = null;
       setDocuments((prev) =>
         prev.map((doc) => {
           if (doc.id === documentId) {
             const existingTags = doc.tags || [];
             if (!existingTags.includes(normalizedTag)) {
-              return {
+              updatedDoc = {
                 ...doc,
                 tags: [...existingTags, normalizedTag],
                 updatedAt: new Date().toISOString(),
               };
+              return updatedDoc;
             }
           }
           return doc;
         })
       );
+
+      // RF-02, RF-05: Se autenticado, sincroniza automaticamente
+      if (session?.user && updatedDoc) {
+        saveDocumentToCloudDebounced(updatedDoc);
+      }
     },
-    []
+    [session?.user, saveDocumentToCloudDebounced]
   );
 
   const removeTag = useCallback(
     (documentId: string, tag: string) => {
+      let updatedDoc: Document | null = null;
       setDocuments((prev) =>
         prev.map((doc) => {
           if (doc.id === documentId) {
             const existingTags = doc.tags || [];
-            return {
+            updatedDoc = {
               ...doc,
               tags: existingTags.filter((t) => t !== tag),
               updatedAt: new Date().toISOString(),
             };
+            return updatedDoc;
           }
           return doc;
         })
       );
+
+      // RF-02, RF-05: Se autenticado, sincroniza automaticamente
+      if (session?.user && updatedDoc) {
+        saveDocumentToCloudDebounced(updatedDoc);
+      }
     },
-    []
+    [session?.user, saveDocumentToCloudDebounced]
   );
 
   const getAllTags = useCallback(() => {
@@ -631,7 +841,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     : documents;
 
   // Template methods
-  const saveAsTemplate = useCallback((documentId: string, templateName: string, description?: string) => {
+  const saveAsTemplate = useCallback(async (documentId: string, templateName: string, description?: string) => {
     const doc = documents.find(d => d.id === documentId);
     if (!doc) return;
 
@@ -641,23 +851,74 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       title: templateName,
       isTemplate: true,
       description,
-      createdAt: new Date().toISOString(), // Templates don't track updatedAt same way? Or should. Template Interface extends Document which has updatedAt.
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       folderId: null, // Templates don't likely belong to user folders
       isFavorite: false,
     };
 
+    // Sempre adiciona ao estado local primeiro
     setTemplates(prev => [...prev, newTemplate]);
-    toast.showToast("✅ Template salvo com sucesso!");
-  }, [documents, toast]);
 
-  const deleteTemplate = useCallback((templateId: string) => {
+    // Se usuário está autenticado, salva na nuvem
+    if (session?.user) {
+      try {
+        const response = await fetch("/api/templates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ template: newTemplate }),
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao salvar template na nuvem");
+          toast.showToast("⚠️ Template salvo localmente, mas houve erro ao salvar na nuvem.");
+        } else {
+          toast.showToast("✅ Template salvo com sucesso!");
+        }
+      } catch (error) {
+        console.error("Erro ao salvar template na nuvem:", error);
+        toast.showToast("⚠️ Template salvo localmente, mas houve erro ao salvar na nuvem.");
+      }
+    } else {
+      // Usuário não autenticado - apenas local
+      toast.showToast("✅ Template salvo localmente!");
+    }
+  }, [documents, toast, session?.user]);
+
+  const deleteTemplate = useCallback(async (templateId: string) => {
+    // Deleta localmente primeiro
     setTemplates(prev => prev.filter(t => t.id !== templateId));
-    toast.showToast("🗑️ Template excluído.");
-  }, [toast]);
 
-  const createDocumentFromTemplate = useCallback((templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    // Se usuário está autenticado, deleta também da nuvem
+    if (session?.user) {
+      try {
+        const response = await fetch("/api/templates", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ templateIds: [templateId] }),
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao deletar template na nuvem");
+          toast.showToast("⚠️ Template deletado localmente, mas houve erro ao deletar na nuvem.");
+        } else {
+          toast.showToast("🗑️ Template excluído.");
+        }
+      } catch (error) {
+        console.error("Erro ao deletar template na nuvem:", error);
+        toast.showToast("⚠️ Template deletado localmente, mas houve erro ao deletar na nuvem.");
+      }
+    } else {
+      // Usuário não autenticado - apenas local
+      toast.showToast("🗑️ Template excluído.");
+    }
+  }, [toast, session?.user]);
+
+  const createDocumentFromTemplate = useCallback(async (templateId: string) => {
+    // Buscar primeiro nos templates do usuário, depois nos templates do sistema
+    const template = templates.find(t => t.id === templateId) || systemTemplates.find(t => t.id === templateId);
     if (!template) return;
 
     if (!checkLimit()) return;
@@ -677,34 +938,69 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       tags: template.tags || [],
     };
 
+    // RF-07: Sempre salva localmente primeiro
     setDocuments(prev => [newDoc, ...prev]);
     setCurrentDocId(newDoc.id);
+    
+    // RF-02: Se autenticado, salva na nuvem automaticamente
+    if (session?.user) {
+      await saveDocumentToCloud(newDoc);
+    }
+    
     toast.showToast("✅ Novo documento criado a partir do template!");
-  }, [templates, checkLimit, toast]);
+  }, [templates, systemTemplates, checkLimit, toast, session?.user, saveDocumentToCloud]);
 
-  // Sync handler
+  // RF-05: Sincronização manual
   const handleSyncDocuments = useCallback(async () => {
-    await documentSync.syncManual(documents, setDocuments);
-    // Após sincronizar, os documentos são atualizados automaticamente
-  }, [documentSync, documents, setDocuments]);
+    if (!session?.user) {
+      toast.showToast("❌ Você precisa estar logado para sincronizar documentos.");
+      return;
+    }
+    
+    try {
+      await documentSync.syncManual(documents, setDocuments);
+      toast.showToast("✅ Documentos sincronizados com sucesso!");
+    } catch (error: any) {
+      toast.showToast(`❌ ${error.message || "Erro ao sincronizar documentos"}`);
+    }
+  }, [documentSync, documents, setDocuments, session?.user, toast]);
 
-  // Sync selected documents handler
+  // RF-05: Sincronização seletiva
   const handleSyncSelectedDocuments = useCallback(
     async (selectedIds: string[]) => {
-      await (documentSync as any).syncSelected(documents, selectedIds, setDocuments);
+      if (!session?.user) {
+        toast.showToast("❌ Você precisa estar logado para sincronizar documentos.");
+        return;
+      }
+      
+      try {
+        await (documentSync as any).syncSelected(documents, selectedIds, setDocuments);
+        toast.showToast("✅ Documentos selecionados sincronizados com sucesso!");
+      } catch (error: any) {
+        toast.showToast(`❌ ${error.message || "Erro ao sincronizar documentos"}`);
+      }
     },
-    [documentSync, documents, setDocuments]
+    [documentSync, documents, setDocuments, session?.user, toast]
   );
 
-  // Check cloud documents handler
+  // RF-01: Verificar documentos na nuvem
   const handleCheckCloudDocuments = useCallback(async () => {
+    if (!session?.user) {
+      return { newDocuments: [], updatedDocuments: [] };
+    }
+    
     return await (documentSync as any).checkCloudDocuments(documents);
-  }, [documentSync, documents]);
+  }, [documentSync, documents, session?.user]);
 
-  // Download from cloud handler
+  // RF-01: Download de documentos da nuvem
   const handleDownloadFromCloud = useCallback(
     async (documentsToDownload: Document[]) => {
-      // Identificar pastas necessárias dos documentos baixados
+      if (!session?.user) {
+        toast.showToast("❌ Você precisa estar logado para baixar documentos da nuvem.");
+        return;
+      }
+
+      // Identificar pastas necessárias
       const requiredFolderIds = new Set<string>();
       documentsToDownload.forEach((doc) => {
         if (doc.folderId) {
@@ -716,10 +1012,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       const existingFolderIds = new Set(folders.map((f) => f.id));
       const foldersToCreate: Folder[] = [];
 
-      requiredFolderIds.forEach((folderId, index) => {
+      requiredFolderIds.forEach((folderId) => {
         if (!existingFolderIds.has(folderId)) {
-          // Criar pasta com nome padrão (o usuário pode renomear depois)
-          // Usar um nome simples e sequencial
           const folderName = foldersToCreate.length === 0 
             ? "Nova Pasta" 
             : `Nova Pasta ${foldersToCreate.length + 1}`;
@@ -733,25 +1027,22 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      // Adicionar pastas criadas ao estado
       if (foldersToCreate.length > 0) {
         setFolders((prev) => [...prev, ...foldersToCreate]);
-        // Salvar pastas no storage
         await storage.saveFolders([...folders, ...foldersToCreate]);
       }
 
-      // Agora baixar os documentos
+      // Baixar documentos
       await (documentSync as any).downloadFromCloud(
         documentsToDownload,
         documents,
         async (updatedDocs: Document[]) => {
           setDocuments(updatedDocs);
-          // Salvar no storage local após download
-          await storage.saveDocuments(updatedDocs);
+          // Não salva localmente quando usuário está autenticado - documentos vêm da nuvem
         }
       );
     },
-    [documentSync, documents, folders, storage]
+    [documentSync, documents, folders, storage, session?.user, toast]
   );
 
   // Context value
@@ -761,8 +1052,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     allDocuments: documents, // All documents for tag counting
     currentDocument,
     isLoading,
-    createDocument: documentOps.createDocument,
-    updateDocument: documentOps.updateDocument,
+    createDocument: handleCreateDocument,
+    updateDocument: handleUpdateDocument,
     deleteDocument: handleDeleteDocument,
     saveDocument: handleSaveDocument,
     saveDocumentLocally: handleSaveDocumentLocally,
@@ -794,6 +1085,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     filterByTag,
     selectedTag,
     templates,
+    systemTemplates,
     saveAsTemplate,
     deleteTemplate,
     createDocumentFromTemplate,

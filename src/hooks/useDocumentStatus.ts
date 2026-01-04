@@ -12,16 +12,27 @@ interface DocumentStatus {
 export function useDocumentStatus(document: Document | null) {
   const { data: session } = useSession();
   const [status, setStatus] = useState<DocumentStatus>({
-    isSavedLocally: true, // Assumimos que está salvo localmente se está no estado
+    isSavedLocally: !session?.user, // Apenas local se não autenticado
     isSavedInCloud: false,
     cloudLastUpdated: null,
     hasUnsavedChanges: false, // Mudanças locais não sincronizadas
   });
 
   const checkCloudStatus = useCallback(async () => {
-    if (!document || !session?.user) {
+    if (!document) {
       setStatus({
-        isSavedLocally: true,
+        isSavedLocally: !session?.user, // Apenas local se não autenticado
+        isSavedInCloud: false,
+        cloudLastUpdated: null,
+        hasUnsavedChanges: false,
+      });
+      return;
+    }
+
+    // Se usuário não está autenticado, documento é apenas local
+    if (!session?.user) {
+      setStatus({
+        isSavedLocally: true, // Documentos não autenticados são salvos localmente
         isSavedInCloud: false,
         cloudLastUpdated: null,
         hasUnsavedChanges: false,
@@ -45,15 +56,15 @@ export function useDocumentStatus(document: Document | null) {
           const hasUnsavedChanges = localUpdated > cloudUpdated;
           
           setStatus({
-            isSavedLocally: true,
+            isSavedLocally: false, // Usuários autenticados não salvam localmente
             isSavedInCloud: true,
             cloudLastUpdated: new Date(cloudDoc.updatedAt),
             hasUnsavedChanges,
           });
         } else {
-          // Documento existe localmente mas não na nuvem = mudanças não sincronizadas
+          // Documento existe no estado mas não na nuvem = mudanças não sincronizadas
           setStatus({
-            isSavedLocally: true,
+            isSavedLocally: false, // Usuários autenticados não salvam localmente
             isSavedInCloud: false,
             cloudLastUpdated: null,
             hasUnsavedChanges: true,
@@ -61,7 +72,7 @@ export function useDocumentStatus(document: Document | null) {
         }
       } else {
         setStatus({
-          isSavedLocally: true,
+          isSavedLocally: false, // Usuários autenticados não salvam localmente
           isSavedInCloud: false,
           cloudLastUpdated: null,
           hasUnsavedChanges: false, // Não sabemos, então assumimos que não há
@@ -70,7 +81,7 @@ export function useDocumentStatus(document: Document | null) {
     } catch (error) {
       console.error("Erro ao verificar status na nuvem:", error);
       setStatus({
-        isSavedLocally: true,
+        isSavedLocally: false, // Usuários autenticados não salvam localmente
         isSavedInCloud: false,
         cloudLastUpdated: null,
         hasUnsavedChanges: false, // Não sabemos, então assumimos que não há
@@ -86,9 +97,17 @@ export function useDocumentStatus(document: Document | null) {
         checkCloudStatus();
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
+    } else if (document && !session?.user) {
+      // Usuário não autenticado: documento é apenas local
       setStatus({
         isSavedLocally: true,
+        isSavedInCloud: false,
+        cloudLastUpdated: null,
+        hasUnsavedChanges: false,
+      });
+    } else {
+      setStatus({
+        isSavedLocally: false,
         isSavedInCloud: false,
         cloudLastUpdated: null,
         hasUnsavedChanges: false,

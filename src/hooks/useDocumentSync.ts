@@ -51,42 +51,58 @@ export function useDocumentSync(options: UseDocumentSyncOptions = {}) {
         const data = await response.json();
         const remoteDocs: Document[] = data.documents || [];
 
-        // Se não há documentos no servidor, retorna os locais
+        // Se não há documentos no servidor, retorna apenas documentos locais que ainda não foram sincronizados
+        // (documentos criados localmente antes do login)
         if (remoteDocs.length === 0) {
+          // Retorna apenas documentos locais que não estão na nuvem
+          // (serão enviados na próxima sincronização)
           return localDocuments;
         }
 
+        // Criar um Set com IDs dos documentos remotos para busca rápida
+        const remoteDocIds = new Set(remoteDocs.map(d => d.id));
+
         // Estratégia de merge: preferir o documento com updatedAt mais recente
-        const merged = [...localDocuments];
+        // Começa com documentos remotos (que pertencem ao usuário)
+        const merged: Document[] = [];
         const conflicts: Array<{ local: Document; remote: Document }> = [];
 
+        // Primeiro, adiciona todos os documentos remotos
         remoteDocs.forEach((remoteDoc) => {
-          const localIndex = merged.findIndex((d) => d.id === remoteDoc.id);
+          merged.push(remoteDoc);
+        });
+
+        // Depois, verifica documentos locais:
+        // - Se o documento local existe no servidor, já foi adicionado acima
+        // - Se o documento local NÃO existe no servidor, é um documento criado localmente
+        //   que ainda não foi sincronizado - mantém ele para ser enviado na próxima sync
+        localDocuments.forEach((localDoc) => {
+          const remoteIndex = merged.findIndex((d) => d.id === localDoc.id);
           
-          if (localIndex === -1) {
-            // Documento existe apenas no servidor - adiciona
-            merged.push(remoteDoc);
+          if (remoteIndex === -1) {
+            // Documento existe apenas localmente - mantém para sincronizar depois
+            merged.push(localDoc);
           } else {
-            const localDoc = merged[localIndex];
+            // Documento existe em ambos - verifica qual é mais recente
+            const remoteDoc = merged[remoteIndex];
             const localTime = new Date(localDoc.updatedAt).getTime();
             const remoteTime = new Date(remoteDoc.updatedAt).getTime();
 
-            if (remoteTime > localTime) {
-              // Servidor tem versão mais recente - atualiza
-              merged[localIndex] = remoteDoc;
-            } else if (localTime > remoteTime) {
-              // Local tem versão mais recente - mantém local
-              // (será enviado na próxima sincronização)
-            } else if (localDoc.content !== remoteDoc.content) {
+            if (localTime > remoteTime) {
+              // Local tem versão mais recente - substitui pela versão local
+              merged[remoteIndex] = localDoc;
+            } else if (localTime === remoteTime && localDoc.content !== remoteDoc.content) {
               // Mesmo timestamp mas conteúdo diferente - conflito
               conflicts.push({ local: localDoc, remote: remoteDoc });
+              // Por padrão, mantém a versão remota em caso de conflito
             }
+            // Se remoteTime > localTime, já está usando a versão remota (não precisa fazer nada)
           }
         });
 
         if (conflicts.length > 0) {
           console.warn(`${conflicts.length} conflitos detectados durante sincronização`);
-          // Por enquanto, mantém a versão local em caso de conflito
+          // Por enquanto, mantém a versão remota em caso de conflito
           // TODO: Implementar UI para resolver conflitos manualmente
         }
 
@@ -432,6 +448,7 @@ export function useDocumentSync(options: UseDocumentSyncOptions = {}) {
     syncManual,
     syncSelected,
     syncFromServer, // Exportar para uso no contexto
+    syncToServer, // Exportar para salvar documentos individuais na nuvem
     checkCloudDocuments,
     downloadFromCloud,
     isSyncing: syncStatus === "syncing",
