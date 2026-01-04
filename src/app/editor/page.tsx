@@ -1,3 +1,4 @@
+"use client"
 import EditorLayout from './Editorlayout'
 import { Editor } from './EditorContent'
 
