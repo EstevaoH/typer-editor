@@ -57,7 +57,7 @@ export function LoginForm() {
                 email: data.email,
                 password: data.password,
                 redirect: false,
-                callbackUrl,
+                // callbackUrl,
             });
 
             if (result?.error) {
