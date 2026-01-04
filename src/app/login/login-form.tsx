@@ -59,6 +59,7 @@ export function LoginForm() {
                 redirect: false,
                 // callbackUrl,
             });
+            console.log(result);
 
             if (result?.error) {
                 toast.showToast(`❌ ${result.error}`);

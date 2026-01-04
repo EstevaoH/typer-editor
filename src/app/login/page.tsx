@@ -1,4 +1,3 @@
-"use client"
 import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -7,17 +6,13 @@ import { LoginForm } from "./login-form";
 
 export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
-
-  const session = async () => await getServerSession(authOptions);
-  console.log(session);
+export default async function LoginPage() {
   try {
-    session().then((s) => {
-      console.log(s);
-      if (s?.user) {
-        redirect("/editor");
-      }
-    })
+    const session = await getServerSession(authOptions);
+
+    if (session) {
+      redirect("/editor");
+    }
   } catch (error) {
     // Se ocorrer erro ao verificar sessão, apenas loga e permite acesso à página (ex: banco fora)
     // Se o erro for de redirect, ele será relançado (no next 15+ pode precisar de tramento diferente, mas por enquanto ok)
