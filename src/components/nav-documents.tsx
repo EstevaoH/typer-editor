@@ -1,4 +1,4 @@
-import { FolderInput, Plus, FileX } from "lucide-react";
+import { FolderInput, Plus, FileX, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   SidebarGroup,
@@ -54,6 +54,7 @@ export function NavDocuments({
     renameFolder,
     moveDocumentToFolder,
     downloadFolder,
+    isLoading,
   } = useDocuments();
   const [documentToDelete, setDocumentToDelete] = useState<Document>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -154,8 +155,14 @@ export function NavDocuments({
       )}
 
       <SidebarGroupContent className="overflow-y-auto">
-        <SidebarMenu>
-          {favoriteDocuments.length > 0 && (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <Loader2 className="w-6 h-6 animate-spin text-zinc-400 mb-2" />
+            <p className="text-xs text-zinc-500">Carregando documentos...</p>
+          </div>
+        ) : (
+          <SidebarMenu>
+            {favoriteDocuments.length > 0 && (
             <>
               {state !== "collapsed" && (
                 <SidebarGroupLabel className="text-zinc-400 text-xs mt-4">
@@ -296,7 +303,8 @@ export function NavDocuments({
               </Empty>
             </div>
           )}
-        </SidebarMenu>
+          </SidebarMenu>
+        )}
       </SidebarGroupContent>
     </SidebarGroup>
   );

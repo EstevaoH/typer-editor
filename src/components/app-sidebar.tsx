@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
+import { useResizableSidebar } from "@/hooks/useResizableSidebar";
 import { NavDocuments } from "./nav-documents";
 import { NavActions } from "./nav-actions";
 import { Separator } from "./ui/separator";
@@ -52,7 +53,18 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
   } = useDocuments();
   const { data: session } = useSession();
   const { state, toggleSidebar } = useSidebar();
+  const { sidebarWidthPx, isResizing, sidebarRef, handleMouseDown } = useResizableSidebar(state === "collapsed");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Atualizar CSS variable no wrapper quando a largura mudar
+  useEffect(() => {
+    if (state !== "collapsed") {
+      const wrapper = document.querySelector('[data-slot="sidebar-wrapper"]') as HTMLElement;
+      if (wrapper) {
+        wrapper.style.setProperty("--sidebar-width", sidebarWidthPx);
+      }
+    }
+  }, [sidebarWidthPx, state]);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -113,12 +125,40 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
         collapsible="icon"
         className={cn(
           "h-full border-none transition-all duration-300",
-          state === "collapsed" ? "w-16" : "w-64",
+          state === "collapsed" ? "w-16" : "",
           className
         )}
+        style={
+          state !== "collapsed"
+            ? {
+                width: sidebarWidthPx,
+                "--sidebar-width": sidebarWidthPx,
+              } as React.CSSProperties
+            : undefined
+        }
         {...props}
       >
-        <SidebarContent className="h-full flex flex-col bg-zinc-800 dark border-none">
+        <SidebarContent
+          ref={sidebarRef}
+          className="h-full flex flex-col bg-zinc-800 dark border-none relative"
+        >
+          {/* Resize Handle */}
+          {state !== "collapsed" && (
+            <div
+              onMouseDown={handleMouseDown}
+              className={cn(
+                "absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:w-1.5 hover:bg-zinc-600 transition-all z-50 group",
+                isResizing && "w-1.5 bg-zinc-500"
+              )}
+              style={{
+                cursor: isResizing ? "col-resize" : "col-resize",
+              }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-0.5 h-8 bg-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          )}
           <SidebarGroup>
             <div className="flex items-center justify-between px-[0.5px] py-1">
               {state !== "collapsed" && (
