@@ -159,25 +159,25 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
               </div>
             </div>
           )}
-          <SidebarGroup>
-            <div className="flex items-center justify-between px-[0.5px] py-1">
+          <SidebarGroup className="shrink-0">
+            <div className="flex items-center justify-between px-2 py-0.5">
               {state !== "collapsed" && (
-                <SidebarGroupLabel className="text-zinc-400">
+                <SidebarGroupLabel className="text-zinc-400 text-xs">
                   Navegação
                 </SidebarGroupLabel>
               )}
-              <SidebarTrigger className="text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 rounded transition-colors" />
+              <SidebarTrigger className="text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 rounded transition-colors h-6 w-6" />
             </div>
-            <SidebarGroupContent>
+            <SidebarGroupContent className="pb-1">
               <SidebarMenu>
                 <SidebarMenuItem>
                   <Link href={"/"}>
                     <SidebarMenuButton
                       tooltip="Início"
-                      className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                      className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7"
                     >
-                      <Home className="w-4 h-4 text-zinc-300" />
-                      <span className="text-zinc-100">Início</span>
+                      <Home className="w-3.5 h-3.5 text-zinc-300" />
+                      <span className="text-zinc-100 text-xs">Início</span>
                     </SidebarMenuButton>
 
                   </Link>
@@ -185,16 +185,16 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     tooltip="Templates"
-                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7"
                     onClick={() => setShowTemplates(true)}
                   >
-                    <FileText className="w-4 h-4 text-zinc-300" />
-                    <span className="text-zinc-100">Templates</span>
+                    <FileText className="w-3.5 h-3.5 text-zinc-300" />
+                    <span className="text-zinc-100 text-xs">Templates</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   {state === "collapsed" && (
-                    <div className="flex flex-col items-center py-4 border-b border-zinc-700 ">
+                    <div className="flex flex-col items-center py-2 border-b border-zinc-700 ">
                       <SidebarMenuButton
                         className="p-2 rounded-md hover:bg-zinc-700 text-zinc-300 cursor-pointer"
                         tooltip="Buscar"
@@ -205,23 +205,23 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
                     </div>
                   )}
                   {state !== "collapsed" && (
-                    <div className="py-2 border-b border-zinc-700 flex items-center gap-2">
+                    <div className="py-1 border-b border-zinc-700 flex items-center gap-2">
                       <div className="relative flex-1">
                         <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                          <Search className="w-4 h-4 text-zinc-400" />
+                          <Search className="w-3.5 h-3.5 text-zinc-400" />
                         </div>
                         <Input
                           placeholder="Buscar documentos..."
-                          className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-8 pr-16"
+                          className="bg-zinc-700 border-zinc-600 text-zinc-100 pl-7 pr-10 h-7 text-xs"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-0.5"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                           </button>
                         )}
                       </div>
@@ -234,8 +234,10 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
 
           {/* Tag Filter */}
           {state !== "collapsed" && (
-            <SidebarGroup>
-              <TagFilter className="px-2 py-2" />
+            <SidebarGroup className="shrink-0">
+              <SidebarGroupContent>
+                <TagFilter />
+              </SidebarGroupContent>
             </SidebarGroup>
           )}
 
@@ -253,48 +255,46 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
           />
 
           {/* Usuário + Configurações */}
-          <Separator orientation="horizontal" className="bg-zinc-700" />
+          <Separator orientation="horizontal" className="bg-zinc-700 my-1" />
           {!session?.user && (
-            <SidebarGroup className="mt-auto">
+            <SidebarGroup className="mt-auto shrink-0">
               <SidebarMenuItem>
                 <Link href="/login">
                   <SidebarMenuButton
                     tooltip="Entrar"
-                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7"
                   >
-                    <LogIn className="w-4 h-4 text-zinc-300" />
-                    <span className="text-zinc-100">Entrar</span>
+                    <LogIn className="w-3.5 h-3.5 text-zinc-300" />
+                    <span className="text-zinc-100 text-xs">Entrar</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
             </SidebarGroup>
           )}
           {session?.user && state !== "collapsed" && (
-            <SidebarGroup>
-              <SidebarMenuItem>
-                <div className="flex flex-col gap-1">
-                  <Link href="/settings">
-                    <NavUser
-                      name={session.user.name || "Usuário"}
-                      email={session.user.email || "m@example.com"}
-                      image={user?.image || ""}
-                    />
-                  </Link>
-                </div>
+            <SidebarGroup className="shrink-0">
+              <SidebarMenuItem className="m-0 p-0">
+                <Link href="/settings">
+                  <NavUser
+                    name={session.user.name || "Usuário"}
+                    email={session.user.email || "m@example.com"}
+                    image={user?.image || ""}
+                  />
+                </Link>
               </SidebarMenuItem>
             </SidebarGroup>
           )}
           {session?.user && state === "collapsed" && (
-            <SidebarGroup className="mt-auto">
+            <SidebarGroup className="mt-auto shrink-0">
               <SidebarMenuItem>
                 <Link href="/settings">
                   <SidebarMenuButton
                     tooltip={`${session.user.name || session.user.email || "Usuário"} - Configurações`}
-                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 p-2 flex items-center justify-center"
+                    className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 p-1.5 flex items-center justify-center"
                   >
-                    <Avatar className="w-10 h-10 border-2 border-zinc-600">
+                    <Avatar className="w-8 h-8 border border-zinc-100">
                       <AvatarImage src={session.user.image || ""} />
-                      <AvatarFallback className="bg-zinc-600 text-zinc-100 text-sm font-medium">
+                      <AvatarFallback className="bg-zinc-600 text-zinc-100 text-xs font-medium">
                         {(session.user.name || session.user.email || "U")?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -305,16 +305,16 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
           )}
 
           {/* Apoie o projeto */}
-          <SidebarGroup>
+          <SidebarGroup className="shrink-0">
             {state != "collapsed" ? (
               <SidebarMenuItem>
                 <a
                   href="https://mepagaumcafe.com.br/estevao/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Coffee className="w-4 h-4" />
+                  <Coffee className="w-3.5 h-3.5" />
                   Apoie o projeto ☕
                 </a>
               </SidebarMenuItem>
@@ -324,7 +324,7 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
                   href="https://mepagaumcafe.com.br/estevao/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 p-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Coffee className="w-4 h-4" />
                 </a>

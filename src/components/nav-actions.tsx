@@ -77,9 +77,9 @@ export function NavActions({ isOpenShareModal }: NavActionsProps) {
     if (!session?.user) {
         return (
             <>
-                <SidebarGroup>
-                    <SidebarGroupLabel className="text-zinc-400">Ações</SidebarGroupLabel>
-                    <SidebarGroupContent>
+                <SidebarGroup className="shrink-0">
+                    <SidebarGroupLabel className="text-zinc-400 text-xs">Ações</SidebarGroupLabel>
+                    <SidebarGroupContent className="">
                         <SidebarMenu>
                             <SidebarMenuItem className="dark">
                                 <DownloadButton />
@@ -93,9 +93,9 @@ export function NavActions({ isOpenShareModal }: NavActionsProps) {
 
     return (
         <>
-            <SidebarGroup>
-                <SidebarGroupLabel className="text-zinc-400">Ações</SidebarGroupLabel>
-                <SidebarGroupContent>
+            <SidebarGroup className="shrink-0">
+                <SidebarGroupLabel className="text-zinc-400 text-xs">Ações</SidebarGroupLabel>
+                <SidebarGroupContent className="pb-0">
                     <SidebarMenu>
                         <SidebarMenuItem className="dark">
                             <DownloadButton />
@@ -107,14 +107,14 @@ export function NavActions({ isOpenShareModal }: NavActionsProps) {
                                         onClick={handleOpenSyncDialog}
                                         disabled={isSyncing}
                                         tooltip={isSyncing ? "Sincronizando..." : "Sincronizar documentos com a nuvem"}
-                                        className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                                        className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7"
                                     >
                                         {isSyncing ? (
-                                            <Loader2 className="w-4 h-4 text-zinc-300 animate-spin" />
+                                            <Loader2 className="w-3.5 h-3.5 text-zinc-300 animate-spin" />
                                         ) : (
-                                            <Cloud className="w-4 h-4 text-zinc-300" />
+                                            <Cloud className="w-3.5 h-3.5 text-zinc-300" />
                                         )}
-                                        <span className="text-zinc-100">
+                                        <span className="text-zinc-100 text-xs">
                                             {isSyncing ? "Sincronizando..." : "Sincronizar"}
                                         </span>
                                     </SidebarMenuButton>
@@ -124,14 +124,14 @@ export function NavActions({ isOpenShareModal }: NavActionsProps) {
                                         onClick={handleOpenCloudDialog}
                                         disabled={isCheckingCloud}
                                         tooltip={isCheckingCloud ? "Verificando..." : "Verificar e baixar documentos da nuvem"}
-                                        className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200"
+                                        className="hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7"
                                     >
                                         {isCheckingCloud ? (
-                                            <Loader2 className="w-4 h-4 text-zinc-300 animate-spin" />
+                                            <Loader2 className="w-3.5 h-3.5 text-zinc-300 animate-spin" />
                                         ) : (
-                                            <CloudDownload className="w-4 h-4 text-zinc-300" />
+                                            <CloudDownload className="w-3.5 h-3.5 text-zinc-300" />
                                         )}
-                                        <span className="text-zinc-100">
+                                        <span className="text-zinc-100 text-xs">
                                             {isCheckingCloud ? "Verificando..." : "Verificar Nuvem"}
                                         </span>
                                     </SidebarMenuButton>

@@ -190,6 +190,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   // RF-05, RF-06: Sincronização automática e pós-login
   const hasLoadedFromServer = useRef(false);
   const hasSyncedLocalDocs = useRef(false);
+  const hasLoadedFoldersFromServer = useRef(false);
+  const hasSyncedLocalFolders = useRef(false);
   
   useEffect(() => {
     const loadFromServerAndSync = async () => {
@@ -245,14 +247,98 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user, storage.isReady, isLoading]);
 
+  // Carregar e sincronizar pastas do servidor
+  useEffect(() => {
+    const loadFoldersFromServerAndSync = async () => {
+      // Apenas quando usuário estiver autenticado
+      if (!session?.user || !storage.isReady || isLoading || hasLoadedFoldersFromServer.current) return;
+
+      try {
+        // Aguarda um pouco para garantir que os dados locais foram carregados primeiro
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Busca pastas do servidor
+        const response = await fetch("/api/folders", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const cloudFolders = (data.folders || []) as Folder[];
+
+          // Carrega pastas locais
+          const localFolders = await storage.loadFolders();
+
+          // Mescla pastas: prioriza nuvem, adiciona locais que não estão na nuvem
+          const mergedFolders = [...cloudFolders];
+          for (const localFolder of localFolders) {
+            if (!mergedFolders.some(f => f.id === localFolder.id)) {
+              mergedFolders.push(localFolder);
+            }
+          }
+
+          setFolders(mergedFolders);
+
+          // Sincronizar pastas locais criadas sem autenticação no primeiro login
+          if (!hasSyncedLocalFolders.current) {
+            const localOnlyFolders = localFolders.filter(
+              (localFolder: Folder) => !cloudFolders.some((cloudFolder: Folder) => cloudFolder.id === localFolder.id)
+            );
+
+            if (localOnlyFolders.length > 0) {
+              try {
+                // Transferir pastas locais para nuvem e vincular ao usuário
+                await fetch("/api/folders", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({ folders: localOnlyFolders }),
+                });
+                
+                toast.showToast(`✅ ${localOnlyFolders.length} pasta(s) local(is) sincronizada(s) com a nuvem!`);
+                
+                // Recarrega pastas do servidor após sincronização
+                const updatedResponse = await fetch("/api/folders", {
+                  credentials: "include",
+                  cache: "no-store",
+                });
+                if (updatedResponse.ok) {
+                  const updatedData = await updatedResponse.json();
+                  setFolders(updatedData.folders || []);
+                }
+              } catch (syncError) {
+                console.error("Erro ao sincronizar pastas locais:", syncError);
+                toast.showToast("⚠️ Algumas pastas locais não puderam ser sincronizadas.");
+              }
+            }
+            
+            hasSyncedLocalFolders.current = true;
+          }
+        }
+
+        hasLoadedFoldersFromServer.current = true;
+      } catch (error) {
+        console.error("Erro ao carregar pastas do servidor:", error);
+        hasLoadedFoldersFromServer.current = true;
+      }
+    };
+
+    loadFoldersFromServerAndSync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user, storage.isReady, isLoading]);
+
   // Reset flags quando usuário faz logout/login
   useEffect(() => {
     if (!session?.user) {
       hasLoadedFromServer.current = false;
       hasSyncedLocalDocs.current = false;
+      hasLoadedFoldersFromServer.current = false;
+      hasSyncedLocalFolders.current = false;
     } else {
       // RF-06: Reset para permitir nova sincronização no login
       hasSyncedLocalDocs.current = false;
+      hasSyncedLocalFolders.current = false;
     }
   }, [session?.user]);
 
@@ -315,8 +401,10 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     }
   }, [debouncedDocuments, isLoading, storage.isReady, currentDocId, toast, session?.user]);
 
+  // Apenas salva pastas localmente se usuário NÃO estiver autenticado
   useEffect(() => {
-    if (!isLoading && storage.isReady) {
+    if (!isLoading && storage.isReady && !session?.user) {
+      // RF-03: Apenas salva localmente quando usuário não está autenticado
       storage.saveFolders(debouncedFolders).catch((error) => {
         console.error("Erro ao salvar pastas:", error);
         if (error.message?.includes('insuficiente')) {
@@ -326,7 +414,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         }
       });
     }
-  }, [debouncedFolders, isLoading, storage.isReady, toast]);
+  }, [debouncedFolders, isLoading, storage.isReady, toast, session?.user]);
 
   useEffect(() => {
     if (!isLoading && storage.isReady) {
@@ -473,6 +561,45 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       }, 2000); // 2 segundos de debounce
     },
     [saveDocumentToCloud]
+  );
+
+  // Função para salvar pasta na nuvem
+  const saveFolderToCloud = useCallback(
+    async (folder: Folder) => {
+      if (!session?.user) {
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/folders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ folders: [folder] }),
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao salvar pasta na nuvem");
+        }
+      } catch (error) {
+        console.error("Erro ao salvar pasta na nuvem:", error);
+      }
+    },
+    [session?.user]
+  );
+
+  // Debounced version para salvar pastas na nuvem
+  const folderCloudSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveFolderToCloudDebounced = useCallback(
+    (folder: Folder) => {
+      if (folderCloudSaveTimeoutRef.current) {
+        clearTimeout(folderCloudSaveTimeoutRef.current);
+      }
+      folderCloudSaveTimeoutRef.current = setTimeout(() => {
+        saveFolderToCloud(folder);
+      }, 2000); // 2 segundos de debounce
+    },
+    [saveFolderToCloud]
   );
 
   // RF-02: Criar documento com salvamento automático na nuvem se autenticado
@@ -639,44 +766,84 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   );
 
   // Folder operations
-  const createFolder = useCallback((name: string, parentId?: string) => {
-    const newFolder: Folder = {
-      id: crypto.randomUUID(),
-      name,
-      createdAt: new Date().toISOString(),
-      parentId: parentId || null,
-    };
-    setFolders((prev) => [...prev, newFolder]);
-  }, []);
+  const createFolder = useCallback(
+    async (name: string, parentId?: string) => {
+      const newFolder: Folder = {
+        id: crypto.randomUUID(),
+        name,
+        createdAt: new Date().toISOString(),
+        parentId: parentId || null,
+      };
+      setFolders((prev) => [...prev, newFolder]);
 
-  const deleteFolder = useCallback((folderId: string) => {
-    // Recursive function to get all subfolder IDs
-    const getSubfolderIds = (id: string, allFolders: Folder[]): string[] => {
-      const children = allFolders.filter(f => f.parentId === id);
-      return [id, ...children.flatMap(child => getSubfolderIds(child.id, allFolders))];
-    };
+      // RF-02: Se autenticado, salva automaticamente na nuvem
+      if (session?.user) {
+        await saveFolderToCloud(newFolder);
+      }
+      // RF-03: Se não autenticado, permanece apenas local (será sincronizado no login)
+    },
+    [session?.user, saveFolderToCloud]
+  );
 
-    setFolders((currentFolders) => {
-      const foldersToDelete = getSubfolderIds(folderId, currentFolders);
+  const deleteFolder = useCallback(
+    async (folderId: string) => {
+      // Recursive function to get all subfolder IDs
+      const getSubfolderIds = (id: string, allFolders: Folder[]): string[] => {
+        const children = allFolders.filter(f => f.parentId === id);
+        return [id, ...children.flatMap(child => getSubfolderIds(child.id, allFolders))];
+      };
 
-      // Move documents from all deleted folders to root
-      setDocuments((prevDocs) =>
-        prevDocs.map((doc) =>
-          doc.folderId && foldersToDelete.includes(doc.folderId)
-            ? { ...doc, folderId: null }
-            : doc
-        )
+      setFolders((currentFolders) => {
+        const foldersToDelete = getSubfolderIds(folderId, currentFolders);
+
+        // Move documents from all deleted folders to root
+        setDocuments((prevDocs) =>
+          prevDocs.map((doc) =>
+            doc.folderId && foldersToDelete.includes(doc.folderId)
+              ? { ...doc, folderId: null }
+              : doc
+          )
+        );
+
+        // RF-02: Se autenticado, deleta também da nuvem
+        if (session?.user) {
+          fetch("/api/folders", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ folderIds: foldersToDelete }),
+          }).catch((error) => {
+            console.error("Erro ao deletar pastas na nuvem:", error);
+            toast.showToast("⚠️ Pastas deletadas localmente, mas houve erro ao deletar na nuvem.");
+          });
+        }
+
+        return currentFolders.filter((f) => !foldersToDelete.includes(f.id));
+      });
+    },
+    [session?.user, toast]
+  );
+
+  const renameFolder = useCallback(
+    (folderId: string, name: string) => {
+      let updatedFolder: Folder | null = null;
+      setFolders((prev) =>
+        prev.map((f) => {
+          if (f.id === folderId) {
+            updatedFolder = { ...f, name };
+            return updatedFolder;
+          }
+          return f;
+        })
       );
 
-      return currentFolders.filter((f) => !foldersToDelete.includes(f.id));
-    });
-  }, []);
-
-  const renameFolder = useCallback((folderId: string, name: string) => {
-    setFolders((prev) =>
-      prev.map((f) => (f.id === folderId ? { ...f, name } : f))
-    );
-  }, []);
+      // RF-02, RF-05: Se autenticado, sincroniza automaticamente
+      if (session?.user && updatedFolder) {
+        saveFolderToCloudDebounced(updatedFolder);
+      }
+    },
+    [session?.user, saveFolderToCloudDebounced]
+  );
 
   const moveDocumentToFolder = useCallback(
     (docId: string, folderId: string | null) => {

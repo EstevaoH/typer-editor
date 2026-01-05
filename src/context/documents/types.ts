@@ -82,8 +82,8 @@ export interface DocumentsContextType {
   undoDelete: () => string | null;
 
   // Folder methods
-  createFolder: (name: string, parentId?: string) => void;
-  deleteFolder: (id: string) => void;
+  createFolder: (name: string, parentId?: string) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
   renameFolder: (id: string, name: string) => void;
   moveDocumentToFolder: (docId: string, folderId: string | null) => void;
   downloadFolder: (folderId: string) => Promise<void>;

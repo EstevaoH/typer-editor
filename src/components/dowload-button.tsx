@@ -18,12 +18,12 @@ export function DownloadButton() {
         <DropdownMenu  >
             <DropdownMenuTrigger className="dark" asChild>
                 <SidebarMenuButton
-                    className="hover:bg-zinc-700 cursor-pointer"
+                    className="hover:bg-zinc-700 cursor-pointer h-7"
                     disabled={!currentDocument}
                     tooltip="Baixar"
                 >
-                    <Download className="w-4 h-4 text-zinc-300" />
-                    <span className="text-zinc-100">Baixar</span>
+                    <Download className="w-3.5 h-3.5 text-zinc-300" />
+                    <span className="text-zinc-100 text-xs">Baixar</span>
                 </SidebarMenuButton>
             </DropdownMenuTrigger>
 

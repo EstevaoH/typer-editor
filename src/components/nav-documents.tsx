@@ -82,7 +82,7 @@ export function NavDocuments({
     [filteredDocuments]
   );
   return (
-    <SidebarGroup className="flex-1 overflow-hidden">
+    <SidebarGroup className="flex-1 min-h-0 overflow-hidden">
       {state === "collapsed" && (
         <div className="flex flex-col items-center gap-2">
           {allDocuments.length === 0 && folders.length === 0 ? (
