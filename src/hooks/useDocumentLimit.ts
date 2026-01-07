@@ -1,16 +1,25 @@
 import { useToast } from "@/context/toast-context";
 import { useCallback } from "react";
+import { useSession } from "next-auth/react";
 
-export function useDocumentLimit(documents: any[], MAX_DOCUMENTS: number) {
+export function useDocumentLimit(documents: any[], defaultMax: number) {
   const toast = useToast();
-  const isLimitReached = documents.length >= MAX_DOCUMENTS;
+  const { data: session } = useSession();
+
+  const userPlan = (session?.user as any)?.plan || "FREE";
+  const isPro = userPlan === "PRO";
+
+  // Free: 5 docs, Pro: Unlimited (Infinity)
+  const MAX_DOCUMENTS = isPro ? Infinity : 5;
+
+  const isLimitReached = !isPro && documents.length >= MAX_DOCUMENTS;
   const canCreate = !isLimitReached;
 
-  const remaining = Math.max(0, MAX_DOCUMENTS - documents.length);
+  const remaining = isPro ? Infinity : Math.max(0, MAX_DOCUMENTS - documents.length);
 
   const checkLimit = useCallback(() => {
     if (isLimitReached) {
-      toast.showToast(`⚠️ Limite de ${MAX_DOCUMENTS} documentos atingido`);
+      toast.showToast(`⚠️ Você atingiu o limite de ${MAX_DOCUMENTS} documentos do plano Gratuito. Faça upgrade para criar mais!`);
       return false;
     }
     return true;
@@ -20,6 +29,7 @@ export function useDocumentLimit(documents: any[], MAX_DOCUMENTS: number) {
     canCreate,
     isLimitReached,
     remaining,
-    checkLimit
+    checkLimit,
+    isPro
   };
 }

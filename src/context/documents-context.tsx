@@ -192,7 +192,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const hasSyncedLocalDocs = useRef(false);
   const hasLoadedFoldersFromServer = useRef(false);
   const hasSyncedLocalFolders = useRef(false);
-  
+
   useEffect(() => {
     const loadFromServerAndSync = async () => {
       // RF-01: Apenas quando usuário estiver autenticado
@@ -205,7 +205,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         // RF-01: Busca apenas documentos do usuário do servidor
         const currentDocs = documents.length > 0 ? documents : await storage.loadDocuments();
         const mergedDocs = await (documentSync as any).syncFromServer(currentDocs);
-        
+
         // RF-01: Atualiza com documentos mesclados (apenas do usuário)
         setDocuments(mergedDocs);
         // Não salva localmente quando usuário está autenticado - apenas na nuvem
@@ -222,7 +222,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
               // RF-04: Transferir documentos locais para nuvem e vincular ao usuário
               await (documentSync as any).syncToServer(localOnlyDocs);
               toast.showToast(`✅ ${localOnlyDocs.length} documento(s) local(is) sincronizado(s) com a nuvem!`);
-              
+
               // Recarrega documentos do servidor após sincronização
               const updatedDocs = await (documentSync as any).syncFromServer(mergedDocs);
               setDocuments(updatedDocs);
@@ -232,7 +232,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
               toast.showToast("⚠️ Alguns documentos locais não puderam ser sincronizados.");
             }
           }
-          
+
           hasSyncedLocalDocs.current = true;
         }
 
@@ -295,9 +295,9 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
                   credentials: "include",
                   body: JSON.stringify({ folders: localOnlyFolders }),
                 });
-                
+
                 toast.showToast(`✅ ${localOnlyFolders.length} pasta(s) local(is) sincronizada(s) com a nuvem!`);
-                
+
                 // Recarrega pastas do servidor após sincronização
                 const updatedResponse = await fetch("/api/folders", {
                   credentials: "include",
@@ -312,7 +312,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
                 toast.showToast("⚠️ Algumas pastas locais não puderam ser sincronizadas.");
               }
             }
-            
+
             hasSyncedLocalFolders.current = true;
           }
         }
@@ -453,7 +453,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
   // Carregar templates da nuvem quando usuário estiver autenticado
   const hasLoadedTemplatesFromServer = useRef(false);
-  
+
   useEffect(() => {
     const loadTemplatesFromServer = async () => {
       if (!session?.user || !storage.isReady || isLoading || hasLoadedTemplatesFromServer.current) return;
@@ -467,18 +467,18 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           const data = await response.json();
           const cloudTemplates = data.templates || [];
-          
+
           // Mesclar templates locais com templates da nuvem
           const localTemplates = await storage.loadTemplates();
           const mergedTemplates = [...cloudTemplates];
-          
+
           // Adicionar templates locais que não estão na nuvem
           for (const localTemplate of localTemplates) {
             if (!mergedTemplates.some(t => t.id === localTemplate.id)) {
               mergedTemplates.push(localTemplate);
             }
           }
-          
+
           setTemplates(mergedTemplates);
           hasLoadedTemplatesFromServer.current = true;
         }
@@ -627,7 +627,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       setDocuments((prev) => [newDoc, ...prev]);
       setCurrentDocId(newDoc.id);
       setHasHandledFirstInput(true);
-      
+
       // RF-02: Se autenticado, salva na nuvem automaticamente
       if (session?.user) {
         await saveDocumentToCloud(newDoc);
@@ -642,16 +642,16 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
   const handleUpdateDocument = useCallback(
     (updates: Partial<Document>) => {
       if (!currentDocId) return;
-      
+
       // RF-07: Sempre atualiza localmente primeiro
       documentOps.updateDocument(updates);
-      
+
       // RF-02, RF-05: Se autenticado, sincroniza automaticamente com debounce
       if (session?.user && currentDocument) {
-        const updatedDoc = { 
-          ...currentDocument, 
-          ...updates, 
-          updatedAt: new Date().toISOString() 
+        const updatedDoc = {
+          ...currentDocument,
+          ...updates,
+          updatedAt: new Date().toISOString()
         };
         saveDocumentToCloudDebounced(updatedDoc);
       }
@@ -1024,6 +1024,16 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       isFavorite: false,
     };
 
+    // Check limits for Free plan
+    const userPlan = (session?.user as any)?.plan || "FREE";
+    const isPro = userPlan === "PRO";
+    const MAX_TEMPLATES = isPro ? Infinity : 2;
+
+    if (!isPro && templates.length >= MAX_TEMPLATES) {
+      toast.showToast(`⚠️ Limite de ${MAX_TEMPLATES} templates atingido no plano Gratuito.`);
+      return;
+    }
+
     // Sempre adiciona ao estado local primeiro
     setTemplates(prev => [...prev, newTemplate]);
 
@@ -1108,12 +1118,12 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     // RF-07: Sempre salva localmente primeiro
     setDocuments(prev => [newDoc, ...prev]);
     setCurrentDocId(newDoc.id);
-    
+
     // RF-02: Se autenticado, salva na nuvem automaticamente
     if (session?.user) {
       await saveDocumentToCloud(newDoc);
     }
-    
+
     toast.showToast("✅ Novo documento criado a partir do template!");
   }, [templates, systemTemplates, checkLimit, toast, session?.user, saveDocumentToCloud]);
 
@@ -1123,7 +1133,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       toast.showToast("❌ Você precisa estar logado para sincronizar documentos.");
       return;
     }
-    
+
     try {
       await documentSync.syncManual(documents, setDocuments);
       toast.showToast("✅ Documentos sincronizados com sucesso!");
@@ -1139,7 +1149,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         toast.showToast("❌ Você precisa estar logado para sincronizar documentos.");
         return;
       }
-      
+
       try {
         await (documentSync as any).syncSelected(documents, selectedIds, setDocuments);
         toast.showToast("✅ Documentos selecionados sincronizados com sucesso!");
@@ -1155,7 +1165,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
     if (!session?.user) {
       return { newDocuments: [], updatedDocuments: [] };
     }
-    
+
     return await (documentSync as any).checkCloudDocuments(documents);
   }, [documentSync, documents, session?.user]);
 
@@ -1181,8 +1191,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
 
       requiredFolderIds.forEach((folderId) => {
         if (!existingFolderIds.has(folderId)) {
-          const folderName = foldersToCreate.length === 0 
-            ? "Nova Pasta" 
+          const folderName = foldersToCreate.length === 0
+            ? "Nova Pasta"
             : `Nova Pasta ${foldersToCreate.length + 1}`;
 
           foldersToCreate.push({

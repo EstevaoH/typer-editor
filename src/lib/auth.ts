@@ -86,7 +86,7 @@ export const authOptions: NextAuthOptions = {
             // Criar novo usuário
             const userId = uuidv4();
             await client.execute({
-              sql: "INSERT INTO users (id, name, email, password_hash, provider, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+              sql: "INSERT INTO users (id, name, email, password_hash, provider, created_at, plan) VALUES (?, ?, ?, ?, ?, ?, 'FREE')",
               args: [
                 userId,
                 user.name || user.email?.split("@")[0] || "Usuário",
@@ -117,12 +117,35 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = (user as any).id;
+        token.plan = (user as any).plan || "FREE"; // Defaults
       }
+
+      // Refresh user data from DB to get latest plan status on every session refresh
+      if (token.email) {
+        try {
+          const client = getTursoClient();
+          const result = await client.execute({
+            sql: "SELECT plan, customer_id, subscription_status FROM users WHERE email = ?",
+            args: [token.email]
+          });
+          if (result.rows.length > 0) {
+            token.plan = result.rows[0].plan;
+            token.customer_id = result.rows[0].customer_id;
+            token.subscription_status = result.rows[0].subscription_status;
+          }
+        } catch (e) {
+          console.error("Error fetching user plan details", e);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user && token?.id) {
         (session.user as any).id = token.id;
+        (session.user as any).plan = token.plan;
+        (session.user as any).customer_id = token.customer_id;
+        (session.user as any).subscription_status = token.subscription_status;
       }
       return session;
     },

@@ -1,0 +1,4 @@
+ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'FREE';
+ALTER TABLE users ADD COLUMN customer_id TEXT;
+ALTER TABLE users ADD COLUMN subscription_id TEXT;
+ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'INACTIVE';

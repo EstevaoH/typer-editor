@@ -10,12 +10,14 @@ import { HignlightSelector } from './hignlight-selector';
 import { VideoSelector } from './video-selector';
 import { ImageSelector } from './image-selector';
 import { LinkSelector } from './link-selector';
-import { BoldIcon, Code2Icon, ItalicIcon, Keyboard, QuoteIcon, Redo2, Search, StrikethroughIcon, UnderlineIcon, Undo2 } from 'lucide-react';
+import { BoldIcon, Code2Icon, ItalicIcon, Keyboard, QuoteIcon, Redo2, Search, StrikethroughIcon, UnderlineIcon, Undo2, Subscript as SubscriptIcon, Superscript as SuperscriptIcon, Minus, RemoveFormatting } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import { ThemeToggle } from './theme-toggle';
 import { VersionHistoryDialog } from './version-history-dialog';
 import { FontSelector } from './font-selector';
 import { SidebarTrigger, useSidebar } from './ui/sidebar';
+import { TextIndentControls } from './text-indent-controls';
+import { CodeBlockSelector } from './code-block-selector';
 
 interface ToolBarProps {
     editor: Editor | null;
@@ -66,30 +68,74 @@ export function ToolBar({ editor }: ToolBarProps) {
                     <UnderlineIcon className="w-4 h-4" />
                 </button>
 
+                {/* Subscript/Superscript */}
                 <button
-                    onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                    className={`p-2 rounded cursor-pointer ${editor.isActive('codeBlock') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
-                    title="Bloco de código (Ctrl+Alt+C)"
+                    onClick={() => editor.chain().focus().toggleSubscript().run()}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('subscript') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    title="Subscrito"
                 >
-                    <Code2Icon className="w-4 h-4" />
+                    <SubscriptIcon className="w-4 h-4" />
                 </button>
+                <button
+                    onClick={() => editor.chain().focus().toggleSuperscript().run()}
+                    className={`p-2 rounded cursor-pointer ${editor.isActive('superscript') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                    title="Sobrescrito"
+                >
+                    <SuperscriptIcon className="w-4 h-4" />
+                </button>
+
+                {/* Clear Formatting */}
+                <button
+                    onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+                    className="p-2 rounded cursor-pointer text-zinc-300 hover:bg-zinc-700"
+                    title="Limpar Formatação (Ctrl+\\)"
+                >
+                    <RemoveFormatting className="w-4 h-4" />
+                </button>
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-zinc-700 mx-1" />
+
+                {/* Heading, Font, Colors */}
+                <HeadingSelector editor={editor} />
+                <FontSelector />
+                <HignlightSelector editor={editor} />
+                <ColorSelector editor={editor} />
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-zinc-700 mx-1" />
+
+                {/* Alignment and Indentation */}
+                <AlignmentSelector editor={editor} />
+                <TextIndentControls editor={editor} />
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-zinc-700 mx-1" />
+
+                {/* Lists */}
+                <ListSelector editor={editor} />
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-zinc-700 mx-1" />
+
+                {/* Code and Quote */}
+                <CodeBlockSelector editor={editor} />
                 <button
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     className={`p-2 rounded cursor-pointer ${editor.isActive('blockquote') ? 'bg-zinc-600 text-white' : 'text-zinc-300 hover:bg-zinc-700'}`}
-                    title="Destaque (Ctrl+Shift+B)"
+                    title="Citação (Ctrl+Shift+B)"
                 >
                     <QuoteIcon className="w-4 h-4" />
                 </button>
-                <FontSelector />
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-zinc-700 mx-1" />
+
+                {/* Insertions */}
                 <LinkSelector editor={editor} />
                 <ImageSelector editor={editor} />
                 <VideoSelector editor={editor} />
                 <ReferenceDialog editor={editor} />
-                <HignlightSelector editor={editor} />
-                <ColorSelector editor={editor} />
-                <HeadingSelector editor={editor} />
-                <AlignmentSelector editor={editor} />
-                <ListSelector editor={editor} />
                 <div className="control-group">
                     <div className="button-group flex items-center gap-1">
                         <button

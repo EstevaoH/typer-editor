@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getTursoClient } from "@/lib/turso";
 import bcrypt from "bcryptjs";
+import { cancelSubscription } from "@/lib/abacate";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -140,6 +141,30 @@ export async function DELETE() {
   const client = getTursoClient();
 
   try {
+    // Verificar se o usuário tem uma assinatura ativa
+    const userResult = await client.execute({
+      sql: "SELECT subscription_id, plan FROM users WHERE id = ? LIMIT 1",
+      args: [userId],
+    });
+
+    if (userResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      const subscriptionId = user.subscription_id as string | null;
+      const plan = user.plan as string | null;
+
+      // Se o usuário tem uma assinatura Pro ativa, cancelar no AbacatePay
+      if (subscriptionId && plan === "PRO") {
+        try {
+          await cancelSubscription(subscriptionId);
+          console.log(`Assinatura ${subscriptionId} cancelada antes de excluir conta`);
+        } catch (error) {
+          console.error("Erro ao cancelar assinatura no AbacatePay:", error);
+          // Continua com a exclusão mesmo se falhar o cancelamento
+          // para não bloquear o usuário de excluir sua conta
+        }
+      }
+    }
+
     // Excluir documentos do usuário
     await client.execute({
       sql: "DELETE FROM documents WHERE user_id = ?",
@@ -147,16 +172,23 @@ export async function DELETE() {
     });
 
     // Tentar excluir pastas (se a tabela existir e tiver user_id)
-    // Para evitar erros se a tabela não existir ou não tiver a coluna, poderíamos verificar antes,
-    // mas assumindo que a feature de pastas foi implementada recentemente:
     try {
       await client.execute({
         sql: "DELETE FROM folders WHERE user_id = ?",
         args: [userId],
       });
     } catch (e) {
-      // Ignorar erro se tabela folders não existir ou falhar, focando no principal
       console.warn("Erro ao tentar excluir pastas ou tabela inexistente:", e);
+    }
+
+    // Tentar excluir templates do usuário
+    try {
+      await client.execute({
+        sql: "DELETE FROM templates WHERE user_id = ?",
+        args: [userId],
+      });
+    } catch (e) {
+      console.warn("Erro ao tentar excluir templates ou tabela inexistente:", e);
     }
 
     // Excluir o usuário
@@ -174,6 +206,7 @@ export async function DELETE() {
     );
   }
 }
+
 
 
 

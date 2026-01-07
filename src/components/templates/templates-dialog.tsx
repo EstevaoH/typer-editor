@@ -10,8 +10,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { FileText, Trash2, Plus, Copy } from "lucide-react"
+import { FileText, Trash2, Plus, Copy, Lock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { useSession } from "next-auth/react"
 import { ptBR } from "date-fns/locale"
 
 interface TemplatesDialogProps {
@@ -21,6 +22,10 @@ interface TemplatesDialogProps {
 
 export function TemplatesDialog({ open, onOpenChange }: TemplatesDialogProps) {
     const { templates, systemTemplates, createDocumentFromTemplate, deleteTemplate } = useDocuments()
+    const { data: session } = useSession()
+
+    const userPlan = (session?.user as any)?.plan || "FREE"
+    const isPro = userPlan === "PRO"
 
     const handleUseTemplate = async (templateId: string) => {
         await createDocumentFromTemplate(templateId)
@@ -46,39 +51,54 @@ export function TemplatesDialog({ open, onOpenChange }: TemplatesDialogProps) {
                                     Templates Padrão do Sistema
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {systemTemplates.map((template) => (
-                                        <div
-                                            key={template.id}
-                                            className="group relative flex flex-col justify-between p-4 rounded-lg border bg-card text-card-foreground hover:shadow-md transition-shadow"
-                                        >
-                                            <div>
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <h3 className="font-semibold leading-none tracking-tight truncate max-w-[80%]">
-                                                        {template.title}
-                                                    </h3>
-                                                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                                                        Sistema
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground mt-2 line-clamp-2 min-h-[40px]">
-                                                    {template.description || "Sem descrição"}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-                                                    <span className="bg-secondary px-2 py-0.5 rounded-full">
-                                                        {template.category || "Geral"}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                    {systemTemplates.map((template) => {
+                                        const isLocked = !isPro && template.category !== "Basico";
 
-                                            <Button
-                                                className="w-full mt-4 gap-2"
-                                                onClick={() => handleUseTemplate(template.id)}
+                                        return (
+                                            <div
+                                                key={template.id}
+                                                className={`group relative flex flex-col justify-between p-4 rounded-lg border bg-card text-card-foreground transition-shadow ${isLocked ? 'opacity-70' : 'hover:shadow-md'}`}
                                             >
-                                                <Copy className="w-4 h-4" />
-                                                Usar Template
-                                            </Button>
-                                        </div>
-                                    ))}
+                                                <div>
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <h3 className="font-semibold leading-none tracking-tight truncate max-w-[80%]">
+                                                            {template.title}
+                                                        </h3>
+                                                        {isLocked ? (
+                                                            <span className="text-xs bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                <Lock className="w-3 h-3" /> Pro
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                                                Sistema
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2 min-h-[40px]">
+                                                        {template.description || "Sem descrição"}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
+                                                        <span className="bg-secondary px-2 py-0.5 rounded-full">
+                                                            {template.category || "Geral"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <Button
+                                                    className="w-full mt-4 gap-2"
+                                                    variant={isLocked ? "outline" : "default"}
+                                                    disabled={isLocked}
+                                                    onClick={() => !isLocked && handleUseTemplate(template.id)}
+                                                >
+                                                    {isLocked ? (
+                                                        <><Lock className="w-4 h-4" /> Bloqueado</>
+                                                    ) : (
+                                                        <><Copy className="w-4 h-4" /> Usar Template</>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}

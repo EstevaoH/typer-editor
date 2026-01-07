@@ -24,8 +24,10 @@ import Image from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
 import Blockquote from '@tiptap/extension-blockquote'
 import Document from '@tiptap/extension-document'
-import { Placeholder } from '@tiptap/extensions'
+import { Placeholder } from '@tiptap/extensions';
 import SearchNReplace from '@sereneinserenade/tiptap-search-and-replace';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
 
 const limit = 42400;
 const lowlight = createLowlight(all);
@@ -44,7 +46,7 @@ export const editorExtensions: any[] = [
   }),
   SearchNReplace.configure({
     searchResultClass: 'search-result',
-    disableRegex: false, 
+    disableRegex: false,
   }),
   Document,
   Underline,
@@ -150,6 +152,11 @@ export const editorExtensions: any[] = [
     nested: true,
   }),
   ListKeymap,
+  Subscript,
+  Superscript,
+  // FontFamily.configure({
+  //   types: ['textStyle'],
+  // }),
 ];
 
 export const editorProps = {
