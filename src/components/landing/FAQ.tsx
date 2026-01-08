@@ -8,31 +8,43 @@ export function FAQ({ onOpenContact }: FAQProps) {
   const faqs = [
     {
       question: "O que é o TyperEditor?",
-      answer: "O TyperEditor é um editor de texto online que permite criar, editar e exportar documentos diretamente no seu navegador, sem necessidade de instalação."
+      answer: "O TyperEditor é um editor de texto online moderno que permite criar, editar, organizar e exportar documentos diretamente no seu navegador. Com sincronização em nuvem, organização em pastas, templates e muito mais."
     },
     {
       question: "Preciso criar uma conta para usar?",
-      answer: "Não! O TyperEditor funciona sem cadastro. Seus documentos são salvos localmente no seu navegador."
+      answer: "Não é obrigatório! Você pode usar o TyperEditor sem criar conta, e seus documentos serão salvos localmente no navegador. Porém, criar uma conta (gratuita) permite sincronização na nuvem, acesso de múltiplos dispositivos e backup automático dos seus documentos."
     },
     {
       question: "Onde meus documentos são salvos?",
-      answer: "Seus documentos são armazenados localmente no seu navegador. Recomendamos exportar cópias de segurança importantes."
+      answer: "Se você não estiver logado, os documentos são salvos apenas localmente no seu navegador. Se você criar uma conta e fizer login, seus documentos são sincronizados na nuvem (banco de dados Turso), permitindo acesso de qualquer dispositivo e backup automático."
+    },
+    {
+      question: "Como funciona o plano Pro?",
+      answer: "O plano Pro oferece acesso vitalício por um pagamento único de R$ 15,00 via PIX. Inclui documentos ilimitados, templates ilimitados, acesso a todos os templates do sistema e sincronização em nuvem. Não há renovação mensal - é vitalício!"
+    },
+    {
+      question: "Quais são as diferenças entre o plano Gratuito e Pro?",
+      answer: "O plano Gratuito permite até 5 documentos e 2 templates personalizados. O plano Pro oferece documentos ilimitados, templates ilimitados, acesso a todos os templates do sistema e sincronização completa na nuvem."
+    },
+    {
+      question: "Posso usar login social?",
+      answer: "Sim! Você pode criar conta usando Google ou GitHub, além do registro tradicional com email e senha. Todos os métodos oferecem as mesmas funcionalidades."
     },
     {
       question: "Quais formatos de exportação são suportados?",
-      answer: "TXT, MD, DOCX, PDF e em breve mais formatos."
+      answer: "Você pode exportar seus documentos em TXT, MD, DOCX, PDF e outros formatos populares, preservando a formatação quando possível."
     },
     {
       question: "Funciona em smartphones e tablets?",
-      answer: "Sim! O TyperEditor é totalmente responsivo e funciona em qualquer dispositivo com navegador moderno."
+      answer: "Sim! O TyperEditor é totalmente responsivo e funciona perfeitamente em qualquer dispositivo com navegador moderno - desktop, tablet ou smartphone."
     },
     {
-      question: "Como posso apoiar o projeto?",
-      answer: "Você pode apoiar o desenvolvimento do TyperEditor me pagando um café! Todo apoio ajuda a manter e melhorar a ferramenta. Clique no botão 'Me pague um café' no rodapé ou no menu lateral."
+      question: "Meus dados estão seguros?",
+      answer: "Sim! Dados são criptografados em trânsito (HTTPS) e em repouso. Para usuários logados, os dados são armazenados em servidores seguros. Para não logados, os dados ficam apenas no seu dispositivo. Consulte nossa Política de Privacidade para mais detalhes."
     },
     {
-      question: "O projeto é open source?",
-      answer: "Sim! O TyperEditor é desenvolvido de forma aberta e transparente. Você pode acompanhar o desenvolvimento e contribuir no GitHub."
+      question: "Posso organizar meus documentos?",
+      answer: "Sim! Você pode criar pastas e subpastas para organizar seus documentos, além de usar tags para classificação e busca rápida."
     }
   ];
 
@@ -56,19 +68,6 @@ export function FAQ({ onOpenContact }: FAQProps) {
                 {faq.question}
               </h3>
               <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
-              {faq.question === "Como posso apoiar o projeto?" && (
-                <div className="mt-4">
-                  <a
-                    href="https://mepagaumcafe.com.br/estevao/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <Coffee className="h-4 w-4" />
-                    Apoiar o projeto ☕
-                  </a>
-                </div>
-              )}
             </div>
           ))}
 

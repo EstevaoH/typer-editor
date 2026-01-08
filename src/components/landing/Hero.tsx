@@ -17,6 +17,7 @@ export function Hero() {
         <div className="flex items-center justify-center mb-10">
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in delay-100">
             O editor de texto moderno que funciona diretamente no seu navegador.
+            Com sincronização em nuvem, organização em pastas, templates e muito mais.
             Rápido, seguro e com tudo que você precisa para criar documentos incríveis.
           </p>
         </div>
@@ -43,17 +44,21 @@ export function Hero() {
               {`# Bem-vindo ao TyperEditor ✨
 
 ## 📝 Recursos Principais
-• Edição em tempo real com interface limpa
-• Salvamento automático no navegador
+• Edição em tempo real com salvamento automático
+• Sincronização em nuvem (usuários logados)
+• Organização em pastas e tags
+• Templates personalizados e do sistema
+• Histórico de versões
 • Exporte para TXT, MD, DOCX, PDF
 • Sintaxe highlight para código
 • Design totalmente responsivo
 
 ## 🚀 Comece Agora
-1. Clique em "Começar a Editar"
-2. Escreva seu conteúdo
-3. Exporte para o formato desejado
-4. Compartilhe seu trabalho!`}
+1. Crie uma conta (ou use sem login)
+2. Organize em pastas e use tags
+3. Crie templates para acelerar
+4. Sincronize na nuvem
+5. Exporte e compartilhe!`}
             </pre>
           </div>
         </div>

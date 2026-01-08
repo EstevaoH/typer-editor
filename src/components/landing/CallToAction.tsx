@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Edit } from "lucide-react";
+import { Edit, Crown } from "lucide-react";
 
 export function CallToAction() {
   return (
@@ -9,6 +9,7 @@ export function CallToAction() {
         <div className="flex justify-center mb-12">
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Junte-se a milhares de usuários que já estão criando documentos incríveis com o TyperEditor.
+            Use gratuitamente ou desbloqueie recursos ilimitados com o plano Pro vitalício.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -19,7 +20,17 @@ export function CallToAction() {
             <Edit className="h-6 w-6" />
             Criar Primeiro Documento
           </Link>
+          <Link
+            href="/checkout"
+            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-10 py-5 rounded-2xl font-medium transition-all transform hover:scale-105 text-lg flex items-center justify-center gap-3 shadow-2xl hover:shadow-amber-500/30"
+          >
+            <Crown className="h-6 w-6" />
+            Ativar Plano Pro
+          </Link>
         </div>
+        <p className="text-sm text-muted-foreground mt-6">
+          Plano Pro: R$ 15,00 único • Acesso vitalício • Sem renovação
+        </p>
       </div>
     </section>
   );

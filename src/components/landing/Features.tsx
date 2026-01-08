@@ -1,4 +1,4 @@
-import { Edit, Download, Code, Smartphone, Lock } from "lucide-react";
+import { Edit, Download, Code, Smartphone, Lock, Cloud, FolderOpen, Tags, FileText, History, Crown } from "lucide-react";
 
 export function Features() {
   const features = [
@@ -9,28 +9,64 @@ export function Features() {
       color: "blue"
     },
     {
-      icon: <Download className="h-8 w-8 text-green-500" />,
-      title: "Múltiplos Formatos",
-      description: "Exporte para TXT, MD, DOCX, PDF e outros formatos populares.",
+      icon: <Cloud className="h-8 w-8 text-green-500" />,
+      title: "Sincronização em Nuvem",
+      description: "Acesse seus documentos de qualquer dispositivo. Sincronização automática para usuários logados.",
       color: "green"
     },
     {
-      icon: <Code className="h-8 w-8 text-purple-500" />,
-      title: "Sintaxe Highlight",
-      description: "Suporte para destacar sintaxe de diversas linguagens de programação.",
+      icon: <FolderOpen className="h-8 w-8 text-purple-500" />,
+      title: "Organização em Pastas",
+      description: "Organize seus documentos em pastas e subpastas para melhor gerenciamento.",
       color: "purple"
     },
     {
-      icon: <Smartphone className="h-8 w-8 text-pink-500" />,
+      icon: <Tags className="h-8 w-8 text-pink-500" />,
+      title: "Sistema de Tags",
+      description: "Classifique e encontre documentos rapidamente com tags personalizadas.",
+      color: "pink"
+    },
+    {
+      icon: <FileText className="h-8 w-8 text-orange-500" />,
+      title: "Templates Personalizados",
+      description: "Crie e use templates para acelerar sua produtividade. Templates do sistema incluídos.",
+      color: "orange"
+    },
+    {
+      icon: <History className="h-8 w-8 text-indigo-500" />,
+      title: "Histórico de Versões",
+      description: "Acompanhe o histórico de edições e restaure versões anteriores quando necessário.",
+      color: "indigo"
+    },
+    {
+      icon: <Download className="h-8 w-8 text-teal-500" />,
+      title: "Múltiplos Formatos",
+      description: "Exporte para TXT, MD, DOCX, PDF e outros formatos populares.",
+      color: "teal"
+    },
+    {
+      icon: <Code className="h-8 w-8 text-cyan-500" />,
+      title: "Sintaxe Highlight",
+      description: "Suporte para destacar sintaxe de diversas linguagens de programação.",
+      color: "cyan"
+    },
+    {
+      icon: <Smartphone className="h-8 w-8 text-rose-500" />,
       title: "Totalmente Responsivo",
       description: "Funciona perfeitamente em desktop, tablet e smartphone.",
-      color: "pink"
+      color: "rose"
     },
     {
       icon: <Lock className="h-8 w-8 text-yellow-500" />,
       title: "Privacidade Garantida",
-      description: "Seus documentos ficam salvos localmente, apenas você tem acesso.",
+      description: "Dados locais para não logados, nuvem criptografada para usuários autenticados.",
       color: "yellow"
+    },
+    {
+      icon: <Crown className="h-8 w-8 text-amber-500" />,
+      title: "Plano Pro Vitalício",
+      description: "Acesso ilimitado a todos os recursos com pagamento único de R$ 15,00.",
+      color: "amber"
     },
   ];
 

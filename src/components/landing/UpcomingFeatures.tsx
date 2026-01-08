@@ -1,4 +1,4 @@
-import { History, Type, Search, BarChart3, DownloadCloud, Palette, ArrowRight, Cloud, Sparkles, FolderOpen } from "lucide-react";
+import { History, Type, Search, BarChart3, DownloadCloud, Palette, ArrowRight, Cloud, Sparkles, FolderOpen, Tags, FileText, LogIn } from "lucide-react";
 
 interface UpcomingFeaturesProps {
   onOpenContact: () => void;
@@ -20,8 +20,8 @@ export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
     },
     {
       icon: <DownloadCloud className="h-8 w-8 text-green-500" />,
-      title: "Novos Formatos",
-      description: "Exportação aprimorada para PDF, DOCX e Markdown com formatação preservada.",
+      title: "Múltiplos Formatos",
+      description: "Exportação para PDF, DOCX, Markdown e outros formatos com formatação preservada.",
       status: "Lançado"
     },
     {
@@ -31,16 +31,40 @@ export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
       status: "Lançado"
     },
     {
+      icon: <Cloud className="h-8 w-8 text-green-500" />,
+      title: "Sincronização Cloud",
+      description: "Salve seus documentos na nuvem e acesse de qualquer dispositivo.",
+      status: "Lançado"
+    },
+    {
+      icon: <FolderOpen className="h-8 w-8 text-green-500" />,
+      title: "Organização em Pastas",
+      description: "Organize seus documentos em pastas e subpastas para melhor gerenciamento.",
+      status: "Lançado"
+    },
+    {
+      icon: <Tags className="h-8 w-8 text-green-500" />,
+      title: "Sistema de Tags",
+      description: "Classifique e encontre documentos rapidamente com tags personalizadas.",
+      status: "Lançado"
+    },
+    {
+      icon: <FileText className="h-8 w-8 text-green-500" />,
+      title: "Templates Personalizados",
+      description: "Crie e use templates para acelerar sua produtividade. Templates do sistema incluídos.",
+      status: "Lançado"
+    },
+    {
+      icon: <LogIn className="h-8 w-8 text-green-500" />,
+      title: "Autenticação Social",
+      description: "Login rápido e seguro com Google, GitHub ou credenciais tradicionais.",
+      status: "Lançado"
+    },
+    {
       icon: <Search className="h-8 w-8 text-blue-500" />,
       title: "Pesquisa Avançada",
       description: "Busca global de conteúdo em todos os seus documentos.",
       status: "Em breve"
-    },
-    {
-      icon: <Cloud className="h-8 w-8 text-purple-500" />,
-      title: "Sincronização Cloud",
-      description: "Salve seus documentos na nuvem e acesse de qualquer dispositivo.",
-      status: "Planejado"
     },
     {
       icon: <Sparkles className="h-8 w-8 text-purple-500" />,
@@ -49,9 +73,9 @@ export function UpcomingFeatures({ onOpenContact }: UpcomingFeaturesProps) {
       status: "Planejado"
     },
     {
-      icon: <FolderOpen className="h-8 w-8 text-purple-500" />,
-      title: "Organização em Pastas",
-      description: "Melhor organização dos seus documentos com sistema de pastas.",
+      icon: <Palette className="h-8 w-8 text-purple-500" />,
+      title: "Temas Personalizados",
+      description: "Mais opções de personalização visual e temas customizáveis.",
       status: "Planejado"
     }
   ];

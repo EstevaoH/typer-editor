@@ -1,24 +1,30 @@
-import { Edit, Palette, Share } from "lucide-react";
+import { Edit, Cloud, FolderOpen, Download, LogIn, Tags } from "lucide-react";
 
 export function HowItWorks() {
   const steps = [
     {
       step: "01",
-      title: "Crie seu Documento",
-      description: "Acesse o editor e comece a escrever imediatamente.",
-      icon: <Edit className="h-8 w-8" />
+      title: "Crie sua Conta (Opcional)",
+      description: "Registre-se gratuitamente ou use login social (Google/GitHub) para sincronização na nuvem.",
+      icon: <LogIn className="h-8 w-8" />
     },
     {
       step: "02",
-      title: "Edite e Formate",
-      description: "Use as ferramentas de formatação para melhorar seu conteúdo.",
-      icon: <Palette className="h-8 w-8" />
+      title: "Organize e Crie",
+      description: "Crie pastas, adicione tags e organize seus documentos. Use templates para começar rápido.",
+      icon: <FolderOpen className="h-8 w-8" />
     },
     {
       step: "03",
+      title: "Sincronize na Nuvem",
+      description: "Seus documentos são sincronizados automaticamente. Acesse de qualquer dispositivo.",
+      icon: <Cloud className="h-8 w-8" />
+    },
+    {
+      step: "04",
       title: "Exporte e Compartilhe",
-      description: "Baixe em múltiplos formatos ou compartilhe diretamente.",
-      icon: <Share className="h-8 w-8" />
+      description: "Baixe em múltiplos formatos (TXT, MD, DOCX, PDF) ou compartilhe diretamente.",
+      icon: <Download className="h-8 w-8" />
     }
   ];
 
@@ -27,10 +33,10 @@ export function HowItWorks() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona</h2>
-          <p className="text-xl text-muted-foreground">Simples e intuitivo em três passos</p>
+          <p className="text-xl text-muted-foreground">Simples e intuitivo em quatro passos</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {steps.map((step, index) => (
             <div
               key={index}
