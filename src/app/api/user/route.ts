@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getTursoClient } from "@/lib/turso";
 import bcrypt from "bcryptjs";
-import { cancelSubscription } from "@/lib/abacate";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -141,29 +140,9 @@ export async function DELETE() {
   const client = getTursoClient();
 
   try {
-    // Verificar se o usuário tem uma assinatura ativa
-    const userResult = await client.execute({
-      sql: "SELECT subscription_id, plan FROM users WHERE id = ? LIMIT 1",
-      args: [userId],
-    });
-
-    if (userResult.rows.length > 0) {
-      const user = userResult.rows[0];
-      const subscriptionId = user.subscription_id as string | null;
-      const plan = user.plan as string | null;
-
-      // Se o usuário tem uma assinatura Pro ativa, cancelar no AbacatePay
-      if (subscriptionId && plan === "PRO") {
-        try {
-          await cancelSubscription(subscriptionId);
-          console.log(`Assinatura ${subscriptionId} cancelada antes de excluir conta`);
-        } catch (error) {
-          console.error("Erro ao cancelar assinatura no AbacatePay:", error);
-          // Continua com a exclusão mesmo se falhar o cancelamento
-          // para não bloquear o usuário de excluir sua conta
-        }
-      }
-    }
+    // Como o pagamento é único (ONE_TIME), não há assinatura recorrente para cancelar.
+    // O pagamento já foi feito e não há renovação automática.
+    // Apenas excluímos os dados do usuário do banco de dados.
 
     // Excluir documentos do usuário
     await client.execute({

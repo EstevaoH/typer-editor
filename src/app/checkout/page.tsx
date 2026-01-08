@@ -7,14 +7,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, CreditCard, Lock, ArrowLeft } from "lucide-react";
+import { Check, CreditCard, Lock, ArrowLeft, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+
+const BASE_AMOUNT = 1500; // R$ 15.00 em centavos
+
+interface CouponData {
+    code: string;
+    discountType: "PERCENTAGE" | "FIXED";
+    discountValue: number;
+    discountAmount: number;
+    finalAmount: number;
+}
 
 export default function CheckoutPage() {
     const { data: session } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [validatingCoupon, setValidatingCoupon] = useState(false);
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<CouponData | null>(null);
     const [formData, setFormData] = useState({
         name: session?.user?.name || "",
         email: session?.user?.email || "",
@@ -74,6 +87,46 @@ export default function CheckoutPage() {
         return true;
     };
 
+    const handleValidateCoupon = async () => {
+        if (!couponCode.trim()) {
+            toast.error("Digite um código de cupom");
+            return;
+        }
+
+        setValidatingCoupon(true);
+        try {
+            const response = await fetch("/api/coupon/validate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    code: couponCode.trim().toUpperCase(),
+                    amount: BASE_AMOUNT,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.valid && data.coupon) {
+                setAppliedCoupon(data.coupon);
+                toast.success("Cupom aplicado com sucesso!");
+            } else {
+                setAppliedCoupon(null);
+                toast.error(data.error || "Cupom inválido");
+            }
+        } catch (error) {
+            toast.error("Erro ao validar cupom. Tente novamente.");
+        } finally {
+            setValidatingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCode("");
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -94,6 +147,7 @@ export default function CheckoutPage() {
                         cellphone: formData.phone.replace(/\D/g, ""),
                         taxId: formData.cpf.replace(/\D/g, ""),
                     },
+                    couponCode: appliedCoupon?.code,
                 }),
             });
 
@@ -111,6 +165,9 @@ export default function CheckoutPage() {
             setLoading(false);
         }
     };
+
+    const finalAmount = appliedCoupon ? appliedCoupon.finalAmount : BASE_AMOUNT;
+    const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
 
     if (!session) {
         return (
@@ -139,8 +196,8 @@ export default function CheckoutPage() {
                         <ArrowLeft className="w-4 h-4" />
                         Voltar para o Editor
                     </Link>
-                    <h1 className="text-3xl font-bold">Assinar Plano Pro</h1>
-                    <p className="text-muted-foreground mt-2">Complete suas informações para finalizar a assinatura</p>
+                    <h1 className="text-3xl font-bold">Ativar Plano Pro</h1>
+                    <p className="text-muted-foreground mt-2">Complete suas informações para finalizar o pagamento</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
@@ -209,6 +266,56 @@ export default function CheckoutPage() {
                                     />
                                 </div>
 
+                                {/* Campo de Cupom */}
+                                <div className="space-y-2 pt-2">
+                                    <Label htmlFor="coupon">Cupom de Desconto</Label>
+                                    {appliedCoupon ? (
+                                        <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-md">
+                                            <Tag className="w-4 h-4 text-primary" />
+                                            <span className="flex-1 text-sm font-medium">
+                                                {appliedCoupon.code} - 
+                                                {appliedCoupon.discountType === "PERCENTAGE" 
+                                                    ? ` ${appliedCoupon.discountValue}% OFF`
+                                                    : ` R$ ${(appliedCoupon.discountValue / 100).toFixed(2)} OFF`}
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={handleRemoveCoupon}
+                                                className="h-6 w-6 p-0"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <Input
+                                                id="coupon"
+                                                type="text"
+                                                placeholder="Digite o código do cupom"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        handleValidateCoupon();
+                                                    }
+                                                }}
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={handleValidateCoupon}
+                                                disabled={validatingCoupon || !couponCode.trim()}
+                                            >
+                                                {validatingCoupon ? "..." : "Aplicar"}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="pt-4">
                                     <Button type="submit" className="w-full" size="lg" disabled={loading}>
                                         {loading ? "Processando..." : "Continuar para Pagamento"}
@@ -236,11 +343,27 @@ export default function CheckoutPage() {
                                 <CardDescription>Acesso completo a todos os recursos</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-muted-foreground">Valor mensal</span>
-                                    <div className="text-3xl font-bold">
-                                        R$ 15,00
-                                        <span className="text-sm font-normal text-muted-foreground">/mês</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-muted-foreground">Valor original</span>
+                                        <span className="text-lg font-medium">
+                                            R$ {(BASE_AMOUNT / 100).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    {appliedCoupon && (
+                                        <div className="flex items-baseline justify-between text-primary">
+                                            <span className="text-sm">Desconto ({appliedCoupon.code})</span>
+                                            <span className="text-lg font-medium">
+                                                - R$ {(discountAmount / 100).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-baseline justify-between pt-2 border-t">
+                                        <span className="text-muted-foreground font-medium">Total a pagar</span>
+                                        <div className="text-3xl font-bold">
+                                            R$ {(finalAmount / 100).toFixed(2)}
+                                            <span className="text-sm font-normal text-muted-foreground"> via PIX</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -274,12 +397,12 @@ export default function CheckoutPage() {
                             </CardHeader>
                             <CardContent className="space-y-4 text-sm">
                                 <div>
-                                    <h5 className="font-semibold mb-1">Posso cancelar a qualquer momento?</h5>
-                                    <p className="text-muted-foreground">Sim, você pode cancelar sua assinatura a qualquer momento sem multas.</p>
+                                    <h5 className="font-semibold mb-1">O pagamento é único?</h5>
+                                    <p className="text-muted-foreground">Sim! Você paga uma única vez via PIX e tem acesso vitalício ao plano Pro.</p>
                                 </div>
                                 <div>
-                                    <h5 className="font-semibold mb-1">Como funciona a cobrança?</h5>
-                                    <p className="text-muted-foreground">A cobrança é mensal e renovada automaticamente via AbacatePay.</p>
+                                    <h5 className="font-semibold mb-1">Como funciona o pagamento?</h5>
+                                    <p className="text-muted-foreground">O pagamento é único via PIX. Após a confirmação, você terá acesso permanente ao plano Pro.</p>
                                 </div>
                                 <div>
                                     <h5 className="font-semibold mb-1">Meus dados estão seguros?</h5>

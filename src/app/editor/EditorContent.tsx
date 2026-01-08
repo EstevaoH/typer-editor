@@ -227,10 +227,10 @@ export function Editor() {
         // Only update content if it's different to avoid cursor jumps
         const currentContent = editor.getHTML();
         if (currentContent !== currentDocument.content) {
-          editor.commands.setContent(currentDocument.content || "", false);
+          editor.commands.setContent(currentDocument.content || "");
         }
       } else {
-        editor.commands.setContent("", false);
+        editor.commands.setContent("");
       }
     }
   }, [currentDocument, editor]);
@@ -356,11 +356,10 @@ export function Editor() {
 
             <div
               ref={editorRef}
-              className={`min-h-[calc(100vh-10rem)] border-2 rounded-xl p-6 transition-all duration-300 ${
-                isEditorFocused
+              className={`min-h-[calc(100vh-10rem)] border-2 rounded-xl p-6 transition-all duration-300 ${isEditorFocused
                   ? "border-primary/30 bg-background "
                   : "border-border/50 bg-background/50 hover:border-border/70 hover:bg-background/70"
-              }`}
+                }`}
               onClick={() => editor?.commands.focus()}
               onKeyDown={(e) => {
                 if (e.key === "Tab") {
@@ -390,8 +389,8 @@ export function Editor() {
                     <FilePenLine className="w-4 h-4" />
                     {currentDocument?.updatedAt
                       ? `Editado ${new Date(
-                          currentDocument.updatedAt
-                        ).toLocaleDateString("pt-BR")}`
+                        currentDocument.updatedAt
+                      ).toLocaleDateString("pt-BR")}`
                       : "Novo documento"}
                   </span>
 
@@ -450,13 +449,12 @@ export function Editor() {
                         className="flex items-center gap-1.5"
                         title={
                           documentStatus.isSavedInCloud
-                            ? `Sincronizado na nuvem${
-                                documentStatus.cloudLastUpdated
-                                  ? ` em ${documentStatus.cloudLastUpdated.toLocaleString(
-                                      "pt-BR"
-                                    )}`
-                                  : ""
-                              }`
+                            ? `Sincronizado na nuvem${documentStatus.cloudLastUpdated
+                              ? ` em ${documentStatus.cloudLastUpdated.toLocaleString(
+                                "pt-BR"
+                              )}`
+                              : ""
+                            }`
                             : "Não sincronizado na nuvem"
                         }
                       >

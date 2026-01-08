@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Check, X, ArrowLeft, Crown, AlertTriangle } from "lucide-react";
+import { Check, ArrowLeft, Crown } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -15,41 +15,9 @@ export default function AccountPage() {
     const { data: session, update } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [canceling, setCanceling] = useState(false);
 
     const userPlan = (session?.user as any)?.plan || "FREE";
     const isPro = userPlan === "PRO";
-    const subscriptionStatus = (session?.user as any)?.subscription_status || "INACTIVE";
-
-    const handleCancelSubscription = async () => {
-        setCanceling(true);
-        try {
-            const response = await fetch("/api/subscription/cancel", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                toast.success("Assinatura cancelada com sucesso");
-                // Atualiza a sessão para refletir o novo plano
-                await update();
-                // Redireciona após 2 segundos
-                setTimeout(() => {
-                    router.push("/editor");
-                }, 2000);
-            } else {
-                toast.error(data.error || "Erro ao cancelar assinatura");
-            }
-        } catch (error) {
-            toast.error("Erro de conexão. Tente novamente.");
-        } finally {
-            setCanceling(false);
-        }
-    };
 
     if (!session) {
         return (
@@ -115,12 +83,12 @@ export default function AccountPage() {
                                 <div>
                                     <CardTitle>Assinatura</CardTitle>
                                     <CardDescription>
-                                        {isPro ? "Você tem acesso a todos os recursos premium" : "Faça upgrade para desbloquear recursos premium"}
+                                        {isPro ? "Você tem acesso vitalício a todos os recursos premium" : "Faça upgrade para desbloquear recursos premium"}
                                     </CardDescription>
                                 </div>
                                 {isPro && (
                                     <Badge variant="outline" className="text-green-600 border-green-600">
-                                        Ativa
+                                        Vitalício
                                     </Badge>
                                 )}
                             </div>
@@ -131,8 +99,11 @@ export default function AccountPage() {
                                     <div className="bg-primary/5 rounded-lg p-4 space-y-3">
                                         <div className="flex items-center justify-between">
                                             <span className="font-semibold">Plano Pro</span>
-                                            <span className="text-2xl font-bold">R$ 15,00<span className="text-sm font-normal text-muted-foreground">/mês</span></span>
+                                            <span className="text-2xl font-bold">R$ 15,00<span className="text-sm font-normal text-muted-foreground"> único</span></span>
                                         </div>
+                                        <p className="text-xs text-muted-foreground italic">
+                                            Acesso vitalício - Pague uma vez, use para sempre
+                                        </p>
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Check className="w-4 h-4 text-primary" />
@@ -152,51 +123,6 @@ export default function AccountPage() {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="outline" className="w-full text-destructive hover:text-destructive" disabled={canceling}>
-                                                {canceling ? "Cancelando..." : "Cancelar Assinatura"}
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle className="flex items-center gap-2">
-                                                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                                    Cancelar Assinatura Pro?
-                                                </AlertDialogTitle>
-                                                <AlertDialogDescription className="space-y-3">
-                                                    <p>Ao cancelar sua assinatura, você perderá acesso aos seguintes recursos:</p>
-                                                    <ul className="space-y-1 text-sm">
-                                                        <li className="flex items-center gap-2">
-                                                            <X className="w-4 h-4 text-destructive" />
-                                                            Documentos ilimitados (voltará ao limite de 5)
-                                                        </li>
-                                                        <li className="flex items-center gap-2">
-                                                            <X className="w-4 h-4 text-destructive" />
-                                                            Templates ilimitados (voltará ao limite de 2)
-                                                        </li>
-                                                        <li className="flex items-center gap-2">
-                                                            <X className="w-4 h-4 text-destructive" />
-                                                            Templates avançados do sistema
-                                                        </li>
-                                                    </ul>
-                                                    <p className="text-xs text-muted-foreground pt-2">
-                                                        Seus documentos e templates existentes serão preservados, mas você não poderá criar novos além dos limites do plano gratuito.
-                                                    </p>
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Manter Assinatura</AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    onClick={handleCancelSubscription}
-                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                >
-                                                    Sim, Cancelar
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
                                 </div>
                             ) : (
                                 <div className="space-y-4">

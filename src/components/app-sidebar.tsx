@@ -210,7 +210,7 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
                         onClick={() => router.push("/settings")}
                       >
                         <Crown className="w-3.5 h-3.5 text-primary" />
-                        <span className="flex-1 text-left">Gerenciar Assinatura</span>
+                        <span className="flex-1 text-left">Gerenciar Plano</span>
                         <Badge variant="default" className="text-xs">Pro</Badge>
                       </Button>
                     ) : (
@@ -226,7 +226,7 @@ export function AppSidebar({ className, user, ...props }: AppSidebarProps) {
                   ) : (
                     // Subscription Button for collapsed sidebar
                     <SidebarMenuButton
-                      tooltip={userPlan === "PRO" ? "Gerenciar Assinatura" : "Seja Pro"}
+                      tooltip={userPlan === "PRO" ? "Gerenciar Plano" : "Seja Pro"}
                       className={cn(
                         "hover:bg-zinc-700 cursor-pointer transition-colors duration-200 h-7",
                         userPlan === "PRO" ? "text-primary" : "text-amber-500"

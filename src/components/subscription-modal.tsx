@@ -58,7 +58,7 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
                             <h3 className="text-xl font-bold text-primary">Pro</h3>
                             <p className="text-muted-foreground">Para Power Users</p>
                         </div>
-                        <div className="text-3xl font-bold">R$ 15,00<span className="text-base font-normal text-muted-foreground">/mês</span></div>
+                        <div className="text-3xl font-bold">R$ 15,00<span className="text-base font-normal text-muted-foreground"> único</span></div>
 
                         <ul className="space-y-2 flex-1">
                             <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-primary" /> Documentos Ilimitados</li>
@@ -68,7 +68,7 @@ export function SubscriptionModal({ open, onOpenChange }: SubscriptionModalProps
                         </ul>
 
                         <Button onClick={handleUpgrade} disabled={loading} className="w-full">
-                            {loading ? "Processando..." : "Assinar Pro"}
+                            {loading ? "Processando..." : "Ativar Pro"}
                         </Button>
                     </div>
                 </div>

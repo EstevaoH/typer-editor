@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { returnUrl, customerData } = body;
+        const { returnUrl, customerData, couponCode } = body;
 
         const db = getTursoClient();
         const userResult = await db.execute({
@@ -46,8 +46,13 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Gera URL de checkout
-        const checkoutUrl = await createCheckoutUrl(customerId, returnUrl || process.env.NEXTAUTH_URL + "/editor");
+        // Gera URL de checkout com cupom se fornecido
+        const checkoutUrl = await createCheckoutUrl(
+            customerId as string, 
+            returnUrl || process.env.NEXTAUTH_URL + "/editor",
+            couponCode,
+            1500 // Valor base em centavos
+        );
 
         return NextResponse.json({ url: checkoutUrl });
     } catch (error: any) {

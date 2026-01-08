@@ -13,8 +13,8 @@ interface SearchSelectorProps {
 export function SearchSelector({ editor, onClose, isOpen }: SearchSelectorProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const searchRef = useRef<HTMLInputElement>(null);
-    const matches = editor?.storage.searchAndReplace?.results || [];
-    const currentIndex = editor?.storage.searchAndReplace?.current || 0;
+    const matches = (editor?.storage as any)?.searchAndReplace?.results || [];
+    const currentIndex = (editor?.storage as any)?.searchAndReplace?.current || 0;
 
     useEffect(() => {
         if (!editor) return;

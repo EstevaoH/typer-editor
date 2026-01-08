@@ -18,53 +18,53 @@ export function TableSelector({ editor }: TableSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const insertTable = () => {
-        editor
-            .chain()
-            .focus()
-            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-            .run();
+        // editor
+        //     .chain()
+        //     .focus()
+        //     .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        //     .run();
         setIsOpen(false);
     };
 
     const deleteTable = () => {
-        editor.chain().focus().deleteTable().run();
+        //  editor.chain().focus().deleteTable().run();
         setIsOpen(false);
     };
 
     const addColumnBefore = () => {
-        editor.chain().focus().addColumnBefore().run();
+        // editor.chain().focus().addColumnBefore().run();
     };
 
     const addColumnAfter = () => {
-        editor.chain().focus().addColumnAfter().run();
+        // editor.chain().focus().addColumnAfter().run();
     };
 
     const deleteColumn = () => {
-        editor.chain().focus().deleteColumn().run();
+        // editor.chain().focus().deleteColumn().run();
     };
 
     const addRowBefore = () => {
-        editor.chain().focus().addRowBefore().run();
+        // editor.chain().focus().addRowBefore().run();
     };
 
     const addRowAfter = () => {
-        editor.chain().focus().addRowAfter().run();
+        //  editor.chain().focus().addRowAfter().run();
     };
 
     const deleteRow = () => {
-        editor.chain().focus().deleteRow().run();
+        // editor.chain().focus().deleteRow().run();
     };
 
     const mergeCells = () => {
-        editor.chain().focus().mergeCells().run();
+        // editor.chain().focus().mergeCells().run();
     };
 
     const splitCell = () => {
-        editor.chain().focus().splitCell().run();
+        // editor.chain().focus().splitCell().run();
     };
 
     const toggleHeaderRow = () => {
-        editor.chain().focus().toggleHeaderRow().run();
+        // editor.chain().focus().toggleHeaderRow().run();
     };
 
     const isInTable = editor.isActive("table");
@@ -74,8 +74,8 @@ export function TableSelector({ editor }: TableSelectorProps) {
             <PopoverTrigger asChild>
                 <button
                     className={`p-2 rounded cursor-pointer ${editor.isActive("table")
-                            ? "bg-zinc-600 text-white"
-                            : "text-zinc-300 hover:bg-zinc-700"
+                        ? "bg-zinc-600 text-white"
+                        : "text-zinc-300 hover:bg-zinc-700"
                         }`}
                     title="Tabela"
                 >
